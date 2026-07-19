@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, BookOpen, Layers, Link2, Table2, FileSpreadsheet, Play, FileText, Keyboard, HelpCircle, ChevronRight, FileDown, ChevronDown, Settings } from 'lucide-react';
+import { X, BookOpen, Layers, Link2, Table2, FileSpreadsheet, Play, FileText, Keyboard, HelpCircle, ChevronRight, FileDown, ChevronDown, Settings, Video, Search, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 
@@ -19,6 +19,7 @@ const SECTIONS: Section[] = [
   { id: 'elements',          icon: <Layers className="w-4 h-4" />,          label: 'Network Elements'    },
   { id: 'all-properties',    icon: <Settings className="w-4 h-4" />,        label: 'All Properties'      },
   { id: 'connections',       icon: <Link2 className="w-4 h-4" />,           label: 'Connections'         },
+  { id: 'demo-videos',       icon: <Video className="w-4 h-4" />,           label: 'Demo Videos'         },
   { id: 'flex-table',        icon: <Table2 className="w-4 h-4" />,          label: 'Flex Table'          },
   { id: 'excel',             icon: <FileSpreadsheet className="w-4 h-4" />, label: 'Excel Import/Export' },
   { id: 'simulation',        icon: <Play className="w-4 h-4" />,            label: 'Running Simulations' },
@@ -939,6 +940,297 @@ function downloadPDF() {
   doc.save('WHAMO_User_Manual.pdf');
 }
 
+// ─── Element visual SVGs ──────────────────────────────────────────────────────
+
+function ReservoirSVG() {
+  return (
+    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect x="6" y="6" width="48" height="38" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="2"/>
+      <path d="M10 32 Q15 27 20 32 Q25 37 30 32 Q35 27 40 32 Q45 37 50 32" stroke="#2563eb" strokeWidth="1.8" fill="none"/>
+      <path d="M10 38 Q15 33 20 38 Q25 43 30 38 Q35 33 40 38 Q45 43 50 38" stroke="#2563eb" strokeWidth="1.8" fill="none"/>
+      <rect x="6" y="35" width="48" height="9" rx="0 0 3 3" fill="#bfdbfe" opacity="0.7"/>
+      <line x1="30" y1="44" x2="30" y2="50" stroke="#2563eb" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+function NodeSVG() {
+  return (
+    <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="25" cy="25" r="18" fill="#f1f5f9" stroke="#475569" strokeWidth="2.2"/>
+      <circle cx="25" cy="25" r="5" fill="#475569"/>
+      <line x1="7" y1="25" x2="0" y2="25" stroke="#475569" strokeWidth="2"/>
+      <line x1="43" y1="25" x2="50" y2="25" stroke="#475569" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+function JunctionSVG() {
+  return (
+    <svg viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="25" cy="25" r="18" fill="#dcfce7" stroke="#16a34a" strokeWidth="2.2"/>
+      <line x1="25" y1="7" x2="25" y2="14" stroke="#16a34a" strokeWidth="2"/>
+      <line x1="11" y1="34" x2="5" y2="40" stroke="#16a34a" strokeWidth="2"/>
+      <line x1="39" y1="34" x2="45" y2="40" stroke="#16a34a" strokeWidth="2"/>
+      <circle cx="25" cy="25" r="4" fill="#16a34a"/>
+      <text x="25" y="29" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">J</text>
+    </svg>
+  );
+}
+
+function SurgeTankSVG() {
+  return (
+    <svg viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect x="8" y="4" width="24" height="42" rx="3" fill="#f3e8ff" stroke="#7c3aed" strokeWidth="2"/>
+      <rect x="8" y="34" width="24" height="12" rx="0 0 3 3" fill="#c4b5fd" opacity="0.7"/>
+      <path d="M12 34 Q16 30 20 34 Q24 38 28 34" stroke="#7c3aed" strokeWidth="1.5" fill="none"/>
+      <line x1="20" y1="46" x2="20" y2="56" stroke="#7c3aed" strokeWidth="2"/>
+      <line x1="8" y1="10" x2="2" y2="10" stroke="#7c3aed" strokeWidth="1.5" strokeDasharray="2,1"/>
+      <line x1="8" y1="20" x2="2" y2="20" stroke="#7c3aed" strokeWidth="1.5" strokeDasharray="2,1"/>
+      <line x1="8" y1="30" x2="2" y2="30" stroke="#7c3aed" strokeWidth="1.5" strokeDasharray="2,1"/>
+    </svg>
+  );
+}
+
+function FlowBCSVG() {
+  return (
+    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect x="6" y="6" width="48" height="38" rx="3" fill="#ffedd5" stroke="#ea580c" strokeWidth="2"/>
+      <path d="M14 25 L46 25" stroke="#ea580c" strokeWidth="2" markerEnd="url(#arrow-fbc)"/>
+      <defs>
+        <marker id="arrow-fbc" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#ea580c"/>
+        </marker>
+      </defs>
+      <path d="M14 18 Q19 14 24 18 Q29 22 34 18 Q39 14 44 18" stroke="#ea580c" strokeWidth="1.5" fill="none"/>
+      <text x="30" y="38" textAnchor="middle" fill="#ea580c" fontSize="8" fontWeight="bold">Flow BC</text>
+    </svg>
+  );
+}
+
+function PumpSVG() {
+  return (
+    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="30" cy="25" r="18" fill="#fce7f3" stroke="#be185d" strokeWidth="2"/>
+      <path d="M22 17 Q30 14 35 22" stroke="#be185d" strokeWidth="2" fill="none"/>
+      <path d="M35 28 Q38 36 30 38" stroke="#be185d" strokeWidth="2" fill="none"/>
+      <circle cx="30" cy="25" r="4" fill="#be185d"/>
+      <line x1="12" y1="25" x2="0" y2="25" stroke="#be185d" strokeWidth="2"/>
+      <line x1="48" y1="25" x2="60" y2="25" stroke="#be185d" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+function CheckValveSVG() {
+  return (
+    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="30" cy="25" r="16" fill="#fee2e2" stroke="#b91c1c" strokeWidth="2"/>
+      <polygon points="22,18 22,32 38,25" fill="#b91c1c" opacity="0.8"/>
+      <line x1="38" y1="18" x2="38" y2="32" stroke="#b91c1c" strokeWidth="2.5"/>
+      <line x1="14" y1="25" x2="0" y2="25" stroke="#b91c1c" strokeWidth="2"/>
+      <line x1="46" y1="25" x2="60" y2="25" stroke="#b91c1c" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+function TurbineSVG() {
+  return (
+    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="30" cy="25" r="17" fill="#cffafe" stroke="#0e7490" strokeWidth="2"/>
+      <path d="M30 13 Q35 18 30 25" stroke="#0e7490" strokeWidth="2" fill="none"/>
+      <path d="M42 31 Q36 28 30 25" stroke="#0e7490" strokeWidth="2" fill="none"/>
+      <path d="M18 31 Q22 24 30 25" stroke="#0e7490" strokeWidth="2" fill="none"/>
+      <circle cx="30" cy="25" r="4" fill="#0e7490"/>
+      <line x1="13" y1="25" x2="0" y2="25" stroke="#0e7490" strokeWidth="2"/>
+      <line x1="47" y1="25" x2="60" y2="25" stroke="#0e7490" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+function ConduitSVG() {
+  return (
+    <svg viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="10" cy="15" r="8" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.8"/>
+      <circle cx="70" cy="15" r="8" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.8"/>
+      <line x1="18" y1="15" x2="62" y2="15" stroke="#64748b" strokeWidth="2"/>
+      <polygon points="56,10 56,20 64,15" fill="#64748b"/>
+    </svg>
+  );
+}
+
+function DummyPipeSVG() {
+  return (
+    <svg viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="10" cy="15" r="8" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.8"/>
+      <circle cx="70" cy="15" r="8" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.8"/>
+      <line x1="18" y1="15" x2="62" y2="15" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,4"/>
+      <polygon points="56,10 56,20 64,15" fill="#94a3b8"/>
+    </svg>
+  );
+}
+
+const ELEMENT_SVG_MAP: Record<string, React.ReactNode> = {
+  reservoir:   <ReservoirSVG />,
+  node:        <NodeSVG />,
+  junction:    <JunctionSVG />,
+  'surge-tank': <SurgeTankSVG />,
+  'flow-bc':   <FlowBCSVG />,
+  pump:        <PumpSVG />,
+  'check-valve': <CheckValveSVG />,
+  turbine:     <TurbineSVG />,
+  conduit:     <ConduitSVG />,
+  'dummy-pipe': <DummyPipeSVG />,
+};
+
+function ElementVisualCard({ id, label }: { id: string; label: string }) {
+  const visual = ELEMENT_SVG_MAP[id];
+  if (!visual) return null;
+  return (
+    <div className="flex flex-col items-center gap-1.5 mb-4 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+      <div className="w-16 h-12 flex items-center justify-center">
+        {visual}
+      </div>
+      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{label} — Canvas Appearance</span>
+    </div>
+  );
+}
+
+// Connection diagram SVGs
+function ConnectionDiagramSVG({ type }: { type: string }) {
+  if (type === 'conduit') return (
+    <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect x="5" y="14" width="30" height="22" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="1.5"/>
+      <text x="20" y="28" textAnchor="middle" fill="#2563eb" fontSize="8" fontWeight="bold">R</text>
+      <line x1="35" y1="25" x2="80" y2="25" stroke="#64748b" strokeWidth="2"/>
+      <circle cx="95" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="95" y="29" textAnchor="middle" fill="#475569" fontSize="8" fontWeight="bold">N</text>
+      <line x1="107" y1="25" x2="152" y2="25" stroke="#64748b" strokeWidth="2"/>
+      <circle cx="167" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="167" y="29" textAnchor="middle" fill="#475569" fontSize="8" fontWeight="bold">N</text>
+      <polygon points="74,21 74,29 82,25" fill="#64748b"/>
+    </svg>
+  );
+  if (type === 'dummy-pipe') return (
+    <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="40" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="40" y="29" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <rect x="70" y="20" width="60" height="10" rx="2" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="5,3"/>
+      <text x="100" y="28" textAnchor="middle" fill="#94a3b8" fontSize="7">dummy</text>
+      <circle cx="160" cy="25" r="14" fill="#faf5ff" stroke="#7c3aed" strokeWidth="1.5"/>
+      <text x="160" y="29" textAnchor="middle" fill="#7c3aed" fontSize="7">ST</text>
+    </svg>
+  );
+  if (type === 'pump-link') return (
+    <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="30" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="30" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <line x1="44" y1="30" x2="75" y2="30" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="90" cy="30" r="14" fill="#fce7f3" stroke="#be185d" strokeWidth="1.8"/>
+      <path d="M83 23 Q90 20 93 28" stroke="#be185d" strokeWidth="1.5" fill="none"/>
+      <path d="M93 32 Q95 39 88 40" stroke="#be185d" strokeWidth="1.5" fill="none"/>
+      <circle cx="90" cy="30" r="3" fill="#be185d"/>
+      <line x1="104" y1="30" x2="135" y2="30" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="150" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="150" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <text x="100" y="12" textAnchor="middle" fill="#be185d" fontSize="7" fontWeight="bold">PUMP</text>
+    </svg>
+  );
+  if (type === 'check-valve-link') return (
+    <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="30" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="30" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <line x1="44" y1="30" x2="72" y2="30" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="88" cy="30" r="14" fill="#fee2e2" stroke="#b91c1c" strokeWidth="1.8"/>
+      <polygon points="82,24 82,36 94,30" fill="#b91c1c" opacity="0.8"/>
+      <line x1="94" y1="24" x2="94" y2="36" stroke="#b91c1c" strokeWidth="2"/>
+      <line x1="102" y1="30" x2="135" y2="30" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="150" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="150" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <polygon points="116,26 116,34 124,30" fill="#64748b"/>
+      <text x="100" y="12" textAnchor="middle" fill="#b91c1c" fontSize="7" fontWeight="bold">CHECK VALVE</text>
+    </svg>
+  );
+  if (type === 'turbine-link') return (
+    <svg viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect x="5" y="16" width="28" height="28" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="1.5"/>
+      <text x="19" y="33" textAnchor="middle" fill="#2563eb" fontSize="8" fontWeight="bold">R</text>
+      <line x1="33" y1="30" x2="62" y2="30" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="78" cy="30" r="14" fill="#cffafe" stroke="#0e7490" strokeWidth="1.8"/>
+      <path d="M78 18 Q82 23 78 30" stroke="#0e7490" strokeWidth="1.5" fill="none"/>
+      <path d="M88 36 Q84 30 78 30" stroke="#0e7490" strokeWidth="1.5" fill="none"/>
+      <path d="M68 36 Q71 26 78 30" stroke="#0e7490" strokeWidth="1.5" fill="none"/>
+      <circle cx="78" cy="30" r="3" fill="#0e7490"/>
+      <line x1="92" y1="30" x2="130" y2="30" stroke="#64748b" strokeWidth="1.5"/>
+      <rect x="135" y="16" width="28" height="28" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="1.5"/>
+      <text x="149" y="33" textAnchor="middle" fill="#2563eb" fontSize="8" fontWeight="bold">R</text>
+      <text x="95" y="12" textAnchor="middle" fill="#0e7490" fontSize="7" fontWeight="bold">TURBINE</text>
+    </svg>
+  );
+  if (type === 'reservoir-conn') return (
+    <svg viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <rect x="5" y="10" width="36" height="30" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="2"/>
+      <path d="M9 31 Q14 27 19 31 Q24 35 29 31 Q34 27 39 31" stroke="#2563eb" strokeWidth="1.2" fill="none"/>
+      <rect x="5" y="32" width="36" height="8" rx="0 0 2 2" fill="#bfdbfe" opacity="0.8"/>
+      <line x1="41" y1="25" x2="80" y2="25" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="95" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="95" y="29" textAnchor="middle" fill="#475569" fontSize="8">N1</text>
+      <line x1="107" y1="25" x2="140" y2="25" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="155" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="155" y="29" textAnchor="middle" fill="#475569" fontSize="8">N2</text>
+      <line x1="107" y1="35" x2="140" y2="50" stroke="#64748b" strokeWidth="1.5"/>
+      <polygon points="60,21 60,29 68,25" fill="#64748b"/>
+    </svg>
+  );
+  if (type === 'surge-tank-conn') return (
+    <svg viewBox="0 0 200 70" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="20" cy="40" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="20" y="44" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <line x1="32" y1="40" x2="95" y2="40" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="108" cy="40" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="108" y="44" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <line x1="108" y1="28" x2="108" y2="8" stroke="#7c3aed" strokeWidth="1.5"/>
+      <rect x="94" y="4" width="28" height="24" rx="2" fill="#f3e8ff" stroke="#7c3aed" strokeWidth="1.8"/>
+      <path d="M97 22 Q101 18 105 22 Q109 26 113 22 Q117 18 121 22" stroke="#7c3aed" strokeWidth="1.2" fill="none"/>
+      <text x="108" y="14" textAnchor="middle" fill="#7c3aed" fontSize="7" fontWeight="bold">ST</text>
+      <line x1="120" y1="40" x2="180" y2="40" stroke="#64748b" strokeWidth="1.5"/>
+      <circle cx="165" cy="40" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="165" y="44" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+    </svg>
+  );
+  if (type === 'flow-bc-conn') return (
+    <svg viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="30" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <text x="30" y="29" textAnchor="middle" fill="#475569" fontSize="8">N</text>
+      <line x1="44" y1="25" x2="85" y2="25" stroke="#64748b" strokeWidth="1.5"/>
+      <rect x="89" y="12" width="40" height="26" rx="3" fill="#ffedd5" stroke="#ea580c" strokeWidth="1.8"/>
+      <path d="M95 25 L120 25" stroke="#ea580c" strokeWidth="1.5"/>
+      <polygon points="116,21 116,29 124,25" fill="#ea580c"/>
+      <text x="109" y="34" textAnchor="middle" fill="#ea580c" fontSize="6.5">Flow BC</text>
+      <polygon points="60,21 60,29 68,25" fill="#64748b"/>
+    </svg>
+  );
+  // default fallback
+  return (
+    <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <circle cx="30" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <line x1="44" y1="25" x2="156" y2="25" stroke="#64748b" strokeWidth="2" strokeDasharray="6,3"/>
+      <circle cx="170" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
+      <polygon points="148,21 148,29 156,25" fill="#64748b"/>
+    </svg>
+  );
+}
+
+function ConnectionDiagramCard({ type, label }: { type: string; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 mb-4 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+      <div className="w-full h-14 flex items-center justify-center">
+        <ConnectionDiagramSVG type={type} />
+      </div>
+      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">{label} — Connection Diagram</span>
+    </div>
+  );
+}
+
 // ─── UI helper components ─────────────────────────────────────────────────────
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -1126,8 +1418,19 @@ function ElementDoc({
       </button>
       {open && (
         <div className="px-4 pt-3 pb-4">
+          {(() => {
+            const svgKey = name.toLowerCase().replace(/\s*\(.*?\)/g, '').replace(/\s+/g, '-').trim();
+            const visual = ELEMENT_SVG_MAP[svgKey];
+            return visual ? (
+              <div className="float-right ml-4 mb-2 w-20 h-16 flex flex-col items-center gap-1">
+                <div className="w-full h-full">{visual}</div>
+                <span className="text-[9px] text-slate-400 font-medium">canvas icon</span>
+              </div>
+            ) : null;
+          })()}
           <MiniHeading>Purpose & When to Use</MiniHeading>
           <BulletList items={purpose} />
+          <div style={{ clear: 'both' }} />
           <MiniHeading>How to Add</MiniHeading>
           <StepList steps={howToAdd} />
           <MiniHeading>Properties</MiniHeading>
@@ -1184,6 +1487,11 @@ function ConnectionDoc({
       </button>
       {open && (
         <div className="px-4 pt-3 pb-4">
+          <div className="mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="w-full h-14">
+              <ConnectionDiagramSVG type={name.toLowerCase().replace(/\s+/g, '-')} />
+            </div>
+          </div>
           <MiniHeading>How to Draw</MiniHeading>
           <StepList steps={howToDraw} />
           <div className="grid grid-cols-2 gap-3 mb-3">
@@ -2377,12 +2685,18 @@ const PROP_FILTER_OPTIONS = [
 
 function ElementPropCard({ id, element, badge, badgeColor, properties }: ElementProps) {
   const [open, setOpen] = useState(true);
+  const visual = ELEMENT_SVG_MAP[id];
   return (
     <div className="mb-4 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
       >
+        {visual && (
+          <div className="w-10 h-8 flex-shrink-0 flex items-center justify-center">
+            {visual}
+          </div>
+        )}
         <span className={`inline-block text-white text-[10px] font-bold px-2 py-0.5 rounded ${badgeColor}`}>
           {badge}
         </span>
@@ -2445,12 +2759,192 @@ function AllPropertiesSection() {
   );
 }
 
+// ─── Demo Videos Section ──────────────────────────────────────────────────────
+
+const VIDEO_FILTER_OPTIONS = [
+  { value: 'all',               label: 'All Videos' },
+  { value: 'reservoir',         label: 'Reservoir' },
+  { value: 'node',              label: 'Node' },
+  { value: 'junction',          label: 'Junction' },
+  { value: 'surge-tank',        label: 'Surge Tank' },
+  { value: 'flow-bc',           label: 'Flow BC' },
+  { value: 'pump',              label: 'Pump' },
+  { value: 'check-valve',       label: 'Check Valve' },
+  { value: 'turbine',           label: 'Turbine' },
+  { value: 'conduit',           label: 'Conduit' },
+  { value: 'flex-table',        label: 'Flex Table' },
+  { value: 'visualization',     label: 'Visualization' },
+  { value: 'inp-generation',    label: 'INP Generation' },
+  { value: 'out-generation',    label: 'OUT Generation' },
+  { value: 'complete-workflow', label: 'Complete Workflow' },
+];
+
+interface VideoEntry {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  categoryLabel: string;
+  categoryColor: string;
+  duration: string;
+  src: string | null;
+}
+
+const VIDEO_DATA: VideoEntry[] = [
+  // Element connection tutorials
+  { id: 'v-reservoir', title: 'Adding & Connecting a Reservoir', description: 'Click the Reservoir tool, place the element on canvas, connect to a downstream Node, and configure head elevation and loss coefficient.', category: 'reservoir', categoryLabel: 'Reservoir', categoryColor: 'bg-blue-600', duration: '~3 min', src: null },
+  { id: 'v-node', title: 'Placing Nodes and Routing Pipes', description: 'Add Node elements as junction points along a pipeline, connect them with conduits, and set elevations for pressure profiling.', category: 'node', categoryLabel: 'Node', categoryColor: 'bg-slate-600', duration: '~2 min', src: null },
+  { id: 'v-junction', title: 'Creating a Demand Junction', description: 'Place a Junction element at a lateral off-take point, connect it to the main line, and set a steady-state demand flow value.', category: 'junction', categoryLabel: 'Junction', categoryColor: 'bg-emerald-600', duration: '~3 min', src: null },
+  { id: 'v-surge-tank', title: 'Installing a Surge Tank', description: 'Place a Surge Tank near pump discharge, connect via a short Dummy Pipe riser, and configure tank top, bottom, and initial water level.', category: 'surge-tank', categoryLabel: 'Surge Tank', categoryColor: 'bg-purple-600', duration: '~4 min', src: null },
+  { id: 'v-flow-bc', title: 'Setting Up a Flow Boundary Condition', description: 'Add a Flow BC element, connect it to the network, choose Fixed or Schedule mode, and configure the flow rate or Q-Schedule.', category: 'flow-bc', categoryLabel: 'Flow BC', categoryColor: 'bg-orange-600', duration: '~3 min', src: null },
+  { id: 'v-pump', title: 'Adding a Pump and Entering P-Char Curve', description: 'Activate Pump link mode, drag from suction to discharge node, and enter the pump characteristic Q-H curve data in the Flex Table.', category: 'pump', categoryLabel: 'Pump', categoryColor: 'bg-pink-600', duration: '~5 min', src: null },
+  { id: 'v-check-valve', title: 'Drawing a Check Valve Link', description: 'Activate Check Valve mode, draw from upstream to downstream node, verify direction, and set the loss coefficient.', category: 'check-valve', categoryLabel: 'Check Valve', categoryColor: 'bg-red-700', duration: '~3 min', src: null },
+  { id: 'v-turbine', title: 'Connecting a Turbine Element', description: 'Activate Turbine link mode, draw from penstock node to tailrace node, set TURBGOV or EMERGENCY mode, and define gate schedule.', category: 'turbine', categoryLabel: 'Turbine', categoryColor: 'bg-cyan-700', duration: '~5 min', src: null },
+  { id: 'v-conduit', title: 'Configuring Conduit Properties', description: 'Select a conduit in the Flex Table, set Length, Diameter, Celerity and Friction, use the Pipe Material selector to auto-calculate wave speed.', category: 'conduit', categoryLabel: 'Conduit', categoryColor: 'bg-slate-500', duration: '~4 min', src: null },
+  // Feature tutorials
+  { id: 'v-flex-table', title: 'Using the Flex Table', description: 'Open the Flex Table, filter by element type, edit cells inline, toggle SI/FPS units, and use the material selector to bulk-update conduit properties.', category: 'flex-table', categoryLabel: 'Flex Table', categoryColor: 'bg-indigo-600', duration: '~6 min', src: null },
+  { id: 'v-excel-import', title: 'Importing Data from Excel', description: 'Export a workbook, edit values in Excel, then import back — rows are matched by Label. Covers single-element and multi-sheet workflows.', category: 'flex-table', categoryLabel: 'Flex Table', categoryColor: 'bg-indigo-600', duration: '~4 min', src: null },
+  { id: 'v-excel-export', title: 'Exporting to Excel', description: 'Export a single element type or a full multi-sheet workbook from the Flex Table. Includes data-validation dropdowns for material and mode fields.', category: 'flex-table', categoryLabel: 'Flex Table', categoryColor: 'bg-indigo-600', duration: '~3 min', src: null },
+  { id: 'v-parameters', title: 'Configuring Simulation Parameters', description: 'Open Analysis → Parameters, set DTCOMP, DTOUT, and TMAX for each simulation time stage, and verify the Courant condition is satisfied.', category: 'out-generation', categoryLabel: 'OUT Generation', categoryColor: 'bg-green-700', duration: '~4 min', src: null },
+  { id: 'v-visualization', title: 'Viewing Results in Visualization', description: 'Open Tools → Visualization, load a .OUT file, switch between Profile Graph (animated HGL) and History Graph (time-series) views.', category: 'visualization', categoryLabel: 'Visualization', categoryColor: 'bg-teal-600', duration: '~5 min', src: null },
+  { id: 'v-inp', title: 'Generating the INP File', description: 'Run network validation, configure output requests in the Configure panel, then click Generate → .INP to download the WHAMO input file.', category: 'inp-generation', categoryLabel: 'INP Generation', categoryColor: 'bg-amber-600', duration: '~4 min', src: null },
+  { id: 'v-out', title: 'Running Simulation & Generating OUT File', description: 'Configure parameters, add output requests, click Generate → .OUT. The WHAMO engine validates, runs, and returns the .OUT results file.', category: 'out-generation', categoryLabel: 'OUT Generation', categoryColor: 'bg-green-700', duration: '~5 min', src: null },
+  // Complete workflow
+  { id: 'v-workflow', title: 'Complete Workflow: Start to Simulation Results', description: 'Full walkthrough: create a project, add elements, draw connections, edit properties in the Flex Table, import/export Excel, configure parameters, generate INP, run simulation, and review results in Visualization.', category: 'complete-workflow', categoryLabel: 'Complete Workflow', categoryColor: 'bg-rose-600', duration: '~20 min', src: null },
+];
+
+function VideoThumbnail({ entry }: { entry: VideoEntry }) {
+  const visual = ELEMENT_SVG_MAP[entry.category] ?? null;
+  return (
+    <div className={`w-full aspect-video rounded-lg flex flex-col items-center justify-center gap-2 ${entry.categoryColor} bg-opacity-10 border border-slate-200 relative overflow-hidden`}
+      style={{ background: `linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)` }}>
+      {visual ? (
+        <div className="w-12 h-10 opacity-80">{visual}</div>
+      ) : (
+        <Video className="w-8 h-8 text-slate-400" />
+      )}
+      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Coming Soon</span>
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/10 rounded-lg">
+        <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow">
+          <Play className="w-4 h-4 text-slate-700 ml-0.5" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VideoCard({ entry }: { entry: VideoEntry }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
+      <div className="p-3 pb-2">
+        <VideoThumbnail entry={entry} />
+      </div>
+      <div className="px-3 pb-3 flex flex-col flex-1">
+        <div className="flex items-center gap-1.5 mb-1.5">
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded text-white ${entry.categoryColor}`}>
+            {entry.categoryLabel}
+          </span>
+          <span className="text-[10px] text-slate-400 ml-auto">{entry.duration}</span>
+        </div>
+        <p className="text-[12px] font-semibold text-slate-800 leading-snug mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          {entry.title}
+        </p>
+        <p className="text-[11px] text-slate-500 leading-relaxed flex-1" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          {entry.description}
+        </p>
+        <button
+          disabled
+          title="Video not yet available"
+          className="mt-2 flex items-center justify-center gap-1.5 w-full py-1.5 rounded-lg bg-slate-100 text-slate-400 text-[11px] font-semibold cursor-not-allowed border border-slate-200"
+          style={{ fontFamily: 'Poppins, sans-serif' }}
+        >
+          <Download className="w-3 h-3" />
+          Download
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DemoVideosSection() {
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+
+  const filtered = VIDEO_DATA.filter(v => {
+    const matchCat = filter === 'all' || v.category === filter;
+    const matchSearch = search === '' ||
+      v.title.toLowerCase().includes(search.toLowerCase()) ||
+      v.description.toLowerCase().includes(search.toLowerCase()) ||
+      v.categoryLabel.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  return (
+    <>
+      <SectionTitle>Demo Videos</SectionTitle>
+      <SectionLead>Video tutorials explaining software usage and element operations. Filter by element or feature, or search for a specific topic.</SectionLead>
+
+      {/* Filter + Search bar */}
+      <div className="flex flex-wrap items-center gap-2 mb-5">
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide" style={{ fontFamily: 'Poppins, sans-serif' }}>Filter:</span>
+        <div className="relative">
+          <select
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            className="appearance-none pl-2.5 pr-7 py-1.5 text-[12px] font-medium bg-white border border-slate-200 rounded-lg text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-sm"
+            style={{ fontFamily: 'Poppins, sans-serif' }}
+          >
+            {VIDEO_FILTER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+        </div>
+        <div className="relative flex-1 min-w-[140px]">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search videos…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-7 pr-3 py-1.5 text-[12px] bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-sm"
+            style={{ fontFamily: 'Poppins, sans-serif' }}
+          />
+        </div>
+        {(filter !== 'all' || search) && (
+          <button
+            onClick={() => { setFilter('all'); setSearch(''); }}
+            className="text-[11px] text-blue-600 hover:underline font-medium"
+            style={{ fontFamily: 'Poppins, sans-serif' }}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="py-12 text-center text-slate-400" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <Video className="w-8 h-8 mx-auto mb-2 opacity-40" />
+          <p className="text-[13px]">No videos match your filter.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-4">
+          {filtered.map(v => <VideoCard key={v.id} entry={v} />)}
+        </div>
+      )}
+
+      <Note>
+        Tutorial videos are coming soon. The section structure, filters, and download buttons are ready — video files will be linked here once recorded.
+      </Note>
+    </>
+  );
+}
+
 // ─── SECTION_CONTENT ──────────────────────────────────────────────────────────
 const SECTION_CONTENT: Record<string, React.ReactNode> = {
   'getting-started':  <GettingStarted />,
   'elements':         <NetworkElements />,
   'all-properties':   <AllPropertiesSection />,
   'connections':      <Connections />,
+  'demo-videos':      <DemoVideosSection />,
   'flex-table':       <FlexTableSection />,
   'excel':            <ExcelSection />,
   'simulation':       <SimulationSection />,
