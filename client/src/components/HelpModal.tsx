@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { X, BookOpen, Layers, Link2, Table2, FileSpreadsheet, Play, FileText, Keyboard, HelpCircle, ChevronRight, FileDown, ChevronDown, Settings, Video, Search, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
+import damIcon from '@assets/dam_1779522984604.png';
+import yIntersectionIcon from '@assets/y-intersection_(1)_1779523210044.png';
+import waterTankIcon from '@assets/water-tank_(2)_1779523360829.png';
+import waterPumpIcon from '@assets/water-pump_1779523451215.png';
+import pipeIcon from '@assets/pipe_1779523475650.png';
+import turbineImgIcon from '@assets/turbine_1779523517554.png';
+import windIcon from '@assets/wind_1779523398812.png';
 
 interface HelpModalProps {
   open: boolean;
@@ -942,144 +949,117 @@ function downloadPDF() {
 
 // ─── Element visual SVGs ──────────────────────────────────────────────────────
 
-function ReservoirSVG() {
+// ─── Canvas-faithful element icon components (using actual project PNGs) ───────
+
+/** Renders a node exactly as it appears on the WHAMO canvas (circle + icon + label). */
+function CanvasCircleIcon({ icon, label, size = 60 }: { icon?: string; label: string; size?: number }) {
   return (
-    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <rect x="6" y="6" width="48" height="38" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="2"/>
-      <path d="M10 32 Q15 27 20 32 Q25 37 30 32 Q35 27 40 32 Q45 37 50 32" stroke="#2563eb" strokeWidth="1.8" fill="none"/>
-      <path d="M10 38 Q15 33 20 38 Q25 43 30 38 Q35 33 40 38 Q45 43 50 38" stroke="#2563eb" strokeWidth="1.8" fill="none"/>
-      <rect x="6" y="35" width="48" height="9" rx="0 0 3 3" fill="#bfdbfe" opacity="0.7"/>
-      <line x1="30" y1="44" x2="30" y2="50" stroke="#2563eb" strokeWidth="2"/>
-    </svg>
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      border: '3px solid #000', background: 'white',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 2, flexShrink: 0,
+    }}>
+      {icon && (
+        <img src={icon} alt={label}
+          style={{ width: size * 0.46, height: size * 0.46, objectFit: 'contain', pointerEvents: 'none' }} />
+      )}
+      <span style={{ fontSize: size * 0.19, fontWeight: 700, color: '#000', lineHeight: 1, whiteSpace: 'nowrap' }}>
+        {label}
+      </span>
+    </div>
   );
 }
+
+function ReservoirSVG() { return <CanvasCircleIcon icon={damIcon} label="R1" />; }
 
 function NodeSVG() {
   return (
-    <svg viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="25" cy="25" r="18" fill="#f1f5f9" stroke="#475569" strokeWidth="2.2"/>
-      <circle cx="25" cy="25" r="5" fill="#475569"/>
-      <line x1="7" y1="25" x2="0" y2="25" stroke="#475569" strokeWidth="2"/>
-      <line x1="43" y1="25" x2="50" y2="25" stroke="#475569" strokeWidth="2"/>
-    </svg>
+    <div style={{
+      width: 60, height: 60, borderRadius: '50%', border: '3px solid #000',
+      background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <span style={{ fontSize: 15, fontWeight: 700, color: '#000' }}>N1</span>
+    </div>
   );
 }
 
-function JunctionSVG() {
-  return (
-    <svg viewBox="0 0 50 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="25" cy="25" r="18" fill="#dcfce7" stroke="#16a34a" strokeWidth="2.2"/>
-      <line x1="25" y1="7" x2="25" y2="14" stroke="#16a34a" strokeWidth="2"/>
-      <line x1="11" y1="34" x2="5" y2="40" stroke="#16a34a" strokeWidth="2"/>
-      <line x1="39" y1="34" x2="45" y2="40" stroke="#16a34a" strokeWidth="2"/>
-      <circle cx="25" cy="25" r="4" fill="#16a34a"/>
-      <text x="25" y="29" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">J</text>
-    </svg>
-  );
-}
-
-function SurgeTankSVG() {
-  return (
-    <svg viewBox="0 0 40 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <rect x="8" y="4" width="24" height="42" rx="3" fill="#f3e8ff" stroke="#7c3aed" strokeWidth="2"/>
-      <rect x="8" y="34" width="24" height="12" rx="0 0 3 3" fill="#c4b5fd" opacity="0.7"/>
-      <path d="M12 34 Q16 30 20 34 Q24 38 28 34" stroke="#7c3aed" strokeWidth="1.5" fill="none"/>
-      <line x1="20" y1="46" x2="20" y2="56" stroke="#7c3aed" strokeWidth="2"/>
-      <line x1="8" y1="10" x2="2" y2="10" stroke="#7c3aed" strokeWidth="1.5" strokeDasharray="2,1"/>
-      <line x1="8" y1="20" x2="2" y2="20" stroke="#7c3aed" strokeWidth="1.5" strokeDasharray="2,1"/>
-      <line x1="8" y1="30" x2="2" y2="30" stroke="#7c3aed" strokeWidth="1.5" strokeDasharray="2,1"/>
-    </svg>
-  );
-}
+function JunctionSVG() { return <CanvasCircleIcon icon={yIntersectionIcon} label="J1" />; }
+function SurgeTankSVG() { return <CanvasCircleIcon icon={waterTankIcon} label="ST1" />; }
 
 function FlowBCSVG() {
   return (
-    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <rect x="6" y="6" width="48" height="38" rx="3" fill="#ffedd5" stroke="#ea580c" strokeWidth="2"/>
-      <path d="M14 25 L46 25" stroke="#ea580c" strokeWidth="2" markerEnd="url(#arrow-fbc)"/>
-      <defs>
-        <marker id="arrow-fbc" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-          <path d="M0,0 L6,3 L0,6 Z" fill="#ea580c"/>
-        </marker>
-      </defs>
-      <path d="M14 18 Q19 14 24 18 Q29 22 34 18 Q39 14 44 18" stroke="#ea580c" strokeWidth="1.5" fill="none"/>
-      <text x="30" y="38" textAnchor="middle" fill="#ea580c" fontSize="8" fontWeight="bold">Flow BC</text>
-    </svg>
+    <div style={{
+      padding: '6px 12px', border: '2px solid #000', borderRadius: 6,
+      background: 'white', display: 'inline-flex', flexDirection: 'column',
+      alignItems: 'center', gap: 2,
+    }}>
+      <img src={windIcon} alt="Flow BC" style={{ width: 26, height: 26, objectFit: 'contain' }} />
+      <span style={{ fontSize: 11, fontWeight: 700, color: '#000', whiteSpace: 'nowrap' }}>Q1</span>
+    </div>
   );
 }
 
-function PumpSVG() {
-  return (
-    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="30" cy="25" r="18" fill="#fce7f3" stroke="#be185d" strokeWidth="2"/>
-      <path d="M22 17 Q30 14 35 22" stroke="#be185d" strokeWidth="2" fill="none"/>
-      <path d="M35 28 Q38 36 30 38" stroke="#be185d" strokeWidth="2" fill="none"/>
-      <circle cx="30" cy="25" r="4" fill="#be185d"/>
-      <line x1="12" y1="25" x2="0" y2="25" stroke="#be185d" strokeWidth="2"/>
-      <line x1="48" y1="25" x2="60" y2="25" stroke="#be185d" strokeWidth="2"/>
-    </svg>
-  );
-}
-
-function CheckValveSVG() {
-  return (
-    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="30" cy="25" r="16" fill="#fee2e2" stroke="#b91c1c" strokeWidth="2"/>
-      <polygon points="22,18 22,32 38,25" fill="#b91c1c" opacity="0.8"/>
-      <line x1="38" y1="18" x2="38" y2="32" stroke="#b91c1c" strokeWidth="2.5"/>
-      <line x1="14" y1="25" x2="0" y2="25" stroke="#b91c1c" strokeWidth="2"/>
-      <line x1="46" y1="25" x2="60" y2="25" stroke="#b91c1c" strokeWidth="2"/>
-    </svg>
-  );
-}
+function PumpSVG() { return <CanvasCircleIcon icon={waterPumpIcon} label="P1" />; }
+function CheckValveSVG() { return <CanvasCircleIcon icon={pipeIcon} label="VC1" />; }
 
 function TurbineSVG() {
+  const size = 60;
+  const inner = 42;
   return (
-    <svg viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="30" cy="25" r="17" fill="#cffafe" stroke="#0e7490" strokeWidth="2"/>
-      <path d="M30 13 Q35 18 30 25" stroke="#0e7490" strokeWidth="2" fill="none"/>
-      <path d="M42 31 Q36 28 30 25" stroke="#0e7490" strokeWidth="2" fill="none"/>
-      <path d="M18 31 Q22 24 30 25" stroke="#0e7490" strokeWidth="2" fill="none"/>
-      <circle cx="30" cy="25" r="4" fill="#0e7490"/>
-      <line x1="13" y1="25" x2="0" y2="25" stroke="#0e7490" strokeWidth="2"/>
-      <line x1="47" y1="25" x2="60" y2="25" stroke="#0e7490" strokeWidth="2"/>
-    </svg>
+    <div style={{ width: size, height: size, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{
+        width: inner, height: inner, background: '#16a34a',
+        border: '3px solid #166534', borderRadius: 4,
+        transform: 'rotate(45deg)', position: 'absolute',
+      }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+        <img src={turbineImgIcon} alt="Turbine"
+          style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+        <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1 }}>T1</span>
+      </div>
+    </div>
   );
 }
 
 function ConduitSVG() {
   return (
-    <svg viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="10" cy="15" r="8" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.8"/>
-      <circle cx="70" cy="15" r="8" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.8"/>
-      <line x1="18" y1="15" x2="62" y2="15" stroke="#64748b" strokeWidth="2"/>
-      <polygon points="56,10 56,20 64,15" fill="#64748b"/>
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+      <CanvasCircleIcon label="N1" size={40} />
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ width: 28, height: 2, background: '#64748b' }} />
+        <div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #64748b' }} />
+      </div>
+      <CanvasCircleIcon label="N2" size={40} />
+    </div>
   );
 }
 
 function DummyPipeSVG() {
   return (
-    <svg viewBox="0 0 80 30" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="10" cy="15" r="8" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.8"/>
-      <circle cx="70" cy="15" r="8" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1.8"/>
-      <line x1="18" y1="15" x2="62" y2="15" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,4"/>
-      <polygon points="56,10 56,20 64,15" fill="#94a3b8"/>
-    </svg>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+      <CanvasCircleIcon label="N1" size={40} />
+      <svg width="36" height="10" style={{ flexShrink: 0 }}>
+        <line x1="0" y1="5" x2="28" y2="5" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,3" />
+        <polygon points="24,1 24,9 32,5" fill="#94a3b8" />
+      </svg>
+      <CanvasCircleIcon icon={waterTankIcon} label="ST1" size={40} />
+    </div>
   );
 }
 
 const ELEMENT_SVG_MAP: Record<string, React.ReactNode> = {
-  reservoir:   <ReservoirSVG />,
-  node:        <NodeSVG />,
-  junction:    <JunctionSVG />,
-  'surge-tank': <SurgeTankSVG />,
-  'flow-bc':   <FlowBCSVG />,
-  pump:        <PumpSVG />,
+  reservoir:     <ReservoirSVG />,
+  node:          <NodeSVG />,
+  junction:      <JunctionSVG />,
+  'surge-tank':  <SurgeTankSVG />,
+  'flow-bc':     <FlowBCSVG />,
+  pump:          <PumpSVG />,
   'check-valve': <CheckValveSVG />,
-  turbine:     <TurbineSVG />,
-  conduit:     <ConduitSVG />,
-  'dummy-pipe': <DummyPipeSVG />,
+  turbine:       <TurbineSVG />,
+  conduit:       <ConduitSVG />,
+  'dummy-pipe':  <DummyPipeSVG />,
 };
 
 function ElementVisualCard({ id, label }: { id: string; label: string }) {
@@ -1095,128 +1075,146 @@ function ElementVisualCard({ id, label }: { id: string; label: string }) {
   );
 }
 
-// Connection diagram SVGs
+// ─── Connection diagram — div-based, using actual project PNG icons ────────────
+
+/** Small canvas-style node for use inside connection diagrams. */
+function DiagNode({ icon, label, diamond, size = 38 }: {
+  icon?: string; label: string; diamond?: boolean; size?: number;
+}) {
+  if (diamond) {
+    return (
+      <div style={{ width: size, height: size, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: size * 0.72, height: size * 0.72, background: '#16a34a', border: '2px solid #166534', borderRadius: 3, transform: 'rotate(45deg)', position: 'absolute' }} />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          {icon && <img src={icon} alt={label} style={{ width: size * 0.36, height: size * 0.36, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />}
+          <span style={{ fontSize: size * 0.2, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{label}</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', border: '2px solid #000',
+      background: 'white', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', gap: 1, flexShrink: 0,
+    }}>
+      {icon && <img src={icon} alt={label} style={{ width: size * 0.46, height: size * 0.46, objectFit: 'contain' }} />}
+      <span style={{ fontSize: size * 0.22, fontWeight: 700, color: '#000', lineHeight: 1, whiteSpace: 'nowrap' }}>{label}</span>
+    </div>
+  );
+}
+
+/** Rectangular Flow BC node for connection diagrams. */
+function DiagFlowBC({ label = 'Q1', size = 38 }: { label?: string; size?: number }) {
+  return (
+    <div style={{
+      padding: '3px 8px', border: '2px solid #000', borderRadius: 4,
+      background: 'white', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', gap: 1, flexShrink: 0,
+    }}>
+      <img src={windIcon} alt="Flow BC" style={{ width: size * 0.5, height: size * 0.5, objectFit: 'contain' }} />
+      <span style={{ fontSize: size * 0.22, fontWeight: 700, color: '#000', lineHeight: 1 }}>{label}</span>
+    </div>
+  );
+}
+
+/** Arrow connector between nodes in a diagram. */
+function DiagArrow({ dashed = false }: { dashed?: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, margin: '0 2px' }}>
+      <div style={{ width: 22, height: 2, background: '#64748b', ...(dashed ? { backgroundImage: 'repeating-linear-gradient(to right, #64748b 0 5px, transparent 5px 8px)', background: 'none' } : {}) }}>
+        {dashed && <svg width="22" height="2"><line x1="0" y1="1" x2="22" y2="1" stroke="#64748b" strokeWidth="2" strokeDasharray="4,3"/></svg>}
+      </div>
+      <div style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: '6px solid #64748b' }} />
+    </div>
+  );
+}
+
+/** Row layout for a connection diagram. */
+function DiagRow({ children }: { children: React.ReactNode }) {
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 0, justifyContent: 'center' }}>{children}</div>;
+}
+
 function ConnectionDiagramSVG({ type }: { type: string }) {
   if (type === 'conduit') return (
-    <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <rect x="5" y="14" width="30" height="22" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="1.5"/>
-      <text x="20" y="28" textAnchor="middle" fill="#2563eb" fontSize="8" fontWeight="bold">R</text>
-      <line x1="35" y1="25" x2="80" y2="25" stroke="#64748b" strokeWidth="2"/>
-      <circle cx="95" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="95" y="29" textAnchor="middle" fill="#475569" fontSize="8" fontWeight="bold">N</text>
-      <line x1="107" y1="25" x2="152" y2="25" stroke="#64748b" strokeWidth="2"/>
-      <circle cx="167" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="167" y="29" textAnchor="middle" fill="#475569" fontSize="8" fontWeight="bold">N</text>
-      <polygon points="74,21 74,29 82,25" fill="#64748b"/>
-    </svg>
+    <DiagRow>
+      <DiagNode icon={damIcon} label="R1" />
+      <DiagArrow />
+      <DiagNode label="N1" />
+      <DiagArrow />
+      <DiagNode label="N2" />
+    </DiagRow>
   );
   if (type === 'dummy-pipe') return (
-    <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="40" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="40" y="29" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <rect x="70" y="20" width="60" height="10" rx="2" fill="#f8fafc" stroke="#94a3b8" strokeWidth="1.5" strokeDasharray="5,3"/>
-      <text x="100" y="28" textAnchor="middle" fill="#94a3b8" fontSize="7">dummy</text>
-      <circle cx="160" cy="25" r="14" fill="#faf5ff" stroke="#7c3aed" strokeWidth="1.5"/>
-      <text x="160" y="29" textAnchor="middle" fill="#7c3aed" fontSize="7">ST</text>
-    </svg>
+    <DiagRow>
+      <DiagNode label="N1" />
+      <DiagArrow dashed />
+      <DiagNode icon={waterTankIcon} label="ST1" />
+    </DiagRow>
   );
   if (type === 'pump-link') return (
-    <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="30" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="30" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <line x1="44" y1="30" x2="75" y2="30" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="90" cy="30" r="14" fill="#fce7f3" stroke="#be185d" strokeWidth="1.8"/>
-      <path d="M83 23 Q90 20 93 28" stroke="#be185d" strokeWidth="1.5" fill="none"/>
-      <path d="M93 32 Q95 39 88 40" stroke="#be185d" strokeWidth="1.5" fill="none"/>
-      <circle cx="90" cy="30" r="3" fill="#be185d"/>
-      <line x1="104" y1="30" x2="135" y2="30" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="150" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="150" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <text x="100" y="12" textAnchor="middle" fill="#be185d" fontSize="7" fontWeight="bold">PUMP</text>
-    </svg>
+    <DiagRow>
+      <DiagNode label="N6" />
+      <DiagArrow />
+      <DiagNode icon={waterPumpIcon} label="P1" />
+      <DiagArrow />
+      <DiagNode label="N16" />
+    </DiagRow>
   );
   if (type === 'check-valve-link') return (
-    <svg viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="30" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="30" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <line x1="44" y1="30" x2="72" y2="30" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="88" cy="30" r="14" fill="#fee2e2" stroke="#b91c1c" strokeWidth="1.8"/>
-      <polygon points="82,24 82,36 94,30" fill="#b91c1c" opacity="0.8"/>
-      <line x1="94" y1="24" x2="94" y2="36" stroke="#b91c1c" strokeWidth="2"/>
-      <line x1="102" y1="30" x2="135" y2="30" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="150" cy="30" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="150" y="34" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <polygon points="116,26 116,34 124,30" fill="#64748b"/>
-      <text x="100" y="12" textAnchor="middle" fill="#b91c1c" fontSize="7" fontWeight="bold">CHECK VALVE</text>
-    </svg>
+    <DiagRow>
+      <DiagNode label="N26" />
+      <DiagArrow />
+      <DiagNode icon={pipeIcon} label="VC1" />
+      <DiagArrow />
+      <DiagNode label="N25" />
+    </DiagRow>
   );
   if (type === 'turbine-link') return (
-    <svg viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <rect x="5" y="16" width="28" height="28" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="1.5"/>
-      <text x="19" y="33" textAnchor="middle" fill="#2563eb" fontSize="8" fontWeight="bold">R</text>
-      <line x1="33" y1="30" x2="62" y2="30" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="78" cy="30" r="14" fill="#cffafe" stroke="#0e7490" strokeWidth="1.8"/>
-      <path d="M78 18 Q82 23 78 30" stroke="#0e7490" strokeWidth="1.5" fill="none"/>
-      <path d="M88 36 Q84 30 78 30" stroke="#0e7490" strokeWidth="1.5" fill="none"/>
-      <path d="M68 36 Q71 26 78 30" stroke="#0e7490" strokeWidth="1.5" fill="none"/>
-      <circle cx="78" cy="30" r="3" fill="#0e7490"/>
-      <line x1="92" y1="30" x2="130" y2="30" stroke="#64748b" strokeWidth="1.5"/>
-      <rect x="135" y="16" width="28" height="28" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="1.5"/>
-      <text x="149" y="33" textAnchor="middle" fill="#2563eb" fontSize="8" fontWeight="bold">R</text>
-      <text x="95" y="12" textAnchor="middle" fill="#0e7490" fontSize="7" fontWeight="bold">TURBINE</text>
-    </svg>
+    <DiagRow>
+      <DiagNode icon={damIcon} label="R1" />
+      <DiagArrow />
+      <DiagNode icon={turbineImgIcon} label="T1" diamond />
+      <DiagArrow />
+      <DiagNode icon={damIcon} label="R2" />
+    </DiagRow>
   );
   if (type === 'reservoir-conn') return (
-    <svg viewBox="0 0 220 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <rect x="5" y="10" width="36" height="30" rx="3" fill="#dbeafe" stroke="#2563eb" strokeWidth="2"/>
-      <path d="M9 31 Q14 27 19 31 Q24 35 29 31 Q34 27 39 31" stroke="#2563eb" strokeWidth="1.2" fill="none"/>
-      <rect x="5" y="32" width="36" height="8" rx="0 0 2 2" fill="#bfdbfe" opacity="0.8"/>
-      <line x1="41" y1="25" x2="80" y2="25" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="95" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="95" y="29" textAnchor="middle" fill="#475569" fontSize="8">N1</text>
-      <line x1="107" y1="25" x2="140" y2="25" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="155" cy="25" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="155" y="29" textAnchor="middle" fill="#475569" fontSize="8">N2</text>
-      <line x1="107" y1="35" x2="140" y2="50" stroke="#64748b" strokeWidth="1.5"/>
-      <polygon points="60,21 60,29 68,25" fill="#64748b"/>
-    </svg>
+    <DiagRow>
+      <DiagNode icon={damIcon} label="R1" />
+      <DiagArrow />
+      <DiagNode label="N1" />
+      <DiagArrow />
+      <DiagNode label="N2" />
+    </DiagRow>
   );
   if (type === 'surge-tank-conn') return (
-    <svg viewBox="0 0 200 70" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="20" cy="40" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="20" y="44" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <line x1="32" y1="40" x2="95" y2="40" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="108" cy="40" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="108" y="44" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <line x1="108" y1="28" x2="108" y2="8" stroke="#7c3aed" strokeWidth="1.5"/>
-      <rect x="94" y="4" width="28" height="24" rx="2" fill="#f3e8ff" stroke="#7c3aed" strokeWidth="1.8"/>
-      <path d="M97 22 Q101 18 105 22 Q109 26 113 22 Q117 18 121 22" stroke="#7c3aed" strokeWidth="1.2" fill="none"/>
-      <text x="108" y="14" textAnchor="middle" fill="#7c3aed" fontSize="7" fontWeight="bold">ST</text>
-      <line x1="120" y1="40" x2="180" y2="40" stroke="#64748b" strokeWidth="1.5"/>
-      <circle cx="165" cy="40" r="12" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="165" y="44" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-    </svg>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      <DiagNode icon={waterTankIcon} label="ST1" size={34} />
+      <div style={{ width: 2, height: 8, background: '#64748b' }} />
+      <DiagRow>
+        <DiagNode label="N1" size={34} />
+        <DiagArrow />
+        <DiagNode label="N2" size={34} />
+        <DiagArrow />
+        <DiagNode label="N3" size={34} />
+      </DiagRow>
+    </div>
   );
   if (type === 'flow-bc-conn') return (
-    <svg viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="30" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <text x="30" y="29" textAnchor="middle" fill="#475569" fontSize="8">N</text>
-      <line x1="44" y1="25" x2="85" y2="25" stroke="#64748b" strokeWidth="1.5"/>
-      <rect x="89" y="12" width="40" height="26" rx="3" fill="#ffedd5" stroke="#ea580c" strokeWidth="1.8"/>
-      <path d="M95 25 L120 25" stroke="#ea580c" strokeWidth="1.5"/>
-      <polygon points="116,21 116,29 124,25" fill="#ea580c"/>
-      <text x="109" y="34" textAnchor="middle" fill="#ea580c" fontSize="6.5">Flow BC</text>
-      <polygon points="60,21 60,29 68,25" fill="#64748b"/>
-    </svg>
+    <DiagRow>
+      <DiagNode label="N1" />
+      <DiagArrow />
+      <DiagFlowBC />
+    </DiagRow>
   );
   // default fallback
   return (
-    <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-      <circle cx="30" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <line x1="44" y1="25" x2="156" y2="25" stroke="#64748b" strokeWidth="2" strokeDasharray="6,3"/>
-      <circle cx="170" cy="25" r="14" fill="#f1f5f9" stroke="#64748b" strokeWidth="1.5"/>
-      <polygon points="148,21 148,29 156,25" fill="#64748b"/>
-    </svg>
+    <DiagRow>
+      <DiagNode label="N1" />
+      <DiagArrow />
+      <DiagNode label="N2" />
+    </DiagRow>
   );
 }
 
