@@ -2683,18 +2683,12 @@ const PROP_FILTER_OPTIONS = [
 
 function ElementPropCard({ id, element, badge, badgeColor, properties }: ElementProps) {
   const [open, setOpen] = useState(true);
-  const visual = ELEMENT_SVG_MAP[id];
   return (
     <div className="mb-4 rounded-lg border border-slate-200 overflow-hidden shadow-sm">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors text-left"
       >
-        {visual && (
-          <div className="w-10 h-8 flex-shrink-0 flex items-center justify-center">
-            {visual}
-          </div>
-        )}
         <span className={`inline-block text-white text-[10px] font-bold px-2 py-0.5 rounded ${badgeColor}`}>
           {badge}
         </span>
