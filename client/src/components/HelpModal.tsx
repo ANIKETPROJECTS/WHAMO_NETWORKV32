@@ -3046,7 +3046,7 @@ export function HelpModal({ open, onClose }: HelpModalProps) {
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto px-8 py-6 bg-[#fafbfc]">
-            <div className="max-w-3xl">
+            <div className="w-full">
               {SECTION_CONTENT[activeSection]}
             </div>
           </div>
