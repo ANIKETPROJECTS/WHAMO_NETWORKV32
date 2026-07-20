@@ -1078,7 +1078,7 @@ function ElementVisualCard({ id, label }: { id: string; label: string }) {
 // ─── Connection diagram — div-based, using actual project PNG icons ────────────
 
 /** Small canvas-style node for use inside connection diagrams. */
-function DiagNode({ icon, label, diamond, size = 38 }: {
+function DiagNode({ icon, label, diamond, size = 70 }: {
   icon?: string; label: string; diamond?: boolean; size?: number;
 }) {
   if (diamond) {
@@ -1105,12 +1105,12 @@ function DiagNode({ icon, label, diamond, size = 38 }: {
 }
 
 /** Rectangular Flow BC node for connection diagrams. */
-function DiagFlowBC({ label = 'Q1', size = 38 }: { label?: string; size?: number }) {
+function DiagFlowBC({ label = 'Q1', size = 70 }: { label?: string; size?: number }) {
   return (
     <div style={{
-      padding: '3px 8px', border: '2px solid #000', borderRadius: 4,
+      padding: '8px 16px', border: '2px solid #000', borderRadius: 6,
       background: 'white', display: 'flex', flexDirection: 'column',
-      alignItems: 'center', gap: 1, flexShrink: 0,
+      alignItems: 'center', gap: 3, flexShrink: 0,
     }}>
       <img src={windIcon} alt="Flow BC" style={{ width: size * 0.5, height: size * 0.5, objectFit: 'contain' }} />
       <span style={{ fontSize: size * 0.22, fontWeight: 700, color: '#000', lineHeight: 1 }}>{label}</span>
@@ -1121,11 +1121,11 @@ function DiagFlowBC({ label = 'Q1', size = 38 }: { label?: string; size?: number
 /** Arrow connector between nodes in a diagram. */
 function DiagArrow({ dashed = false }: { dashed?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, margin: '0 2px' }}>
-      <div style={{ width: 22, height: 2, background: '#64748b', ...(dashed ? { backgroundImage: 'repeating-linear-gradient(to right, #64748b 0 5px, transparent 5px 8px)', background: 'none' } : {}) }}>
-        {dashed && <svg width="22" height="2"><line x1="0" y1="1" x2="22" y2="1" stroke="#64748b" strokeWidth="2" strokeDasharray="4,3"/></svg>}
-      </div>
-      <div style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: '6px solid #64748b' }} />
+    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, margin: '0 4px' }}>
+      {dashed
+        ? <svg width="50" height="4" style={{ display: 'block' }}><line x1="0" y1="2" x2="42" y2="2" stroke="#64748b" strokeWidth="2.5" strokeDasharray="6,4"/><polygon points="38,0 38,4 48,2" fill="#64748b"/></svg>
+        : <><div style={{ width: 42, height: 2.5, background: '#64748b' }} /><div style={{ width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '9px solid #64748b' }} /></>
+      }
     </div>
   );
 }
@@ -1189,15 +1189,15 @@ function ConnectionDiagramSVG({ type }: { type: string }) {
     </DiagRow>
   );
   if (type === 'surge-tank-conn') return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-      <DiagNode icon={waterTankIcon} label="ST1" size={34} />
-      <div style={{ width: 2, height: 8, background: '#64748b' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+      <DiagNode icon={waterTankIcon} label="ST1" size={62} />
+      <div style={{ width: 2.5, height: 14, background: '#64748b' }} />
       <DiagRow>
-        <DiagNode label="N1" size={34} />
+        <DiagNode label="N1" size={62} />
         <DiagArrow />
-        <DiagNode label="N2" size={34} />
+        <DiagNode label="N2" size={62} />
         <DiagArrow />
-        <DiagNode label="N3" size={34} />
+        <DiagNode label="N3" size={62} />
       </DiagRow>
     </div>
   );
@@ -1487,10 +1487,8 @@ function ConnectionDoc({
       </button>
       {open && (
         <div className="px-4 pt-3 pb-4">
-          <div className="mb-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
-            <div className="w-full h-14">
-              <ConnectionDiagramSVG type={name.toLowerCase().replace(/\s+/g, '-')} />
-            </div>
+          <div className="mb-4 p-5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center" style={{ minHeight: 140 }}>
+            <ConnectionDiagramSVG type={name.toLowerCase().replace(/\s+/g, '-')} />
           </div>
           <MiniHeading>How to Draw</MiniHeading>
           <StepList steps={howToDraw} />
