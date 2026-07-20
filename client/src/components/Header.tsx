@@ -168,6 +168,81 @@ function InlineRibbonBtn({
   );
 }
 
+// ─── Split ribbon button: main click = connector mode, caret = dropdown ──────
+function SplitInlineRibbonBtn({
+  imgSrc, label, active, disabled,
+  onConnectorClick, onElementClick,
+  ...rest
+}: {
+  imgSrc?: string;
+  label: string;
+  active?: boolean;
+  disabled?: boolean;
+  onConnectorClick: () => void;
+  onElementClick: () => void;
+  [key: string]: any;
+}) {
+  return (
+    <div
+      {...rest}
+      className={cn(
+        "relative flex flex-col items-center h-[62px] px-2 py-1 rounded transition-colors select-none flex-1",
+        disabled ? "opacity-40 cursor-not-allowed" : "",
+        active ? "bg-blue-100 ring-1 ring-blue-300" : "",
+      )}
+    >
+      {/* Main clickable area — connector mode */}
+      <button
+        disabled={disabled}
+        onClick={onConnectorClick}
+        className={cn(
+          "flex flex-col items-center w-full flex-1 rounded transition-colors",
+          !disabled && "hover:bg-blue-50 active:bg-blue-100 cursor-pointer",
+        )}
+      >
+        <div className="flex flex-1 items-center justify-center">
+          {imgSrc && <img src={imgSrc} className="w-7 h-7 object-contain" alt={label} />}
+        </div>
+        <div className="h-[22px] flex items-end justify-center w-full">
+          <span className="text-[10px] font-semibold text-black text-center leading-tight pr-3" style={{ fontFamily: 'Poppins, sans-serif' }}>{label}</span>
+        </div>
+      </button>
+
+      {/* Dropdown caret — always accessible, anchored bottom-right */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            disabled={disabled}
+            onClick={e => e.stopPropagation()}
+            className={cn(
+              "absolute bottom-0.5 right-0.5 flex items-center justify-center w-4 h-4 rounded transition-colors",
+              !disabled && "hover:bg-blue-200 cursor-pointer",
+            )}
+            title={`${label} options`}
+          >
+            <ChevronDown className="w-2.5 h-2.5 text-slate-500" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="center" className="w-44 shadow-lg z-50">
+          <DropdownMenuItem onClick={onConnectorClick} className="gap-2 text-[12px]">
+            <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="2" cy="8" r="1.5"/><line x1="3.5" y1="8" x2="12.5" y2="8"/><circle cx="14" cy="8" r="1.5"/>
+            </svg>
+            Connect nodes
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={onElementClick} className="gap-2 text-[12px]">
+            <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="8" cy="8" r="5.5"/><line x1="8" y1="5" x2="8" y2="11"/><line x1="5" y1="8" x2="11" y2="8"/>
+            </svg>
+            Place as element
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 // ─── Ribbon helper components ────────────────────────────────────────────────
 function RibbonBtn({
   icon, label, onClick, disabled, active, highlight,
@@ -789,26 +864,29 @@ export function Header({
           <InlineRibbonBtn imgSrc={yIntersectionIcon} label="Junction" onClick={() => { if (!isProjectOpen) onActivate?.(); addNode("junction", getViewportCenter()); }} />
           <InlineRibbonBtn imgSrc={waterTankIcon} label="Surge Tank" onClick={() => { if (!isProjectOpen) onActivate?.(); addNode("surgeTank", getViewportCenter()); }} />
           <InlineRibbonBtn imgSrc={windIcon} label="Flow BC" onClick={() => { if (!isProjectOpen) onActivate?.(); addNode("flowBoundary", getViewportCenter()); }} />
-          <InlineRibbonBtn
+          <SplitInlineRibbonBtn
             imgSrc={waterPumpIcon}
             label="Pump"
-            onClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'pump' ? null : 'pump'); }}
             active={activeLinkTool === 'pump'}
             data-testid="ribbon-btn-pump"
+            onConnectorClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'pump' ? null : 'pump'); }}
+            onElementClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(null); addNode('pump', getViewportCenter()); }}
           />
-          <InlineRibbonBtn
+          <SplitInlineRibbonBtn
             imgSrc={pipeIcon}
             label="Check Valve"
-            onClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'checkValve' ? null : 'checkValve'); }}
             active={activeLinkTool === 'checkValve'}
             data-testid="ribbon-btn-checkvalve"
+            onConnectorClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'checkValve' ? null : 'checkValve'); }}
+            onElementClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(null); addNode('checkValve', getViewportCenter()); }}
           />
-          <InlineRibbonBtn
+          <SplitInlineRibbonBtn
             imgSrc={turbineImgIcon}
             label="Turbine"
-            onClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'turbine' ? null : 'turbine'); }}
             active={activeLinkTool === 'turbine'}
             data-testid="ribbon-btn-turbine"
+            onConnectorClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'turbine' ? null : 'turbine'); }}
+            onElementClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(null); addNode('turbine', getViewportCenter()); }}
           />
         </RibbonGroup>
 
