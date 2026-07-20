@@ -952,7 +952,7 @@ function downloadPDF() {
 // ─── Canvas-faithful element icon components (using actual project PNGs) ───────
 
 /** Renders a node exactly as it appears on the WHAMO canvas (circle + icon + label). */
-function CanvasCircleIcon({ icon, label, size = 60 }: { icon?: string; label: string; size?: number }) {
+function CanvasCircleIcon({ icon, label, size = 80 }: { icon?: string; label: string; size?: number }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
@@ -977,10 +977,10 @@ function ReservoirSVG() { return <CanvasCircleIcon icon={damIcon} label="R1" />;
 function NodeSVG() {
   return (
     <div style={{
-      width: 60, height: 60, borderRadius: '50%', border: '3px solid #000',
+      width: 80, height: 80, borderRadius: '50%', border: '3px solid #000',
       background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      <span style={{ fontSize: 15, fontWeight: 700, color: '#000' }}>N1</span>
+      <span style={{ fontSize: 19, fontWeight: 700, color: '#000' }}>N1</span>
     </div>
   );
 }
@@ -991,12 +991,12 @@ function SurgeTankSVG() { return <CanvasCircleIcon icon={waterTankIcon} label="S
 function FlowBCSVG() {
   return (
     <div style={{
-      padding: '6px 12px', border: '2px solid #000', borderRadius: 6,
+      padding: '10px 18px', border: '2px solid #000', borderRadius: 8,
       background: 'white', display: 'inline-flex', flexDirection: 'column',
-      alignItems: 'center', gap: 2,
+      alignItems: 'center', gap: 4,
     }}>
-      <img src={windIcon} alt="Flow BC" style={{ width: 26, height: 26, objectFit: 'contain' }} />
-      <span style={{ fontSize: 11, fontWeight: 700, color: '#000', whiteSpace: 'nowrap' }}>Q1</span>
+      <img src={windIcon} alt="Flow BC" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+      <span style={{ fontSize: 14, fontWeight: 700, color: '#000', whiteSpace: 'nowrap' }}>Q1</span>
     </div>
   );
 }
@@ -1005,19 +1005,19 @@ function PumpSVG() { return <CanvasCircleIcon icon={waterPumpIcon} label="P1" />
 function CheckValveSVG() { return <CanvasCircleIcon icon={pipeIcon} label="VC1" />; }
 
 function TurbineSVG() {
-  const size = 60;
-  const inner = 42;
+  const size = 80;
+  const inner = 56;
   return (
     <div style={{ width: size, height: size, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{
         width: inner, height: inner, background: '#16a34a',
-        border: '3px solid #166534', borderRadius: 4,
+        border: '3px solid #166534', borderRadius: 5,
         transform: 'rotate(45deg)', position: 'absolute',
       }} />
-      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
         <img src={turbineImgIcon} alt="Turbine"
-          style={{ width: 22, height: 22, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', lineHeight: 1 }}>T1</span>
+          style={{ width: 30, height: 30, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1 }}>T1</span>
       </div>
     </div>
   );
@@ -1026,12 +1026,12 @@ function TurbineSVG() {
 function ConduitSVG() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-      <CanvasCircleIcon label="N1" size={40} />
+      <CanvasCircleIcon label="N1" size={52} />
       <div style={{ display: 'flex', alignItems: 'center' }}>
-        <div style={{ width: 28, height: 2, background: '#64748b' }} />
-        <div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #64748b' }} />
+        <div style={{ width: 36, height: 2, background: '#64748b' }} />
+        <div style={{ width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '10px solid #64748b' }} />
       </div>
-      <CanvasCircleIcon label="N2" size={40} />
+      <CanvasCircleIcon label="N2" size={52} />
     </div>
   );
 }
@@ -1039,12 +1039,12 @@ function ConduitSVG() {
 function DummyPipeSVG() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-      <CanvasCircleIcon label="N1" size={40} />
-      <svg width="36" height="10" style={{ flexShrink: 0 }}>
-        <line x1="0" y1="5" x2="28" y2="5" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,3" />
-        <polygon points="24,1 24,9 32,5" fill="#94a3b8" />
+      <CanvasCircleIcon label="N1" size={52} />
+      <svg width="44" height="12" style={{ flexShrink: 0 }}>
+        <line x1="0" y1="6" x2="34" y2="6" stroke="#94a3b8" strokeWidth="2" strokeDasharray="5,3" />
+        <polygon points="30,2 30,10 40,6" fill="#94a3b8" />
       </svg>
-      <CanvasCircleIcon icon={waterTankIcon} label="ST1" size={40} />
+      <CanvasCircleIcon icon={waterTankIcon} label="ST1" size={52} />
     </div>
   );
 }
@@ -1420,9 +1420,11 @@ function ElementDoc({
             const svgKey = name.toLowerCase().replace(/\s*\(.*?\)/g, '').replace(/\s+/g, '-').trim();
             const visual = ELEMENT_SVG_MAP[svgKey];
             return visual ? (
-              <div className="float-right ml-4 mb-2 w-20 h-16 flex flex-col items-center gap-1">
-                <div className="w-full h-full">{visual}</div>
-                <span className="text-[9px] text-slate-400 font-medium">canvas icon</span>
+              <div className="float-right ml-5 mb-3 flex flex-col items-center gap-2 p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-md" style={{ minWidth: 140 }}>
+                <div className="flex items-center justify-center" style={{ minHeight: 90 }}>
+                  {visual}
+                </div>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Canvas Icon</span>
               </div>
             ) : null;
           })()}
