@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { X, BookOpen, Layers, Link2, Table2, FileSpreadsheet, Play, FileText, Keyboard, HelpCircle, ChevronRight, FileDown, ChevronDown, Settings, Video, Search, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
