@@ -2805,34 +2805,49 @@ const VIDEO_DATA: VideoEntry[] = [
   { id: 'v-workflow', title: 'Complete Workflow: Start to Simulation Results', description: 'Full walkthrough: create a project, add elements, draw connections, edit properties in the Flex Table, import/export Excel, configure parameters, generate INP, run simulation, and review results in Visualization.', category: 'complete-workflow', categoryLabel: 'Complete Workflow', categoryColor: 'bg-rose-600', duration: '~20 min', src: null },
 ];
 
-// ─── Animated video thumbnails ──────────────────────────────────────────────
+// ─── Video Player (step-cycling animated guide thumbnails) ───────────────────
 
-const ANIM_CSS = `
-@keyframes va-pop    { 0%{opacity:0;transform:scale(.5)} 60%{transform:scale(1.08)} 100%{opacity:1;transform:scale(1)} }
-@keyframes va-slide-l{ 0%{opacity:0;transform:translateX(-16px)} 100%{opacity:1;transform:translateX(0)} }
-@keyframes va-slide-r{ 0%{opacity:0;transform:translateX(16px)}  100%{opacity:1;transform:translateX(0)} }
-@keyframes va-slide-u{ 0%{opacity:0;transform:translateY(12px)}  100%{opacity:1;transform:translateY(0)} }
-@keyframes va-grow-w { 0%{width:0}   100%{width:100%} }
-@keyframes va-grow-h { 0%{height:0}  100%{height:100%} }
-@keyframes va-pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
-@keyframes va-glow   { 0%,100%{box-shadow:0 0 0 0 rgba(26,115,232,.4)} 50%{box-shadow:0 0 0 8px rgba(26,115,232,0)} }
-@keyframes va-spin   { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
-@keyframes va-flow   { 0%{transform:translateX(-6px);opacity:0} 50%{opacity:1} 100%{transform:translateX(10px);opacity:0} }
-@keyframes va-chart  { 0%{stroke-dashoffset:320} 100%{stroke-dashoffset:0} }
-@keyframes va-bar    { 0%{height:4px} 100%{height:var(--bh)} }
-@keyframes va-prog   { 0%{width:0%} 85%{width:74%} 100%{width:74%} }
-@keyframes va-blink  { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-@keyframes va-type   { 0%{max-width:0;opacity:0} 5%{opacity:1} 100%{max-width:200px} }
-@keyframes va-row-hl { 0%,100%{background:transparent} 50%{background:#dbeafe} }
-@keyframes va-arrow  { 0%,100%{opacity:.3;transform:translateX(0)} 50%{opacity:1;transform:translateX(5px)} }
-@keyframes va-fadeio { 0%,100%{opacity:0} 20%,80%{opacity:1} }
+const VP_CSS = `
+@keyframes vp-line   { from{width:0} to{width:100%} }
+@keyframes vp-vline  { from{height:0} to{height:100%} }
+@keyframes vp-pop    { from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)} }
+@keyframes vp-pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.18)} }
+@keyframes vp-glow   { 0%,100%{box-shadow:0 0 0 0 rgba(26,115,232,.5)} 50%{box-shadow:0 0 0 8px rgba(26,115,232,0)} }
+@keyframes vp-spin   { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+@keyframes vp-dot    { 0%{transform:translateX(-2px);opacity:0} 50%{opacity:1} 100%{transform:translateX(22px);opacity:0} }
+@keyframes vp-chart  { from{stroke-dashoffset:320} to{stroke-dashoffset:0} }
+@keyframes vp-prog   { from{width:0%} to{width:72%} }
+@keyframes vp-blink  { 0%,49%{opacity:1} 50%,99%{opacity:0} }
+@keyframes vp-slide-u{ from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes vp-slide-l{ from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+@keyframes vp-hl     { 0%,100%{background:#f0f9ff} 50%{background:#bfdbfe} }
+@keyframes vp-hl-btn { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.25)} }
+@keyframes vp-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
 `;
 
 function VideoAnimStyles() {
-  return <style dangerouslySetInnerHTML={{ __html: ANIM_CSS }} />;
+  return <style dangerouslySetInnerHTML={{ __html: VP_CSS }} />;
 }
 
-// Shared mini building blocks
+// ─── Shared mini primitives for video frames ─────────────────────────────────
+
+function VN({ icon, label, size = 36, glow = false, pulse = false }: {
+  icon?: string; label: string; size?: number; glow?: boolean; pulse?: boolean;
+}) {
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', border: '2.5px solid #1e293b',
+      background: 'white', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', flexShrink: 0, gap: 1,
+      animation: pulse ? 'vp-pulse 1.2s ease-in-out infinite' : glow ? 'vp-glow 1.5s ease-in-out infinite' : undefined,
+    }}>
+      {icon && <img src={icon} alt="" style={{ width: size * 0.44, height: size * 0.44, objectFit: 'contain' }} />}
+      <span style={{ fontSize: Math.max(7, size * 0.22), fontWeight: 700, color: '#1e293b', lineHeight: 1 }}>{label}</span>
+    </div>
+  );
+}
+
+// Keep old name for backward compat
 function AN({ icon, label, size = 38, style = {}, imgStyle = {} }: {
   icon?: string; label: string; size?: number; style?: React.CSSProperties; imgStyle?: React.CSSProperties;
 }) {
@@ -2848,64 +2863,851 @@ function AN({ icon, label, size = 38, style = {}, imgStyle = {} }: {
   );
 }
 
-function ATurb({ size = 38 }: { size?: number }) {
+function VTurb({ size = 38, label = 'T1' }: { size?: number; label?: string }) {
   return (
     <div style={{ width: size, height: size, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <div style={{ width: size * 0.72, height: size * 0.72, background: '#16a34a', border: '2px solid #166534', borderRadius: 3, transform: 'rotate(45deg)', position: 'absolute' }} />
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <img src={turbineImgIcon} alt="" style={{ width: size * 0.38, height: size * 0.38, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-        <span style={{ fontSize: Math.max(7, size * 0.2), fontWeight: 700, color: '#fff', lineHeight: 1 }}>T1</span>
+        <img src={turbineImgIcon} alt="" style={{ width: size * 0.36, height: size * 0.36, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+        <span style={{ fontSize: Math.max(7, size * 0.2), fontWeight: 700, color: '#fff', lineHeight: 1 }}>{label}</span>
       </div>
     </div>
   );
 }
 
-function AFlowBC({ size = 38 }: { size?: number }) {
+function VFlowBC({ size = 38, label = 'Q1' }: { size?: number; label?: string }) {
   return (
-    <div style={{ padding: '4px 8px', border: '2px solid #1e293b', borderRadius: 5, background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+    <div style={{ padding: '4px 8px', border: '2.5px solid #1e293b', borderRadius: 6, background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
       <img src={windIcon} alt="" style={{ width: size * 0.5, height: size * 0.5, objectFit: 'contain' }} />
-      <span style={{ fontSize: Math.max(8, size * 0.22), fontWeight: 700, color: '#1e293b', lineHeight: 1 }}>Q1</span>
+      <span style={{ fontSize: Math.max(8, size * 0.22), fontWeight: 700, color: '#1e293b', lineHeight: 1 }}>{label}</span>
     </div>
   );
 }
 
-function AArrow({ w = 32, dashed = false, color = '#64748b' }: { w?: number; dashed?: boolean; color?: string }) {
+function VArrow({ w = 32, dashed = false, color = '#64748b', animated = false }: { w?: number; dashed?: boolean; color?: string; animated?: boolean }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, animation: animated ? 'vp-bounce 1s ease-in-out infinite' : undefined }}>
       {dashed
-        ? <svg width={w} height={4}><line x1={0} y1={2} x2={w - 7} y2={2} stroke={color} strokeWidth={2} strokeDasharray="4,3" /><polygon points={`${w - 8},0 ${w - 8},4 ${w},2`} fill={color} /></svg>
-        : <><div style={{ width: w - 7, height: 2, background: color }} /><div style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: `7px solid ${color}` }} /></>
+        ? <svg width={w} height={6}><line x1={0} y1={3} x2={w - 8} y2={3} stroke={color} strokeWidth={2} strokeDasharray="4,3" /><polygon points={`${w - 8},0 ${w - 8},6 ${w},3`} fill={color} /></svg>
+        : <><div style={{ width: w - 8, height: 2.5, background: color }} /><div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: `8px solid ${color}` }} /></>
       }
     </div>
   );
 }
 
-function ALabel({ text, delay = '0s', color = '#1a73e8', style = {} }: { text: string; delay?: string; color?: string; style?: React.CSSProperties }) {
+function Chip({ text, color = '#1a73e8' }: { text: string; color?: string }) {
   return (
-    <div style={{
-      fontSize: 9, fontWeight: 700, color, background: `${color}18`, border: `1px solid ${color}44`,
-      borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', fontFamily: 'monospace',
-      animation: `va-slide-u 0.5s ${delay} both`,
-      ...style,
-    }}>{text}</div>
-  );
-}
-
-function AStep({ n, label, active }: { n: number; label: string; active: boolean }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: active ? 1 : 0.35, transition: 'opacity 0.4s' }}>
-      <div style={{ width: 16, height: 16, borderRadius: '50%', background: active ? '#1a73e8' : '#94a3b8', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{n}</div>
-      <span style={{ fontSize: 9, fontWeight: 600, color: active ? '#1e293b' : '#94a3b8', whiteSpace: 'nowrap' }}>{label}</span>
+    <div style={{ fontSize: 9, fontWeight: 700, color, background: `${color}18`, border: `1px solid ${color}55`, borderRadius: 4, padding: '2px 7px', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>
+      {text}
     </div>
   );
 }
 
-// Per-video animated scenes
-function AnimatedScene({ id }: { id: string }) {
-  const sceneStyle: React.CSSProperties = { position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' };
-  const D = (ms: number) => `${ms}ms`; // delay helper
+function ToolBtn({ icon, label, active = false }: { icon: string; label: string; active?: boolean }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+      padding: '5px 8px', borderRadius: 6, border: `1.5px solid ${active ? '#1a73e8' : '#e2e8f0'}`,
+      background: active ? '#dbeafe' : 'white', flexShrink: 0,
+      animation: active ? 'vp-glow 1.5s ease-in-out infinite' : undefined,
+    }}>
+      <span style={{ fontSize: 16 }}>{icon}</span>
+      <span style={{ fontSize: 8, fontWeight: 700, color: active ? '#1a73e8' : '#64748b' }}>{label}</span>
+    </div>
+  );
+}
+
+function MiniTable({ headers, rows, hlRow = -1, hlCol = -1, editVal = '' }: {
+  headers: string[]; rows: string[][]; hlRow?: number; hlCol?: number; editVal?: string;
+}) {
+  return (
+    <div style={{ background: 'white', borderRadius: 7, border: '1px solid #e2e8f0', overflow: 'hidden', width: '100%' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${headers.length}, 1fr)`, background: '#1e293b', padding: '3px 8px' }}>
+        {headers.map(h => <span key={h} style={{ fontSize: 8, fontWeight: 700, color: 'white', padding: '1px 0' }}>{h}</span>)}
+      </div>
+      {rows.map((row, ri) => (
+        <div key={ri} style={{ display: 'grid', gridTemplateColumns: `repeat(${headers.length}, 1fr)`, padding: '3px 8px', borderTop: '1px solid #f1f5f9', background: ri === hlRow ? '#eff6ff' : 'transparent', animation: ri === hlRow ? 'vp-hl 1.5s ease-in-out infinite' : undefined }}>
+          {row.map((v, ci) => (
+            <span key={ci} style={{ fontSize: 9, fontFamily: 'monospace', color: ri === hlRow && ci === hlCol ? '#1a73e8' : '#374151', fontWeight: ri === hlRow && ci === hlCol ? 700 : 400, outline: ri === hlRow && ci === hlCol ? '2px solid #1a73e8' : 'none', outlineOffset: 1, borderRadius: 2 }}>
+              {ri === hlRow && ci === hlCol ? (editVal || v) : v}
+              {ri === hlRow && ci === hlCol && <span style={{ animation: 'vp-blink 0.9s step-end infinite' }}>|</span>}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Frame builder ────────────────────────────────────────────────────────────
+
+interface AnimFrame { title: string; content: React.ReactNode; ms: number; }
+
+function buildFrames(id: string): AnimFrame[] {
+  // Row helper
+  const row = (children: React.ReactNode, gap = 8) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap, flexWrap: 'nowrap' }}>{children}</div>
+  );
+  const col = (children: React.ReactNode, gap = 8) => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap }}>{children}</div>
+  );
 
   switch (id) {
+
+    // ── v-reservoir ───────────────────────────────────────────────────────
+    case 'v-reservoir': return [
+      { ms: 2000, title: 'Select the Reservoir tool from the toolbar', content: col(<>
+        <div style={{ fontSize: 10, fontWeight: 700, color: '#475569', marginBottom: 4 }}>Toolbar</div>
+        {row(<>
+          <ToolBtn icon="🌊" label="Node" />
+          <ToolBtn icon="🏔" label="Reservoir" active />
+          <ToolBtn icon="⚙" label="Pump" />
+          <ToolBtn icon="🪣" label="Tank" />
+        </>, 6)}
+        <Chip text="Click to activate Reservoir tool" color="#1a73e8" />
+      </>) },
+      { ms: 2000, title: 'Click on the canvas to place the reservoir', content: col(<>
+        <VN icon={damIcon} label="R1" size={52} glow />
+        <Chip text="R1 placed at (120, 80)" />
+      </>) },
+      { ms: 2200, title: 'Drag from R1 to connect a downstream Node', content: col(<>
+        {row(<>
+          <VN icon={damIcon} label="R1" size={44} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <div style={{ width: 60, height: 3, background: '#64748b', borderRadius: 2, animation: 'vp-line 0.8s ease-out infinite alternate' }} />
+          </div>
+          <VN label="N1" size={38} pulse />
+        </>)}
+        <Chip text="Drag → release on target node" color="#16a34a" />
+      </>) },
+      { ms: 2200, title: 'Set Elevation and operating mode', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 180 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>R1 Properties</div>
+          {[['Elevation (m)', '120.0'], ['Mode', 'Fixed ▾'], ['Loss Coeff.', '0.0']].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#1a73e8', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Elevation + mode configured ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-node ────────────────────────────────────────────────────────────
+    case 'v-node': return [
+      { ms: 1800, title: 'Select the Node tool and click to place N1', content: col(<>
+        <VN label="N1" size={50} glow />
+        <Chip text="Node placed — sets pipe junction point" />
+      </>) },
+      { ms: 2000, title: 'Draw conduit from N1 to place N2', content: col(<>
+        {row(<>
+          <VN label="N1" size={38} />
+          <VArrow w={50} animated />
+          <VN label="N2" size={38} pulse />
+        </>)}
+        <Chip text="Conduit C1 connecting N1 → N2" color="#7c3aed" />
+      </>) },
+      { ms: 2000, title: 'Continue pipeline — add N3', content: col(<>
+        {row(<>
+          <VN icon={damIcon} label="R1" size={34} />
+          <VArrow w={28} />
+          <VN label="N1" size={34} />
+          <VArrow w={28} />
+          <VN label="N2" size={34} />
+          <VArrow w={28} />
+          <VN label="N3" size={34} pulse />
+        </>)}
+      </>) },
+      { ms: 2200, title: 'Open Flex Table to set Node elevations', content: col(<>
+        <MiniTable headers={['Label','Elevation (m)','Notes']} rows={[['N1','45.0','upstream'],['N2','38.0','mid'],['N3','30.0','outlet']]} hlRow={1} hlCol={1} editVal="38.0" />
+        <Chip text="Elevation sets HGL reference points" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-junction ────────────────────────────────────────────────────────
+    case 'v-junction': return [
+      { ms: 1800, title: 'Place a Junction element at a lateral off-take', content: col(<>
+        <VN icon={yIntersectionIcon} label="J1" size={52} glow />
+        <Chip text="Junction = lateral demand point" color="#059669" />
+      </>) },
+      { ms: 2000, title: 'Connect the main pipeline through J1', content: col(<>
+        {row(<>
+          <VN label="N1" size={36} />
+          <VArrow w={32} />
+          <VN icon={yIntersectionIcon} label="J1" size={44} pulse />
+          <VArrow w={32} />
+          <VN label="N2" size={36} />
+        </>)}
+        <Chip text="Main line passes through junction" />
+      </>) },
+      { ms: 2200, title: 'Demand flow exits downward from J1', content: col(<>
+        {row(<><VN label="N1" size={34} /><VArrow w={28} /><VN icon={yIntersectionIcon} label="J1" size={40} /><VArrow w={28} /><VN label="N2" size={34} /></>)}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0, marginTop: -4 }}>
+          <div style={{ width: 2.5, height: 22, background: '#f59e0b', animation: 'vp-vline 0.7s ease-out infinite alternate' }} />
+          <div style={{ width: 0, height: 0, borderLeft: '6px solid transparent', borderRight: '6px solid transparent', borderTop: '10px solid #f59e0b' }} />
+        </div>
+        <Chip text="Off-take demand" color="#f59e0b" />
+      </>) },
+      { ms: 2000, title: 'Set the steady-state demand flow value', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 175 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>J1 Properties</div>
+          {[['Demand Q (m³/s)', '0.050'],['Elevation (m)', '42.0']].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#f59e0b', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Q = 0.05 m³/s demand set ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-surge-tank ──────────────────────────────────────────────────────
+    case 'v-surge-tank': return [
+      { ms: 1800, title: 'Place a Surge Tank near pump discharge', content: col(<>
+        <VN icon={waterTankIcon} label="ST1" size={52} glow />
+        <Chip text="Surge Tank suppresses transient surges" color="#7c3aed" />
+      </>) },
+      { ms: 2000, title: 'Draw a Dummy Pipe riser from N2 up to ST1', content: col(<>
+        <VN icon={waterTankIcon} label="ST1" size={42} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+          <div style={{ width: 2.5, height: 28, background: '#94a3b8', animation: 'vp-vline 0.6s ease-out infinite alternate', borderRadius: 2 }} />
+        </div>
+        {row(<><VN label="N1" size={34} /><VArrow w={28} /><VN label="N2" size={34} pulse /></>)}
+        <Chip text="Dummy Pipe: short riser connection" color="#7c3aed" />
+      </>) },
+      { ms: 2200, title: 'Full topology: pump + surge tank protection', content: col(<>
+        <VN icon={waterTankIcon} label="ST1" size={40} />
+        <div style={{ width: 2, height: 16, background: '#94a3b8' }} />
+        {row(<><VN label="N1" size={32} /><VArrow w={22} /><VN icon={waterPumpIcon} label="P1" size={36} pulse /><VArrow w={22} /><VN label="N2" size={32} /><VArrow w={22} /><VN label="N3" size={32} /></>)}
+      </>) },
+      { ms: 2200, title: 'Configure tank top, bottom, and initial level', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 180 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>ST1 Properties</div>
+          {[['Top (m)', '60.0'],['Bottom (m)', '30.0'],['Initial level (m)', '45.0'],['Area (m²)', '5.0']].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#7c3aed', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Surge suppressed ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-flow-bc ─────────────────────────────────────────────────────────
+    case 'v-flow-bc': return [
+      { ms: 1800, title: 'Place a Flow BC element on the canvas', content: col(<>
+        <VFlowBC size={48} />
+        <Chip text="Flow BC injects / withdraws flow" color="#ea580c" />
+      </>) },
+      { ms: 2000, title: 'Connect Flow BC to a network node', content: col(<>
+        {row(<>
+          <VFlowBC size={40} />
+          <div style={{ position: 'relative', width: 48, height: 16 }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ position: 'absolute', top: '50%', left: `${i * 34}%`, transform: 'translateY(-50%)', width: 8, height: 8, borderRadius: '50%', background: '#1a73e8', animation: `vp-dot 1s ${i * 330}ms infinite` }} />
+            ))}
+            <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 2, background: '#cbd5e1', transform: 'translateY(-50%)' }} />
+          </div>
+          <VArrow w={14} color="#1a73e8" />
+          <VN label="N5" size={36} pulse />
+        </>)}
+        <Chip text="Flow injected into N5" />
+      </>) },
+      { ms: 2000, title: 'Choose operating mode: Fixed or Q-Schedule', content: col(<>
+        {row(<>
+          <div style={{ padding: '6px 10px', borderRadius: 6, border: '1.5px solid #e2e8f0', background: '#f8fafc', opacity: 0.6 }}><span style={{ fontSize: 9, fontWeight: 700, color: '#64748b' }}>Fixed Q</span></div>
+          <div style={{ padding: '6px 10px', borderRadius: 6, border: '2px solid #1a73e8', background: '#dbeafe' }}><span style={{ fontSize: 9, fontWeight: 700, color: '#1a73e8' }}>Q-Schedule ✓</span></div>
+        </>, 10)}
+        <Chip text="Q-Schedule varies flow over time" />
+      </>) },
+      { ms: 2000, title: 'Configure the flow rate or schedule', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 180 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Q1 Properties</div>
+          {[['Mode','Q-Schedule'],['Q (m³/s)','0.200'],['T-start (s)','0.0'],['T-end (s)','10.0']].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#ea580c', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Flow BC configured ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-pump ────────────────────────────────────────────────────────────
+    case 'v-pump': return [
+      { ms: 1800, title: 'Activate the Pump link tool', content: col(<>
+        {row(<>
+          <ToolBtn icon="🌊" label="Node" />
+          <ToolBtn icon="⚙" label="Pump" active />
+          <ToolBtn icon="🔧" label="Valve" />
+        </>, 8)}
+        <Chip text="Pump link draws between two nodes" />
+      </>) },
+      { ms: 2000, title: 'Drag from suction node N6 to start link', content: col(<>
+        {row(<>
+          <VN label="N6" size={40} glow />
+          <div style={{ width: 40, height: 2, background: '#cbd5e1', borderRadius: 2, animation: 'vp-line 0.7s ease-out infinite alternate' }} />
+          <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px dashed #94a3b8', background: '#f8fafc' }} />
+        </>)}
+        <Chip text="Drag from suction node →" />
+      </>) },
+      { ms: 2200, title: 'Release on discharge node N16 to complete', content: col(<>
+        {row(<>
+          <VN label="N6" size={36} />
+          <VArrow w={28} />
+          <VN icon={waterPumpIcon} label="P1" size={44} pulse />
+          <VArrow w={28} />
+          <VN label="N16" size={36} />
+        </>)}
+        <Chip text="Pump P1 created N6 → N16" color="#db2777" />
+      </>) },
+      { ms: 2400, title: 'Enter pump P-Characteristic (Q-H) curve data', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 8px' }}>
+          <div style={{ fontSize: 8, fontWeight: 700, color: '#64748b', marginBottom: 4 }}>P-CHAR CURVE (Flex Table)</div>
+          <svg width={130} height={54}>
+            <line x1={12} y1={2} x2={12} y2={48} stroke="#e2e8f0" strokeWidth={1} />
+            <line x1={12} y1={48} x2={128} y2={48} stroke="#e2e8f0" strokeWidth={1} />
+            {[[0,44,0.00,'•'],[1,38,40,'•'],[2,28,80,'•'],[3,14,120,'•'],[4,4,160,'•']].map(([i,y,qv]) => <>
+              <circle key={`c${i}`} cx={12 + Number(i) * 28} cy={Number(y)} r={3} fill="#1a73e8" />
+            </>)}
+            <path d="M12,44 Q54,36 84,26 Q108,18 128,4" stroke="#1a73e8" strokeWidth={2} fill="none"
+              style={{ strokeDasharray: 200, animation: 'vp-chart 1.5s ease-out infinite alternate' }} />
+            <text x={70} y={52} fontSize={7} fill="#94a3b8" textAnchor="middle">Q (m³/s) →</text>
+            <text x={4} y={26} fontSize={7} fill="#94a3b8" textAnchor="middle" transform="rotate(-90,4,26)">H</text>
+          </svg>
+        </div>
+        <Chip text="Enter Q-H pairs in Flex Table → P-Char" color="#db2777" />
+      </>) },
+    ];
+
+    // ── v-check-valve ─────────────────────────────────────────────────────
+    case 'v-check-valve': return [
+      { ms: 1800, title: 'Activate Check Valve link mode', content: col(<>
+        {row(<>
+          <ToolBtn icon="⚙" label="Pump" />
+          <ToolBtn icon="🚪" label="Check V." active />
+          <ToolBtn icon="💎" label="Turbine" />
+        </>, 8)}
+        <Chip text="Check Valve allows flow in one direction only" />
+      </>) },
+      { ms: 2000, title: 'Draw from upstream N26 to downstream N25', content: col(<>
+        {row(<>
+          <VN label="N26" size={38} />
+          <VArrow w={32} animated />
+          <VN icon={pipeIcon} label="VC1" size={44} pulse />
+          <VArrow w={32} />
+          <VN label="N25" size={38} />
+        </>)}
+        <Chip text="VC1: N26 → N25" />
+      </>) },
+      { ms: 2000, title: 'Forward flow: freely allowed', content: col(<>
+        {row(<>
+          <VN label="N26" size={36} />
+          {[0,1,2].map(i => (
+            <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#16a34a', animation: `vp-dot 0.9s ${i * 300}ms infinite` }} />
+          ))}
+          <VN icon={pipeIcon} label="VC1" size={40} />
+          {[0,1,2].map(i => (
+            <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#16a34a', animation: `vp-dot 0.9s ${i * 300}ms infinite` }} />
+          ))}
+          <VN label="N25" size={36} />
+        </>)}
+        <Chip text="→ Forward flow allowed ✓" color="#16a34a" />
+      </>) },
+      { ms: 2000, title: 'Reverse flow: automatically blocked', content: col(<>
+        {row(<>
+          <VN label="N26" size={36} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 16, color: '#ef4444' }}>✕</span>
+            <div style={{ width: 22, height: 2, background: '#ef4444', borderRadius: 2 }} />
+          </div>
+          <VN icon={pipeIcon} label="VC1" size={40} />
+          <div style={{ width: 2, height: 28, background: '#ef4444', borderRadius: 2 }} />
+          <VN label="N25" size={36} />
+        </>)}
+        <Chip text="← Backflow automatically blocked" color="#ef4444" />
+      </>) },
+    ];
+
+    // ── v-turbine ─────────────────────────────────────────────────────────
+    case 'v-turbine': return [
+      { ms: 1800, title: 'Activate Turbine link mode', content: col(<>
+        {row(<>
+          <ToolBtn icon="⚙" label="Pump" />
+          <ToolBtn icon="💎" label="Turbine" active />
+          <ToolBtn icon="🚪" label="Valve" />
+        </>, 8)}
+        <Chip text="Turbine: diamond-shaped link element" color="#0891b2" />
+      </>) },
+      { ms: 2000, title: 'Connect penstock reservoir to turbine', content: col(<>
+        {row(<>
+          <VN icon={damIcon} label="R1" size={38} />
+          <VArrow w={30} animated />
+          <VTurb size={46} />
+        </>)}
+        <Chip text="Penstock: R1 (high head) → T1" color="#0891b2" />
+      </>) },
+      { ms: 2000, title: 'Complete link to tailrace reservoir', content: col(<>
+        {row(<>
+          <VN icon={damIcon} label="R1" size={34} />
+          <VArrow w={24} />
+          <VTurb size={44} />
+          <VArrow w={24} animated />
+          <VN icon={damIcon} label="R2" size={34} />
+        </>)}
+        <Chip text="T1 penstock → tailrace R2 complete" color="#0891b2" />
+      </>) },
+      { ms: 2200, title: 'Set mode (TURBGOV / EMERGENCY) and gate schedule', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 185 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>T1 Properties</div>
+          {[['Mode','TURBGOV'],['Initial gate','1.0'],['T-close (s)','5.0'],['⚡ Power (MW)','250']].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#0891b2', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Turbine generating ⚡" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-conduit ─────────────────────────────────────────────────────────
+    case 'v-conduit': return [
+      { ms: 1800, title: 'Select a conduit in the Flex Table', content: col(<>
+        <MiniTable headers={['Label','Length','Diam.','Material']} rows={[['C1','250','0.6','Steel'],['C2','180','0.5','Steel'],['C3','320','0.8','HDPE']]} hlRow={0} hlCol={0} />
+        <Chip text="Select conduit row to edit" />
+      </>) },
+      { ms: 2000, title: 'Set Length and Diameter', content: col(<>
+        {row(<>
+          <VN label="N1" size={34} />
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <Chip text="L = 250 m" />
+            <div style={{ width: 70, height: 3, background: '#475569', borderRadius: 2 }} />
+            <Chip text="D = 0.6 m" color="#7c3aed" />
+          </div>
+          <VN label="N2" size={34} />
+        </>)}
+      </>) },
+      { ms: 2000, title: 'Select pipe material from dropdown', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', width: 175 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', marginBottom: 5 }}>Material</div>
+          {['Steel (a=1300)','Cast Iron','HDPE','Asbestos cement'].map((m,i) => (
+            <div key={m} style={{ padding: '3px 6px', borderRadius: 4, background: i === 0 ? '#dbeafe' : 'transparent', fontSize: 9, color: i === 0 ? '#1a73e8' : '#475569', fontWeight: i === 0 ? 700 : 400, marginBottom: 1 }}>{m}</div>
+          ))}
+        </div>
+        <Chip text="Material auto-fills celerity" />
+      </>) },
+      { ms: 2200, title: 'Celerity (wave speed) is auto-calculated', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 180 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>C1 — Steel Pipe</div>
+          {[['Length (m)','250.0'],['Diameter (m)','0.600'],['Celerity a (m/s)','1300 ✓'],['Darcy f','0.015'],['Courant #','0.98 ✓']].map(([k, v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#0891b2', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      </>) },
+    ];
+
+    // ── v-flex-table ──────────────────────────────────────────────────────
+    case 'v-flex-table': return [
+      { ms: 1800, title: 'Open the Flex Table from the toolbar', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', width: 200 }}>
+          <div style={{ background: '#1e293b', padding: '5px 10px', fontSize: 9, fontWeight: 700, color: 'white' }}>Flex Table</div>
+          <MiniTable headers={['Label','From','To','Length']} rows={[['C1','R1','N1','250'],['C2','N1','N2','180'],['C3','N2','N3','320']]} />
+        </div>
+        <Chip text="Open: Tools → Flex Table" />
+      </>) },
+      { ms: 2000, title: 'Filter by element type', content: col(<>
+        {row(<>
+          {['All','Nodes','Conduits','Pumps'].map((t, i) => (
+            <div key={t} style={{ padding: '4px 8px', borderRadius: 14, border: `1.5px solid ${i === 2 ? '#1a73e8' : '#e2e8f0'}`, background: i === 2 ? '#dbeafe' : 'white', fontSize: 9, fontWeight: i === 2 ? 700 : 400, color: i === 2 ? '#1a73e8' : '#64748b' }}>{t}</div>
+          ))}
+        </>, 5)}
+        <MiniTable headers={['Label','Length','Diam.','a (m/s)']} rows={[['C1','250','0.60','1300'],['C2','180','0.50','1100'],['C3','320','0.80','1200']]} />
+      </>) },
+      { ms: 2200, title: 'Click any cell to edit inline', content: col(<>
+        <MiniTable headers={['Label','Length','Diam.','a (m/s)']} rows={[['C1','250','0.60','1300'],['C2','180','0.55','1100'],['C3','320','0.80','1200']]} hlRow={1} hlCol={2} editVal="0.55" />
+        <Chip text="Click cell → type new value → Enter" />
+      </>) },
+      { ms: 2000, title: 'Toggle SI / FPS units', content: col(<>
+        {row(<>
+          <div style={{ padding: '5px 12px', borderRadius: 6, border: '2px solid #1a73e8', background: '#dbeafe', fontSize: 10, fontWeight: 700, color: '#1a73e8' }}>SI</div>
+          <div style={{ fontSize: 12, color: '#94a3b8' }}>⇌</div>
+          <div style={{ padding: '5px 12px', borderRadius: 6, border: '1.5px solid #e2e8f0', background: 'white', fontSize: 10, fontWeight: 700, color: '#64748b' }}>FPS</div>
+        </>, 10)}
+        <Chip text="All values convert automatically" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-excel-import ────────────────────────────────────────────────────
+    case 'v-excel-import': return [
+      { ms: 1800, title: 'Export a template workbook from the Flex Table', content: col(<>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 38, height: 46, background: '#1a73e8', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <img src={damIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(1)' }} />
+          </div>
+          <VArrow w={36} color="#16a34a" animated />
+          <div style={{ width: 36, height: 44, background: '#16a34a', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 16, fontWeight: 900, color: 'white' }}>X</span>
+          </div>
+        </div>
+        <Chip text="Export template.xlsx first" color="#16a34a" />
+      </>) },
+      { ms: 2000, title: 'Edit data values directly in Excel', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', width: 200 }}>
+          <div style={{ background: '#16a34a', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'white' }}>data.xlsx — Conduits</div>
+          <MiniTable headers={['Label','Length','Diam.']} rows={[['C1','250','0.60'],['C2','200','0.55'],['C3','320','0.80']]} hlRow={1} hlCol={1} editVal="200" />
+        </div>
+        <Chip text="Edit values freely in Excel" />
+      </>) },
+      { ms: 2000, title: 'Import the edited workbook back into WHAMO', content: col(<>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 36, height: 44, background: '#16a34a', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 16, fontWeight: 900, color: 'white' }}>X</span>
+          </div>
+          <VArrow w={36} color="#1a73e8" animated />
+          <div style={{ width: 38, height: 46, background: '#1a73e8', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <img src={damIcon} alt="" style={{ width: 20, height: 20, filter: 'brightness(0) invert(1)' }} />
+          </div>
+        </div>
+        <Chip text="Flex Table → Import → select file" />
+      </>) },
+      { ms: 2000, title: 'Rows matched by Label column — data updated', content: col(<>
+        <MiniTable headers={['Label','Length','Status']} rows={[['C1','250','✓ unchanged'],['C2','200','✓ updated'],['C3','320','✓ unchanged']]} hlRow={1} hlCol={2} />
+        <Chip text="Matched by Label column ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-excel-export ────────────────────────────────────────────────────
+    case 'v-excel-export': return [
+      { ms: 1800, title: 'Open the Flex Table — filter to element type', content: col(<>
+        <MiniTable headers={['Label','Length','Diam.','a']} rows={[['C1','250','0.60','1300'],['C2','180','0.50','1100'],['C3','320','0.80','1200']]} />
+        <Chip text="Flex Table showing Conduits" />
+      </>) },
+      { ms: 2000, title: 'Click Export button — choose scope', content: col(<>
+        {row(<>
+          <div style={{ padding: '6px 10px', borderRadius: 6, border: '1.5px solid #e2e8f0', background: '#f8fafc', fontSize: 9, fontWeight: 700, color: '#64748b' }}>This type</div>
+          <div style={{ padding: '6px 10px', borderRadius: 6, border: '2px solid #1a73e8', background: '#dbeafe', fontSize: 9, fontWeight: 700, color: '#1a73e8', animation: 'vp-glow 1.5s infinite' }}>All Types ✓</div>
+        </>, 8)}
+        <Chip text="All Types = multi-sheet workbook" />
+      </>) },
+      { ms: 2000, title: 'Multi-sheet workbook generated', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', width: 185 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', marginBottom: 5 }}>network.xlsx</div>
+          {['Reservoirs','Nodes','Junctions','Conduits','Pumps','…'].map((s,i) => (
+            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2, opacity: i > 3 ? 0.5 : 1 }}>
+              <span style={{ fontSize: 9 }}>📄</span>
+              <span style={{ fontSize: 9, color: '#475569', fontFamily: 'monospace' }}>{s}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="9 sheets downloaded ✓" color="#16a34a" />
+      </>) },
+      { ms: 2000, title: 'Validation dropdowns included for material fields', content: col(<>
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '8px 12px', width: 185 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#15803d', marginBottom: 5 }}>Material column (Excel dropdown)</div>
+          {['Steel','Cast Iron','HDPE','Asbestos cement'].map((m, i) => (
+            <div key={m} style={{ padding: '2px 5px', borderRadius: 3, background: i === 0 ? '#dcfce7' : 'transparent', fontSize: 9, color: '#374151', marginBottom: 1 }}>{i === 0 ? '✓ ' : ''}{m}</div>
+          ))}
+        </div>
+        <Chip text="Data-validation prevents invalid entries" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-parameters ──────────────────────────────────────────────────────
+    case 'v-parameters': return [
+      { ms: 1800, title: 'Open Analysis → Parameters panel', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 185 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Simulation Parameters</div>
+          {[['DTCOMP (s)','—'],['DTOUT (s)','—'],['TMAX (s)','—']].map(([k,v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontFamily: 'monospace', color: '#94a3b8' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Parameters panel opened" />
+      </>) },
+      { ms: 2000, title: 'Set DTCOMP — computational time step', content: col(<>
+        <div style={{ width: 185 }}>
+          {[['DTCOMP','0.010 s','#1a73e8', 1], ['DTOUT','—','#7c3aed',0],['TMAX','—','#16a34a',0]].map(([l,v,c,active]) => (
+            <div key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#64748b', width: 56 }}>{l}</span>
+              <div style={{ flex: 1, height: 7, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: c as string, borderRadius: 4, width: active ? '35%' : '0%', transition: 'width 0.5s' }} />
+              </div>
+              <span style={{ fontSize: 9, fontWeight: active ? 700 : 400, color: active ? c as string : '#94a3b8', fontFamily: 'monospace', width: 44 }}>{v as string}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="DTCOMP = Δx/a (Courant condition)" />
+      </>) },
+      { ms: 2000, title: 'Set DTOUT and TMAX for the simulation', content: col(<>
+        <div style={{ width: 185 }}>
+          {[['DTCOMP','0.010 s','#1a73e8', 35], ['DTOUT','0.100 s','#7c3aed', 60],['TMAX','30.0 s','#16a34a', 80]].map(([l,v,c,pct]) => (
+            <div key={l as string} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#64748b', width: 56 }}>{l}</span>
+              <div style={{ flex: 1, height: 7, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: c as string, borderRadius: 4, width: `${pct}%` }} />
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 700, color: c as string, fontFamily: 'monospace', width: 44 }}>{v as string}</span>
+            </div>
+          ))}
+        </div>
+      </>) },
+      { ms: 2200, title: 'Verify Courant condition is satisfied', content: col(<>
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 14px', width: 185 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#15803d', marginBottom: 6 }}>Courant Check</div>
+          {[['Cr = a·Δt/Δx','≤ 1.0'],['Longest pipe Δx','25.0 m'],['a·DTCOMP','13.0 m'],['Courant #','0.52 ✓']].map(([k,v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 9, color: '#16a34a' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#15803d', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Courant condition satisfied ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-visualization ───────────────────────────────────────────────────
+    case 'v-visualization': return [
+      { ms: 1800, title: 'Open Tools → Visualization', content: col(<>
+        {row(<>
+          <ToolBtn icon="📊" label="Visualize" active />
+          <ToolBtn icon="📋" label="Table" />
+          <ToolBtn icon="📁" label="Files" />
+        </>, 8)}
+        <Chip text="Loads .OUT results file for viewing" color="#0891b2" />
+      </>) },
+      { ms: 2000, title: 'Load a .OUT results file', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 185 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', marginBottom: 5 }}>Select .OUT file</div>
+          <div style={{ padding: '5px 8px', borderRadius: 5, border: '1.5px dashed #94a3b8', fontSize: 9, color: '#64748b', marginBottom: 6 }}>network_run1.out ✓</div>
+          <div style={{ padding: '5px', borderRadius: 5, background: '#1a73e8', color: 'white', fontSize: 9, fontWeight: 700, textAlign: 'center', animation: 'vp-glow 1.5s infinite' }}>Load File</div>
+        </div>
+        <Chip text=".OUT file loaded successfully" color="#16a34a" />
+      </>) },
+      { ms: 2400, title: 'Profile Graph — animated HGL over pipe stations', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 8px', width: '95%' }}>
+          <div style={{ fontSize: 8, fontWeight: 700, color: '#0891b2', marginBottom: 3 }}>HGL Profile — t = 2.4 s</div>
+          <svg width="100%" height={62}>
+            {[15,30,45].map(y => <line key={y} x1={8} y1={y} x2="98%" y2={y} stroke="#f1f5f9" strokeWidth={1} />)}
+            <path d="M8,50 L40,42 L75,38 L110,24 L150,30 L185,18 L215,28" stroke="#ef4444" strokeWidth={1.5} fill="none" strokeDasharray="4,3" opacity={0.6} />
+            <path d="M8,56 L40,52 L75,50 L110,45 L150,52 L185,46 L215,55" stroke="#3b82f6" strokeWidth={1.5} fill="none" strokeDasharray="4,3" opacity={0.6} />
+            <path d="M8,52 L40,46 L75,42 L110,30 L150,40 L185,26 L215,38" stroke="#1a73e8" strokeWidth={2.5} fill="none"
+              style={{ strokeDasharray: 280, animation: 'vp-chart 2s ease-out infinite alternate' }} />
+            <text x="50%" y={60} fontSize={7} fill="#94a3b8" textAnchor="middle">Pipe station →</text>
+          </svg>
+          {row(<><Chip text="Max" color="#ef4444" /><Chip text="HGL" /><Chip text="Min" color="#3b82f6" /></>, 5)}
+        </div>
+      </>) },
+      { ms: 2200, title: 'Switch to History Graph — time-series at a node', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 8px', width: '95%' }}>
+          <div style={{ fontSize: 8, fontWeight: 700, color: '#7c3aed', marginBottom: 3 }}>History — Node N5 Pressure (m)</div>
+          <svg width="100%" height={62}>
+            {[15,30,45].map(y => <line key={y} x1={8} y1={y} x2="98%" y2={y} stroke="#f1f5f9" strokeWidth={1} />)}
+            <path d="M8,30 C25,28 35,18 55,12 C70,8 80,22 100,25 C120,28 140,35 160,30 C175,26 195,28 215,30" stroke="#7c3aed" strokeWidth={2.5} fill="none"
+              style={{ strokeDasharray: 280, animation: 'vp-chart 2s ease-out infinite alternate' }} />
+            <text x="50%" y={60} fontSize={7} fill="#94a3b8" textAnchor="middle">Time (s) →</text>
+          </svg>
+        </div>
+        <Chip text="Time-series at selected node/pipe" color="#7c3aed" />
+      </>) },
+    ];
+
+    // ── v-inp ─────────────────────────────────────────────────────────────
+    case 'v-inp': return [
+      { ms: 1800, title: 'Run network validation first', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', width: 185 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 5 }}>Validation</div>
+          {['All nodes connected ✓','No orphan elements ✓','Courant satisfied ✓','Reservoirs defined ✓'].map(msg => (
+            <div key={msg} style={{ fontSize: 9, color: '#16a34a', marginBottom: 2 }}>{msg}</div>
+          ))}
+        </div>
+        <Chip text="Network valid — ready to generate" color="#16a34a" />
+      </>) },
+      { ms: 2000, title: 'Configure output requests in the panel', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', width: 185 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 5 }}>Output Requests</div>
+          {[['HGRAPH N5','✓ Head history'],['PGRAPH N5','✓ Pressure history'],['PROFILE','✓ Pipe profiles'],['MAXMIN','✓ Envelope']].map(([k,v]) => (
+            <div key={k} style={{ display: 'flex', gap: 6, marginBottom: 3 }}>
+              <span style={{ fontSize: 8, fontFamily: 'monospace', color: '#1a73e8', width: 72 }}>{k}</span>
+              <span style={{ fontSize: 8, color: '#16a34a' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+      </>) },
+      { ms: 2000, title: 'Click Generate → .INP to produce the file', content: col(<>
+        <div style={{ padding: '7px 20px', borderRadius: 8, background: '#d97706', color: 'white', fontSize: 11, fontWeight: 700, animation: 'vp-glow 1.5s infinite', cursor: 'default' }}>
+          ⬇ Generate .INP
+        </div>
+        <Chip text="Validates → writes WHAMO input file" color="#d97706" />
+      </>) },
+      { ms: 2200, title: 'INP file downloads — inspect the output', content: col(<>
+        <div style={{ background: '#1e293b', borderRadius: 8, padding: '7px 10px', width: 200, fontFamily: 'monospace', fontSize: 8 }}>
+          {[['RESERVOIRS','#f59e0b'],['  RESRV ID R1 HW 120.0 FINISH','#86efac'],['CONDUITS','#f59e0b'],['  PIPE ID C1 FROM R1 TO N1 L 250','#86efac'],['PUMPS','#f59e0b'],['  PUMP ID P1 ...','#86efac']].map(([t,c], i) => (
+            <div key={i} style={{ color: c, overflow: 'hidden', whiteSpace: 'nowrap' }}>{t}</div>
+          ))}
+          <span style={{ color: '#fff', animation: 'vp-blink 0.8s step-end infinite' }}>█</span>
+        </div>
+        <Chip text="network.INP downloaded ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-out ─────────────────────────────────────────────────────────────
+    case 'v-out': return [
+      { ms: 1800, title: 'Confirm parameters and add output requests', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', width: 180 }}>
+          {[['DTCOMP','0.010 s'],['DTOUT','0.100 s'],['TMAX','30.0 s']].map(([k,v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', fontFamily: 'monospace' }}>{v} ✓</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="Parameters ready" color="#16a34a" />
+      </>) },
+      { ms: 1800, title: 'Click Generate → .OUT', content: col(<>
+        <div style={{ padding: '8px 22px', borderRadius: 8, background: '#15803d', color: 'white', fontSize: 12, fontWeight: 700, animation: 'vp-glow 1.5s infinite' }}>
+          ⬇ Generate .OUT
+        </div>
+        <Chip text="Sends .INP to WHAMO engine" color="#15803d" />
+      </>) },
+      { ms: 2400, title: 'WHAMO engine running — progress updates', content: col(<>
+        <div style={{ position: 'relative', width: 48, height: 48 }}>
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '4px solid #e2e8f0' }} />
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '4px solid transparent', borderTopColor: '#15803d', animation: 'vp-spin 0.9s linear infinite' }} />
+          <div style={{ position: 'absolute', inset: 8, borderRadius: '50%', background: '#15803d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 12 }}>⚙</span>
+          </div>
+        </div>
+        <div style={{ width: 180, height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: 'linear-gradient(90deg,#15803d,#22c55e)', borderRadius: 4, animation: 'vp-prog 2.2s ease-in-out infinite alternate' }} />
+        </div>
+        <Chip text="WHAMO.EXE running…" color="#15803d" />
+      </>) },
+      { ms: 2200, title: '.OUT results file ready — load in Visualization', content: col(<>
+        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '10px 14px', width: 185 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#15803d', marginBottom: 5 }}>✓ Complete</div>
+          {[['Runtime','2.3 s'],['Time steps','3 000'],['Output pts','300'],['File size','1.4 MB']].map(([k,v]) => (
+            <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+              <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#15803d', fontFamily: 'monospace' }}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <Chip text="network_run1.out downloaded ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    // ── v-workflow ────────────────────────────────────────────────────────
+    case 'v-workflow': return [
+      { ms: 2000, title: 'Step 1: Design your network on the canvas', content: col(<>
+        {row(<>
+          <VN icon={damIcon} label="R1" size={34} />
+          <VArrow w={22} />
+          <VN label="N1" size={30} />
+          <VArrow w={22} />
+          <VN icon={waterPumpIcon} label="P1" size={34} pulse />
+          <VArrow w={22} />
+          <VN label="N2" size={30} />
+        </>)}
+        <Chip text="1 / 5 — Design network" color="#1a73e8" />
+      </>) },
+      { ms: 2000, title: 'Step 2: Edit properties in the Flex Table', content: col(<>
+        <MiniTable headers={['Label','Length','Diam.','a']} rows={[['C1','250','0.60','1300'],['C2','180','0.50','1100']]} hlRow={0} hlCol={2} />
+        <Chip text="2 / 5 — Configure properties" color="#7c3aed" />
+      </>) },
+      { ms: 2000, title: 'Step 3: Generate the .INP file', content: col(<>
+        <div style={{ background: '#1e293b', borderRadius: 7, padding: '6px 10px', width: 185, fontFamily: 'monospace', fontSize: 8 }}>
+          {[['RESERVOIRS','#f59e0b'],['  RESRV ID R1 ...','#86efac'],['CONDUITS','#f59e0b'],['  PIPE ID C1 ...','#86efac']].map(([t,c],i) => <div key={i} style={{ color: c }}>{t}</div>)}
+        </div>
+        <Chip text="3 / 5 — Generate .INP" color="#d97706" />
+      </>) },
+      { ms: 2000, title: 'Step 4: Run the WHAMO simulation engine', content: col(<>
+        <div style={{ width: 185, height: 9, background: '#f1f5f9', borderRadius: 5, overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: 'linear-gradient(90deg,#0891b2,#22d3ee)', borderRadius: 5, animation: 'vp-prog 2s ease-in-out infinite alternate' }} />
+        </div>
+        <Chip text="4 / 5 — Run WHAMO engine" color="#0891b2" />
+      </>) },
+      { ms: 2200, title: 'Step 5: Review results in Visualization', content: col(<>
+        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 6, padding: '4px 7px', width: '95%' }}>
+          <svg width="100%" height={52}>
+            <path d="M6,42 L36,32 L66,38 L96,20 L130,34 L164,22 L195,30" stroke="#ef4444" strokeWidth={1.5} fill="none" strokeDasharray="4,3" opacity={0.6} />
+            <path d="M6,38 L36,26 L66,32 L96,14 L130,28 L164,16 L195,24" stroke="#1a73e8" strokeWidth={2.5} fill="none" style={{ strokeDasharray: 260, animation: 'vp-chart 2s ease-out infinite alternate' }} />
+            <path d="M6,48 L36,46 L66,48 L96,44 L130,50 L164,46 L195,48" stroke="#3b82f6" strokeWidth={1.5} fill="none" strokeDasharray="4,3" opacity={0.6} />
+          </svg>
+        </div>
+        <Chip text="5 / 5 — View HGL results ✓" color="#16a34a" />
+      </>) },
+    ];
+
+    default: return [
+      { ms: 2000, title: 'Demo guide', content: <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}><Video className="w-8 h-8 text-slate-300" /></div> },
+    ];
+  }
+}
+
+// ─── VideoPlayer — React step-cycling animated guide ──────────────────────────
+
+function VideoPlayer({ id }: { id: string }) {
+  const frames = buildFrames(id);
+  const [fi, setFi] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  // Cycle frames: fade out → advance → fade in
+  useEffect(() => {
+    const dur = frames[fi]?.ms ?? 2000;
+    const t = setTimeout(() => {
+      setVisible(false);
+      const t2 = setTimeout(() => {
+        setFi(prev => (prev + 1) % frames.length);
+        setVisible(true);
+      }, 280);
+      return () => clearTimeout(t2);
+    }, dur);
+    return () => clearTimeout(t);
+  }, [fi, frames.length]);
+
+  const frame = frames[fi];
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)' }}>
+      {/* Header bar with step title + dots */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px', background: 'rgba(15,23,42,0.82)', backdropFilter: 'blur(2px)', flexShrink: 0 }}>
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#1a73e8', animation: 'vp-pulse 1.4s ease-in-out infinite', flexShrink: 0 }} />
+        <span style={{ fontSize: 8.5, fontWeight: 600, color: '#e2e8f0', fontFamily: 'Poppins,sans-serif', flex: 1, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{frame?.title}</span>
+        <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
+          {frames.map((_, i) => (
+            <div key={i} style={{ height: 5, borderRadius: 3, background: i === fi ? '#1a73e8' : '#475569', width: i === fi ? 14 : 5, transition: 'width 0.3s ease, background 0.3s ease' }} />
+          ))}
+        </div>
+      </div>
+      {/* Content area — fades between frames */}
+      <div style={{
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '10px 12px 8px',
+        opacity: visible ? 1 : 0,
+        transition: 'opacity 0.28s ease-in-out',
+      }}>
+        {frame?.content}
+      </div>
+    </div>
+  );
+}
+
+// (AnimatedScene replaced by VideoPlayer + buildFrames above)
+function _ObsoleteAnimatedScene({ id }: { id: string }) {
+  const _dummy = id;
+  return null;
+
+  switch (_dummy) {
 
     // ── Reservoir ──────────────────────────────────────────────────────────
     case 'v-reservoir': return (
@@ -3320,14 +4122,8 @@ function AnimatedScene({ id }: { id: string }) {
 
 function VideoThumbnail({ entry }: { entry: VideoEntry }) {
   return (
-    <div className="w-full aspect-video rounded-lg relative overflow-hidden border border-slate-200"
-      style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
-      <AnimatedScene id={entry.id} />
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/10 rounded-lg">
-        <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow">
-          <Play className="w-4 h-4 text-slate-700 ml-0.5" />
-        </div>
-      </div>
+    <div className="w-full aspect-video rounded-lg relative overflow-hidden border border-slate-200">
+      <VideoPlayer id={entry.id} />
     </div>
   );
 }
@@ -3380,6 +4176,7 @@ function DemoVideosSection() {
 
   return (
     <>
+      <VideoAnimStyles />
       <SectionTitle>Demo Videos</SectionTitle>
       <SectionLead>Video tutorials explaining software usage and element operations. Filter by element or feature, or search for a specific topic.</SectionLead>
 
