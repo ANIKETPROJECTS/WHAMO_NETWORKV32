@@ -2805,17 +2805,524 @@ const VIDEO_DATA: VideoEntry[] = [
   { id: 'v-workflow', title: 'Complete Workflow: Start to Simulation Results', description: 'Full walkthrough: create a project, add elements, draw connections, edit properties in the Flex Table, import/export Excel, configure parameters, generate INP, run simulation, and review results in Visualization.', category: 'complete-workflow', categoryLabel: 'Complete Workflow', categoryColor: 'bg-rose-600', duration: '~20 min', src: null },
 ];
 
-function VideoThumbnail({ entry }: { entry: VideoEntry }) {
-  const visual = ELEMENT_SVG_MAP[entry.category] ?? null;
+// ─── Animated video thumbnails ──────────────────────────────────────────────
+
+const ANIM_CSS = `
+@keyframes va-pop    { 0%{opacity:0;transform:scale(.5)} 60%{transform:scale(1.08)} 100%{opacity:1;transform:scale(1)} }
+@keyframes va-slide-l{ 0%{opacity:0;transform:translateX(-16px)} 100%{opacity:1;transform:translateX(0)} }
+@keyframes va-slide-r{ 0%{opacity:0;transform:translateX(16px)}  100%{opacity:1;transform:translateX(0)} }
+@keyframes va-slide-u{ 0%{opacity:0;transform:translateY(12px)}  100%{opacity:1;transform:translateY(0)} }
+@keyframes va-grow-w { 0%{width:0}   100%{width:100%} }
+@keyframes va-grow-h { 0%{height:0}  100%{height:100%} }
+@keyframes va-pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+@keyframes va-glow   { 0%,100%{box-shadow:0 0 0 0 rgba(26,115,232,.4)} 50%{box-shadow:0 0 0 8px rgba(26,115,232,0)} }
+@keyframes va-spin   { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+@keyframes va-flow   { 0%{transform:translateX(-6px);opacity:0} 50%{opacity:1} 100%{transform:translateX(10px);opacity:0} }
+@keyframes va-chart  { 0%{stroke-dashoffset:320} 100%{stroke-dashoffset:0} }
+@keyframes va-bar    { 0%{height:4px} 100%{height:var(--bh)} }
+@keyframes va-prog   { 0%{width:0%} 85%{width:74%} 100%{width:74%} }
+@keyframes va-blink  { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+@keyframes va-type   { 0%{max-width:0;opacity:0} 5%{opacity:1} 100%{max-width:200px} }
+@keyframes va-row-hl { 0%,100%{background:transparent} 50%{background:#dbeafe} }
+@keyframes va-arrow  { 0%,100%{opacity:.3;transform:translateX(0)} 50%{opacity:1;transform:translateX(5px)} }
+@keyframes va-fadeio { 0%,100%{opacity:0} 20%,80%{opacity:1} }
+`;
+
+function VideoAnimStyles() {
+  return <style dangerouslySetInnerHTML={{ __html: ANIM_CSS }} />;
+}
+
+// Shared mini building blocks
+function AN({ icon, label, size = 38, style = {}, imgStyle = {} }: {
+  icon?: string; label: string; size?: number; style?: React.CSSProperties; imgStyle?: React.CSSProperties;
+}) {
   return (
-    <div className={`w-full aspect-video rounded-lg flex flex-col items-center justify-center gap-2 ${entry.categoryColor} bg-opacity-10 border border-slate-200 relative overflow-hidden`}
-      style={{ background: `linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)` }}>
-      {visual ? (
-        <div className="w-12 h-10 opacity-80">{visual}</div>
-      ) : (
-        <Video className="w-8 h-8 text-slate-400" />
-      )}
-      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Coming Soon</span>
+    <div style={{
+      width: size, height: size, borderRadius: '50%', border: '2.5px solid #1e293b',
+      background: 'white', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', flexShrink: 0, gap: 1, ...style,
+    }}>
+      {icon && <img src={icon} alt="" style={{ width: size * 0.44, height: size * 0.44, objectFit: 'contain', ...imgStyle }} />}
+      <span style={{ fontSize: Math.max(8, size * 0.22), fontWeight: 700, color: '#1e293b', lineHeight: 1, whiteSpace: 'nowrap' }}>{label}</span>
+    </div>
+  );
+}
+
+function ATurb({ size = 38 }: { size?: number }) {
+  return (
+    <div style={{ width: size, height: size, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ width: size * 0.72, height: size * 0.72, background: '#16a34a', border: '2px solid #166534', borderRadius: 3, transform: 'rotate(45deg)', position: 'absolute' }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <img src={turbineImgIcon} alt="" style={{ width: size * 0.38, height: size * 0.38, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+        <span style={{ fontSize: Math.max(7, size * 0.2), fontWeight: 700, color: '#fff', lineHeight: 1 }}>T1</span>
+      </div>
+    </div>
+  );
+}
+
+function AFlowBC({ size = 38 }: { size?: number }) {
+  return (
+    <div style={{ padding: '4px 8px', border: '2px solid #1e293b', borderRadius: 5, background: 'white', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+      <img src={windIcon} alt="" style={{ width: size * 0.5, height: size * 0.5, objectFit: 'contain' }} />
+      <span style={{ fontSize: Math.max(8, size * 0.22), fontWeight: 700, color: '#1e293b', lineHeight: 1 }}>Q1</span>
+    </div>
+  );
+}
+
+function AArrow({ w = 32, dashed = false, color = '#64748b' }: { w?: number; dashed?: boolean; color?: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+      {dashed
+        ? <svg width={w} height={4}><line x1={0} y1={2} x2={w - 7} y2={2} stroke={color} strokeWidth={2} strokeDasharray="4,3" /><polygon points={`${w - 8},0 ${w - 8},4 ${w},2`} fill={color} /></svg>
+        : <><div style={{ width: w - 7, height: 2, background: color }} /><div style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: `7px solid ${color}` }} /></>
+      }
+    </div>
+  );
+}
+
+function ALabel({ text, delay = '0s', color = '#1a73e8', style = {} }: { text: string; delay?: string; color?: string; style?: React.CSSProperties }) {
+  return (
+    <div style={{
+      fontSize: 9, fontWeight: 700, color, background: `${color}18`, border: `1px solid ${color}44`,
+      borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', fontFamily: 'monospace',
+      animation: `va-slide-u 0.5s ${delay} both`,
+      ...style,
+    }}>{text}</div>
+  );
+}
+
+function AStep({ n, label, active }: { n: number; label: string; active: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, opacity: active ? 1 : 0.35, transition: 'opacity 0.4s' }}>
+      <div style={{ width: 16, height: 16, borderRadius: '50%', background: active ? '#1a73e8' : '#94a3b8', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{n}</div>
+      <span style={{ fontSize: 9, fontWeight: 600, color: active ? '#1e293b' : '#94a3b8', whiteSpace: 'nowrap' }}>{label}</span>
+    </div>
+  );
+}
+
+// Per-video animated scenes
+function AnimatedScene({ id }: { id: string }) {
+  const sceneStyle: React.CSSProperties = { position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' };
+  const D = (ms: number) => `${ms}ms`; // delay helper
+
+  switch (id) {
+
+    // ── Reservoir ──────────────────────────────────────────────────────────
+    case 'v-reservoir': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <AN icon={damIcon} label="R1" size={42} style={{ animation: 'va-pop 0.6s 0s both, va-glow 2s 0.8s infinite' }} />
+            <div style={{ overflow: 'hidden', display: 'flex', alignItems: 'center' }}>
+              <div style={{ animation: 'va-grow-w 0.7s 0.9s both', width: 44, height: 2, background: '#64748b', flexShrink: 0 }} />
+              <div style={{ width: 0, height: 0, borderTop: '4px solid transparent', borderBottom: '4px solid transparent', borderLeft: '7px solid #64748b', animation: 'va-slide-r 0.3s 1.6s both', flexShrink: 0 }} />
+            </div>
+            <AN label="N1" size={36} style={{ animation: 'va-pop 0.6s 1.7s both' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, animation: 'va-slide-u 0.5s 2.2s both' }}>
+            <ALabel text="Elevation: 120 m" delay="2.2s" />
+            <ALabel text="Mode: Fixed" delay="2.4s" color="#16a34a" />
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Node ───────────────────────────────────────────────────────────────
+    case 'v-node': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <AN icon={damIcon} label="R1" size={38} style={{ animation: 'va-pop 0.5s 0s both' }} />
+          <AArrow w={28} />
+          <AN label="N1" size={34} style={{ animation: 'va-pop 0.5s 0.7s both' }} />
+          <AArrow w={28} />
+          <AN label="N2" size={34} style={{ animation: 'va-pop 0.5s 1.4s both' }} />
+          <AArrow w={28} />
+          <AN label="N3" size={34} style={{ animation: 'va-pop 0.5s 2.1s both' }} />
+        </div>
+        <div style={{ position: 'absolute', bottom: 10, display: 'flex', gap: 6, animation: 'va-slide-u 0.5s 2.8s both' }}>
+          <ALabel text="Elev: 45 m" delay="2.8s" />
+          <ALabel text="Elev: 38 m" delay="3s" />
+          <ALabel text="Elev: 30 m" delay="3.2s" />
+        </div>
+      </div>
+    );
+
+    // ── Junction ───────────────────────────────────────────────────────────
+    case 'v-junction': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <AN label="N1" size={34} style={{ animation: 'va-pop 0.5s 0s both' }} />
+            <AArrow w={24} />
+            <AN icon={yIntersectionIcon} label="J1" size={40} style={{ animation: 'va-pop 0.5s 0.8s both, va-glow 2s 1.4s infinite' }} />
+            <AArrow w={24} />
+            <AN label="N2" size={34} style={{ animation: 'va-pop 0.5s 1.6s both' }} />
+          </div>
+          {/* Demand off-take arrow downward */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'va-slide-u 0.5s 2.2s both' }}>
+            <div style={{ width: 2, height: 18, background: '#f59e0b', animation: 'va-grow-h 0.5s 2.2s both' }} />
+            <div style={{ width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '8px solid #f59e0b' }} />
+            <ALabel text="Q = 0.05 m³/s" color="#f59e0b" delay="2.7s" />
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Surge Tank ─────────────────────────────────────────────────────────
+    case 'v-surge-tank': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
+          {/* Surge tank above */}
+          <AN icon={waterTankIcon} label="ST1" size={40} style={{ animation: 'va-pop 0.6s 0s both, va-pulse 2s 1s infinite' }} />
+          {/* Vertical riser */}
+          <div style={{ width: 2, height: 20, background: '#94a3b8', animation: 'va-grow-h 0.4s 0.8s both' }} />
+          {/* Main pipeline */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, animation: 'va-pop 0.5s 1.3s both' }}>
+            <AN label="N1" size={34} />
+            <AArrow w={22} />
+            <AN icon={waterPumpIcon} label="P1" size={34} />
+            <AArrow w={22} />
+            <AN label="N2" size={34} />
+          </div>
+          <ALabel text="Surge suppressed ✓" color="#16a34a" delay="2.2s" style={{ marginTop: 8, animation: 'va-slide-u 0.5s 2.2s both' }} />
+        </div>
+      </div>
+    );
+
+    // ── Flow BC ────────────────────────────────────────────────────────────
+    case 'v-flow-bc': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <AFlowBC size={40} style={{ animation: 'va-pop 0.6s 0s both' } as any} />
+            {/* animated flow particles */}
+            <div style={{ position: 'relative', width: 50, height: 20 }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  position: 'absolute', top: '50%', left: `${i * 30}%`, transform: 'translateY(-50%)',
+                  width: 8, height: 8, borderRadius: '50%', background: '#1a73e8', opacity: 0,
+                  animation: `va-flow 1.2s ${D(i * 400 + 800)} infinite`,
+                }} />
+              ))}
+              <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: 2, background: '#cbd5e1', transform: 'translateY(-50%)' }} />
+            </div>
+            <AArrow w={18} color="#1a73e8" />
+            <AN label="N1" size={36} style={{ animation: 'va-pop 0.5s 0.9s both' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 6, animation: 'va-slide-u 0.5s 2s both' }}>
+            <ALabel text="Mode: Q-Schedule" delay="2s" />
+            <ALabel text="Q = 0.2 m³/s" color="#f59e0b" delay="2.3s" />
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Pump ───────────────────────────────────────────────────────────────
+    case 'v-pump': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <AN label="N6" size={34} style={{ animation: 'va-pop 0.5s 0s both' }} />
+            <AArrow w={22} />
+            <AN icon={waterPumpIcon} label="P1" size={42} style={{ animation: 'va-pop 0.6s 0.7s both, va-pulse 1.5s 1.3s infinite' }} />
+            <AArrow w={22} />
+            <AN label="N16" size={34} style={{ animation: 'va-pop 0.5s 1.4s both' }} />
+          </div>
+          {/* Mini P-Char curve */}
+          <div style={{ animation: 'va-pop 0.5s 2s both', background: 'white', borderRadius: 6, border: '1px solid #e2e8f0', padding: '4px 8px' }}>
+            <div style={{ fontSize: 8, fontWeight: 700, color: '#64748b', marginBottom: 3 }}>P-CHAR CURVE</div>
+            <svg width={90} height={36}>
+              <path d="M5,30 Q25,8 45,12 Q65,16 85,28" stroke="#1a73e8" strokeWidth={2} fill="none"
+                style={{ animation: 'va-chart 1s 2.4s both', strokeDasharray: 200, strokeDashoffset: 200 }} />
+              <text x={2} y={36} fontSize={7} fill="#94a3b8">Q →</text>
+              <text x={0} y={10} fontSize={7} fill="#94a3b8">H↑</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Check Valve ────────────────────────────────────────────────────────
+    case 'v-check-valve': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <AN label="N26" size={34} style={{ animation: 'va-pop 0.5s 0s both' }} />
+            <AArrow w={22} />
+            <AN icon={pipeIcon} label="VC1" size={42} style={{ animation: 'va-pop 0.6s 0.8s both' }} />
+            <AArrow w={22} />
+            <AN label="N25" size={34} style={{ animation: 'va-pop 0.5s 1.6s both' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, animation: 'va-slide-u 0.5s 2.2s both' }}>
+            <ALabel text="→ Flow allowed" color="#16a34a" delay="2.2s" />
+            <ALabel text="← Backflow blocked" color="#ef4444" delay="2.5s" />
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Turbine ────────────────────────────────────────────────────────────
+    case 'v-turbine': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <AN icon={damIcon} label="R1" size={36} style={{ animation: 'va-pop 0.5s 0s both' }} />
+            <AArrow w={20} />
+            <ATurb size={44} />
+            <AArrow w={20} />
+            <AN icon={damIcon} label="R2" size={36} style={{ animation: 'va-pop 0.5s 1.6s both' }} />
+          </div>
+          {/* Power output indicator */}
+          <div style={{ animation: 'va-slide-u 0.5s 2.2s both', display: 'flex', gap: 6 }}>
+            <ALabel text="Mode: TURBGOV" delay="2.2s" color="#0891b2" />
+            <ALabel text="⚡ Generating" delay="2.5s" color="#16a34a" />
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Conduit ────────────────────────────────────────────────────────────
+    case 'v-conduit': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <AN label="N1" size={32} style={{ animation: 'va-pop 0.5s 0s both' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <ALabel text="L = 250 m" delay="0.8s" />
+              <div style={{ width: 70, height: 3, background: '#475569', borderRadius: 2, animation: 'va-grow-w 0.6s 0.5s both' }} />
+              <ALabel text="D = 0.6 m" delay="1.2s" color="#7c3aed" />
+            </div>
+            <AN label="N2" size={32} style={{ animation: 'va-pop 0.5s 0.5s both' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 5, animation: 'va-slide-u 0.5s 2s both' }}>
+            <ALabel text="a = 1200 m/s" delay="2s" color="#0891b2" />
+            <ALabel text="f = 0.015" delay="2.3s" color="#d97706" />
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Flex Table ─────────────────────────────────────────────────────────
+    case 'v-flex-table': return (
+      <div style={sceneStyle}>
+        <div style={{ animation: 'va-pop 0.5s 0s both', background: 'white', borderRadius: 8, border: '1px solid #e2e8f0', overflow: 'hidden', width: '85%' }}>
+          {/* Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr', background: '#1e293b', padding: '4px 8px' }}>
+            {['Label', 'Length', 'Diameter', 'Celerity'].map(h => (
+              <span key={h} style={{ fontSize: 8, fontWeight: 700, color: 'white' }}>{h}</span>
+            ))}
+          </div>
+          {/* Rows */}
+          {[
+            ['C1', '250', '0.6', '1200'],
+            ['C2', '180', '0.5', '1100'],
+            ['C3', '320', '0.8', '1250'],
+          ].map(([lbl, l, d, a], i) => (
+            <div key={i} style={{
+              display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr',
+              padding: '4px 8px', borderTop: '1px solid #f1f5f9',
+              animation: i === 1 ? `va-row-hl 2s ${D(i * 400 + 600)} infinite` : undefined,
+            }}>
+              {[lbl, l, d, a].map((v, j) => (
+                <span key={j} style={{ fontSize: 9, color: i === 1 && j === 2 ? '#1a73e8' : '#374151', fontWeight: i === 1 && j === 2 ? 700 : 400, fontFamily: 'monospace' }}>{v}{j > 0 && i === 1 && j === 2 ? '|' : ''}</span>
+              ))}
+            </div>
+          ))}
+        </div>
+        <ALabel text="Editing inline ✎" delay="1.8s" style={{ position: 'absolute', bottom: 8, animation: 'va-slide-u 0.5s 1.8s both' }} />
+      </div>
+    );
+
+    // ── Excel Import ───────────────────────────────────────────────────────
+    case 'v-excel-import': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Excel file */}
+          <div style={{ animation: 'va-pop 0.5s 0s both', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <div style={{ width: 40, height: 48, background: '#16a34a', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 14, fontWeight: 900, color: 'white' }}>X</span>
+            </div>
+            <span style={{ fontSize: 8, fontWeight: 700, color: '#16a34a' }}>data.xlsx</span>
+          </div>
+          {/* Animated arrow */}
+          <div style={{ display: 'flex', alignItems: 'center', animation: 'va-arrow 1s 0.8s infinite' }}>
+            <div style={{ width: 36, height: 3, background: '#1a73e8', borderRadius: 2 }} />
+            <div style={{ width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '10px solid #1a73e8' }} />
+          </div>
+          {/* App icon */}
+          <div style={{ animation: 'va-pop 0.5s 1.4s both', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 10, background: '#1a73e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={damIcon} alt="" style={{ width: 24, height: 24, filter: 'brightness(0) invert(1)' }} />
+            </div>
+            <span style={{ fontSize: 8, fontWeight: 700, color: '#1a73e8' }}>WHAMO</span>
+          </div>
+        </div>
+        <ALabel text="Matched by Label column" delay="2.2s" style={{ position: 'absolute', bottom: 8, animation: 'va-slide-u 0.5s 2.2s both' }} />
+      </div>
+    );
+
+    // ── Excel Export ───────────────────────────────────────────────────────
+    case 'v-excel-export': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* App icon */}
+          <div style={{ animation: 'va-pop 0.5s 0s both', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 10, background: '#1a73e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src={damIcon} alt="" style={{ width: 24, height: 24, filter: 'brightness(0) invert(1)' }} />
+            </div>
+            <span style={{ fontSize: 8, fontWeight: 700, color: '#1a73e8' }}>WHAMO</span>
+          </div>
+          {/* Animated arrow */}
+          <div style={{ display: 'flex', alignItems: 'center', animation: 'va-arrow 1s 0.6s infinite' }}>
+            <div style={{ width: 36, height: 3, background: '#16a34a', borderRadius: 2 }} />
+            <div style={{ width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: '10px solid #16a34a' }} />
+          </div>
+          {/* Excel */}
+          <div style={{ animation: 'va-pop 0.5s 1.2s both', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+            <div style={{ width: 40, height: 48, background: '#16a34a', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 14, fontWeight: 900, color: 'white' }}>X</span>
+            </div>
+            <span style={{ fontSize: 8, fontWeight: 700, color: '#16a34a' }}>network.xlsx</span>
+          </div>
+        </div>
+        <ALabel text="9 sheets · validation dropdowns" delay="2s" style={{ position: 'absolute', bottom: 8, animation: 'va-slide-u 0.5s 2s both' }} />
+      </div>
+    );
+
+    // ── Parameters ─────────────────────────────────────────────────────────
+    case 'v-parameters': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, width: '80%', animation: 'va-pop 0.5s 0s both' }}>
+          {[
+            { label: 'DTCOMP', val: '0.01 s', color: '#1a73e8', delay: '0.3s' },
+            { label: 'DTOUT',  val: '0.1 s',  color: '#7c3aed', delay: '0.7s' },
+            { label: 'TMAX',   val: '30 s',   color: '#16a34a', delay: '1.1s' },
+          ].map(({ label, val, color, delay }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, animation: `va-slide-l 0.4s ${delay} both` }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#64748b', width: 54 }}>{label}</span>
+              <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: color, borderRadius: 3, animation: `va-prog 1.5s ${delay} both` }} />
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 700, color, width: 36, textAlign: 'right' }}>{val}</span>
+            </div>
+          ))}
+          <ALabel text="Courant condition satisfied ✓" color="#16a34a" delay="2.2s" style={{ alignSelf: 'center', animation: 'va-slide-u 0.5s 2.2s both' }} />
+        </div>
+      </div>
+    );
+
+    // ── Visualization ──────────────────────────────────────────────────────
+    case 'v-visualization': return (
+      <div style={sceneStyle}>
+        <div style={{ animation: 'va-pop 0.5s 0s both', width: '88%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#0891b2' }}>HGL Profile — Animated</div>
+          <svg width="100%" height={80} style={{ background: 'white', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+            {/* Grid lines */}
+            {[20, 40, 60].map(y => <line key={y} x1={10} y1={y} x2="98%" y2={y} stroke="#f1f5f9" strokeWidth={1} />)}
+            {/* Max envelope */}
+            <path d="M10,15 L50,10 L90,18 L130,8 L170,22 L210,12 L250,20"
+              stroke="#ef4444" strokeWidth={1.5} fill="none" strokeDasharray="4,3" opacity={0.7} />
+            {/* Min envelope */}
+            <path d="M10,55 L50,60 L90,52 L130,65 L170,50 L210,62 L250,55"
+              stroke="#3b82f6" strokeWidth={1.5} fill="none" strokeDasharray="4,3" opacity={0.7} />
+            {/* Animated HGL line */}
+            <path d="M10,35 L50,28 L90,38 L130,22 L170,42 L210,30 L250,36"
+              stroke="#1a73e8" strokeWidth={2.5} fill="none"
+              style={{ strokeDasharray: 320, animation: 'va-chart 2s 0.5s both' }} />
+            <text x={12} y={76} fontSize={7} fill="#94a3b8">Pipe station →</text>
+            <text x={215} y={12} fontSize={7} fill="#ef4444">Max HGL</text>
+            <text x={215} y={62} fontSize={7} fill="#3b82f6">Min HGL</text>
+          </svg>
+          <div style={{ display: 'flex', gap: 8, animation: 'va-slide-u 0.4s 2.8s both' }}>
+            <ALabel text="▶ Play animation" delay="2.8s" color="#1a73e8" />
+            <ALabel text="History Graph" delay="3s" color="#0891b2" />
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── INP Generation ─────────────────────────────────────────────────────
+    case 'v-inp': return (
+      <div style={sceneStyle}>
+        <div style={{ animation: 'va-pop 0.5s 0s both', width: '88%', background: '#1e293b', borderRadius: 8, padding: '8px 10px', fontFamily: 'monospace', fontSize: 9 }}>
+          {[
+            { text: 'RESERVOIRS', color: '#f59e0b', delay: '0.3s' },
+            { text: '  RESRV ID R1 HW 120.0 FINISH', color: '#86efac', delay: '0.9s' },
+            { text: 'CONDUITS', color: '#f59e0b', delay: '1.5s' },
+            { text: '  PIPE ID C1 FROM R1 TO N1 L 250 ...', color: '#86efac', delay: '2.1s' },
+            { text: 'PUMPS', color: '#f59e0b', delay: '2.7s' },
+            { text: '  PUMP ID P1 ...', color: '#86efac', delay: '3.3s' },
+          ].map(({ text, color, delay }) => (
+            <div key={text} style={{ color, animation: `va-slide-l 0.4s ${delay} both`, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+              {text}
+            </div>
+          ))}
+          <span style={{ color: '#fff', animation: 'va-blink 1s 0.5s infinite' }}>█</span>
+        </div>
+      </div>
+    );
+
+    // ── OUT / Simulation ───────────────────────────────────────────────────
+    case 'v-out': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          {/* Spinning gear */}
+          <div style={{ position: 'relative', width: 52, height: 52 }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '4px solid #e2e8f0' }} />
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '4px solid transparent', borderTopColor: '#1a73e8', animation: 'va-spin 1s linear infinite' }} />
+            <div style={{ position: 'absolute', inset: 8, borderRadius: '50%', background: '#1a73e8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 14 }}>⚙</span>
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div style={{ width: '80%', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ fontSize: 9, fontWeight: 700, color: '#475569', textAlign: 'center' }}>WHAMO.EXE running…</div>
+            <div style={{ height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ height: '100%', background: 'linear-gradient(90deg,#1a73e8,#0ea5e9)', borderRadius: 4, animation: 'va-prog 3s 0.5s both' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <ALabel text=".INP sent" color="#16a34a" delay="0.5s" />
+              <ALabel text=".OUT ready ✓" color="#16a34a" delay="3s" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    // ── Workflow ───────────────────────────────────────────────────────────
+    case 'v-workflow': return (
+      <div style={sceneStyle}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '88%' }}>
+          {[
+            { step: 1, label: 'Design Network', color: '#1a73e8', delay: '0s' },
+            { step: 2, label: 'Configure Properties', color: '#7c3aed', delay: '0.5s' },
+            { step: 3, label: 'Generate .INP File', color: '#d97706', delay: '1s' },
+            { step: 4, label: 'Run WHAMO Engine', color: '#0891b2', delay: '1.5s' },
+            { step: 5, label: 'View Results & Charts', color: '#16a34a', delay: '2s' },
+          ].map(({ step, label, color, delay }) => (
+            <div key={step} style={{ display: 'flex', alignItems: 'center', gap: 6, animation: `va-slide-l 0.4s ${delay} both` }}>
+              <div style={{ width: 18, height: 18, borderRadius: '50%', background: color, color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{step}</div>
+              <div style={{ flex: 1, height: 4, background: color, borderRadius: 2, opacity: 0.8 }} />
+              <span style={{ fontSize: 9, fontWeight: 600, color: '#374151', whiteSpace: 'nowrap' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+
+    default: return (
+      <div style={sceneStyle}>
+        <Video className="w-8 h-8 text-slate-300" />
+      </div>
+    );
+  }
+}
+
+function VideoThumbnail({ entry }: { entry: VideoEntry }) {
+  return (
+    <div className="w-full aspect-video rounded-lg relative overflow-hidden border border-slate-200"
+      style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' }}>
+      <AnimatedScene id={entry.id} />
       <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/10 rounded-lg">
         <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow">
           <Play className="w-4 h-4 text-slate-700 ml-0.5" />
