@@ -858,10 +858,48 @@ function DesignerInner() {
     setShowProjectsList(true);
   };
 
-  const handleVisualizationClick = () => {
-    setVisualizationOutContent(null);
-    setVisualizationFileName("");
-    setShowVisualization(true);
+  const handleVisualizationClick = async () => {
+    if (nodes.length === 0) {
+      setVisualizationOutContent(null);
+      setVisualizationFileName("");
+      setShowVisualization(true);
+      return;
+    }
+
+    setIsRunningSimulation(true);
+    try {
+      const inpContent = generateInpFile(nodes as WhamoNode[], edges as WhamoEdge[], false);
+      const response = await fetch("/api/generate-out", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inpContent }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success || !data.files?.out) {
+        throw new Error(data.error || "Simulation failed. Make sure the WHAMO engine is available on the server.");
+      }
+
+      const binary = atob(data.files.out);
+      const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+      const outContent = new TextDecoder("utf-8").decode(bytes);
+
+      const name = (projectName && projectName !== "Untitled Network") ? projectName : "simulation";
+      setVisualizationOutContent(outContent);
+      setVisualizationFileName(`${name}.OUT`);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Simulation Failed",
+        description: err.message,
+      });
+      setVisualizationOutContent(null);
+      setVisualizationFileName("");
+    } finally {
+      setIsRunningSimulation(false);
+      setShowVisualization(true);
+    }
   };
 
   const [showDiagram, setShowDiagram] = useState(false);
