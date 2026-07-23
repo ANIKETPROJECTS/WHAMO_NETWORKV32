@@ -653,28 +653,33 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
       if (!isNaN(num)) usedScheduleNumbers.add(num);
     });
 
-    const scheduleLines: string[] = [];
+    const scheduleBlocks: { schedNum: number; pts: any[] }[] = [];
     usedScheduleNumbers.forEach(schedNum => {
       // Prefer global qSchedules, fall back to per-node schedulePoints for backward compat
       const pts: any[] =
         (qSchedules[schedNum] as any[]) ||
         (flowBoundaries.find(n => Number(n.data?.scheduleNumber) === schedNum)?.data?.schedulePoints as any[]) ||
         [];
-      const unit = globalUnit;
-      let schedule = '';
-      if (pts.length > 0) {
-        schedule = pts.map((p: any) => `T ${p.time} Q ${toFPS(Number(p.flow), unit, 'flow')}`).join(' ');
-      } else {
-        schedule = 'T 0 Q 3000 T 20 Q 0 T 3000 Q 0';
-      }
-      scheduleLines.push(` QSCHEDULE ${schedNum} ${schedule}`);
+      scheduleBlocks.push({ schedNum, pts });
     });
 
-    if (scheduleLines.length > 0) {
-      addL('SCHEDULE');
-      scheduleLines.forEach(line => addL(line));
-      addL('FINISH');
-      addL('');
+    if (scheduleBlocks.length > 0) {
+      scheduleBlocks.forEach(({ schedNum, pts }) => {
+        const unit = globalUnit;
+        addL('SCHEDULE');
+        addL(` QSCHEDULE ${schedNum}`);
+        if (pts.length > 0) {
+          pts.forEach((p: any) => {
+            addL(`  T ${p.time} Q ${toFPS(Number(p.flow), unit, 'flow')}`);
+          });
+        } else {
+          addL('  T 0 Q 3000');
+          addL('  T 20 Q 0');
+          addL('  T 3000 Q 0');
+        }
+        addL('FINISH');
+        addL('');
+      });
     }
   }
   addL('');
