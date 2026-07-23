@@ -871,7 +871,7 @@ function DesignerInner() {
       const inpContent = generateInpFile(nodes as WhamoNode[], edges as WhamoEdge[], false);
       const response = await fetch("/api/generate-out", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeader() },
         body: JSON.stringify({ inpContent }),
       });
 
