@@ -66,6 +66,7 @@ import {
 import { ValidationModal } from '@/components/ValidationModal';
 import { validateNetwork, ValidationError } from '@/lib/validator';
 import { VisualizationView } from '@/components/visualization/VisualizationView';
+import { ThreeDVisualizationView } from '@/components/visualization/ThreeDVisualizationView';
 import { ProjectsListPanel } from '@/components/ProjectsListPanel';
 import { getAuthHeader } from '@/lib/queryClient';
 import { getAutosaveSettings } from '@/components/SettingsDialog';
@@ -101,6 +102,7 @@ function DesignerInner() {
   const forceGenerateOutRef = useRef<() => void>(() => {});
   const [showNodeSelection, setShowNodeSelection] = useState(false);
   const [showVisualization, setShowVisualization] = useState(false);
+  const [show3DVisualization, setShow3DVisualization] = useState(false);
 
   useEffect(() => {
     const handleToggleNodeSelection = () => {
@@ -1159,6 +1161,7 @@ function DesignerInner() {
           setDiagramView(resetView);
         }}
         onVisualization={handleVisualizationClick}
+        on3DVisualization={() => setShow3DVisualization(true)}
         activeLinkTool={activeLinkTool}
         onSetLinkTool={setActiveLinkTool}
         onShowFilePreview={(content, fileName, type) => setFilePreview({ content, fileName, type })}
@@ -1201,6 +1204,14 @@ function DesignerInner() {
           }}
           initialOutContent={visualizationOutContent ?? undefined}
           initialFileName={visualizationFileName || undefined}
+        />
+      )}
+      {show3DVisualization && (
+        <ThreeDVisualizationView
+          nodes={nodes}
+          edges={edges}
+          projectName={projectName}
+          onClose={() => setShow3DVisualization(false)}
         />
       )}
 

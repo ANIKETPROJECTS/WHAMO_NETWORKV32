@@ -33,6 +33,7 @@ import {
   FileCode2,
   CheckCircle2,
   TriangleAlert,
+  Box,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -332,6 +333,7 @@ interface HeaderProps {
   onLoad: () => void;
   onShowDiagram?: () => void;
   onVisualization?: () => void;
+  on3DVisualization?: () => void;
   activeLinkTool?: 'pump' | 'checkValve' | 'turbine' | null;
   onSetLinkTool?: (tool: 'pump' | 'checkValve' | 'turbine' | null) => void;
   onShowFilePreview?: (content: string, fileName: string, type: 'inp' | 'out') => void;
@@ -353,6 +355,7 @@ export function Header({
   onLoad,
   onShowDiagram,
   onVisualization,
+  on3DVisualization,
   activeLinkTool,
   onSetLinkTool,
   onShowFilePreview,
@@ -908,6 +911,12 @@ export function Header({
             label="Visualization"
             onClick={onVisualization}
             data-testid="ribbon-btn-visualization"
+          />
+          <InlineRibbonBtn
+            icon={<Box className="h-6 w-6 text-slate-700" />}
+            label="3D View"
+            onClick={on3DVisualization}
+            data-testid="ribbon-btn-3d-visualization"
           />
         </RibbonGroup>
 

@@ -4,3 +4,4 @@
 - [Duplicate element IDs](inp-duplicate-ids.md) — flowBoundary/pump/checkValve/turbine labels must be globally unique; duplicates silently break JSON-vs-INP round-trips.
 - [Auto-arrange crossing bug](autoarrange-layout-crossing.md) — barycenter using parents+children together in one pass can flip sibling order between adjacent levels, crossing parallel branches that shouldn't cross.
 - [OPPUMP mode parsing](oppump-mode.md) — oppumps changed from Set to Map storing {mode,toff?}; pumpOpMode/pumpToff added to both NodeData and EdgeData; generator writes SHUTOFF TOFF X vs PUMP correctly.
+- [Root typecheck baseline](root-typecheck-baseline.md) — the imported root app can build and run while its legacy npm run check still reports unrelated TypeScript errors.
