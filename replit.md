@@ -93,7 +93,15 @@ Preferred communication style: Simple, everyday language.
 - **Start application** — `npm run dev` → Express + Vite dev server on port 5000 (main app webview)
 - **GRAPHVISUALIZATIONCODE/artifacts/whamo-viewer: web** — Vite dev server on port 21454 (standalone React viewer)
 - **GRAPHVISUALIZATIONCODE/artifacts/api-server: API Server** — Express API on port 8080 (standalone API for the viewer)
+- **GRAPHVISUALIZATIONCODE/artifacts/mockup-sandbox: Component Preview Server** — Vite component preview server on port 8081
 
 ### Build & deploy
 - Deployment build: `npm run build` → `node ./dist/index.cjs`
 - The WHAMO engine (`server/engines/WHAMO.EXE`) requires `wine` to run on Linux and is executed in an isolated temporary directory without invoking a shell
+
+### Replit setup status
+- Root dependencies are installed with pnpm; run `npm run dev` to start the WHAMO Designer.
+- Workspace dependencies are installed from `GRAPHVISUALIZATIONCODE/pnpm-lock.yaml`.
+- Run `cd GRAPHVISUALIZATIONCODE && pnpm run typecheck` to check the standalone workspace.
+- Run `cd GRAPHVISUALIZATIONCODE && pnpm run build` to build the standalone viewer, API, and preview packages.
+- The root app requires `MONGODB_URI` and `JWT_SECRET` at startup; keep both configured as Replit environment values.
