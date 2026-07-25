@@ -10,6 +10,10 @@ localPort = 5000
 externalPort = 3000
 
 [[ports]]
+localPort = 5001
+externalPort = 3002
+
+[[ports]]
 localPort = 8080
 externalPort = 8080
 
@@ -34,7 +38,7 @@ run = ["node", "./dist/index.cjs"]
 build = ["npm", "run", "build"]
 
 [workflows]
-runButton = "Start application"
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Start application"
@@ -45,8 +49,17 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "cd GRAPHVISUALIZATIONCODE && pnpm --filter @workspace/whamo-viewer run dev"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
 
 [agent]
 expertMode = true
@@ -57,3 +70,4 @@ stack = "FULLSTACK_JS"
 [userenv.shared]
 PORT = "5000"
 JWT_SECRET = "c530f8cdd2e9c22bbeabb758b2c8184bed68183f0663e2cb80d28fcdcf51fd0f8bd88a78827e018a575932e182fc41cf0303296e79f0f61842dfc549571e633d"
+BASE_PATH = "/"
