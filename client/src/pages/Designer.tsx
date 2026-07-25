@@ -1206,17 +1206,16 @@ function DesignerInner() {
           initialFileName={visualizationFileName || undefined}
         />
       )}
-      {show3DVisualization && (
-        <ThreeDVisualizationView
-          nodes={nodes}
-          edges={edges}
-          projectName={projectName}
-          onClose={() => setShow3DVisualization(false)}
-        />
-      )}
-
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden relative">
+        {show3DVisualization && (
+          <ThreeDVisualizationView
+            nodes={nodes}
+            edges={edges}
+            projectName={projectName}
+            onClose={() => setShow3DVisualization(false)}
+          />
+        )}
         {projectState === "empty" && nodes.length === 0 && edges.length === 0 && (
           <div className="absolute inset-0 z-[1] flex items-center justify-center pointer-events-none">
             <div className="flex gap-12 pointer-events-auto">
