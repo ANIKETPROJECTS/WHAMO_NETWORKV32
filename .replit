@@ -49,7 +49,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd GRAPHVISUALIZATIONCODE && pnpm --filter @workspace/whamo-viewer run dev"
+args = "npm run dev"
 waitForPort = 5000
 
 [[workflows.workflow]]
