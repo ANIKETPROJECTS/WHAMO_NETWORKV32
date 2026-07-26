@@ -354,9 +354,11 @@ export function PropertiesPanel() {
   const [manualHydraulicOverrides, setManualHydraulicOverrides] = useState({
     celerity: false,
     friction: false,
+    manningsN: false,
+    pipeE: false,
   });
   const [pendingHydraulicOverride, setPendingHydraulicOverride] = useState<{
-    field: 'celerity' | 'friction';
+    field: 'celerity' | 'friction' | 'manningsN' | 'pipeE';
     value: string;
   } | null>(null);
 
@@ -379,7 +381,7 @@ export function PropertiesPanel() {
   }, [selectedElementId]);
 
   useEffect(() => {
-    setManualHydraulicOverrides({ celerity: false, friction: false });
+    setManualHydraulicOverrides({ celerity: false, friction: false, manningsN: false, pipeE: false });
     setPendingHydraulicOverride(null);
   }, [selectedElementId]);
 
@@ -531,17 +533,30 @@ export function PropertiesPanel() {
     && !manualHydraulicOverrides.friction
     && parseFloat(formData.manningsN) > 0
     && parseFloat(formData.diameter) > 0;
+  const materialApplied = !!(formData.materialId && formData.materialId !== '');
+  const manningsNIsAuto = materialApplied && !manualHydraulicOverrides.manningsN;
+  const pipeEIsAuto = materialApplied && !manualHydraulicOverrides.pipeE;
   const calculatedInputClass = (isAuto: boolean) =>
     isAuto
       ? 'bg-sky-50 border-sky-300 focus-visible:ring-sky-400'
       : 'bg-white border-slate-300';
 
-  const hydraulicFieldLabel = pendingHydraulicOverride?.field === 'celerity'
-    ? 'Wave Speed'
-    : 'Friction';
+  const hydraulicFieldLabel =
+    pendingHydraulicOverride?.field === 'celerity' ? 'Wave Speed' :
+    pendingHydraulicOverride?.field === 'friction' ? 'Friction' :
+    pendingHydraulicOverride?.field === 'manningsN' ? "Manning's n" :
+    "Young's Modulus (E)";
+  const hydraulicFieldDescription =
+    (pendingHydraulicOverride?.field === 'manningsN' || pendingHydraulicOverride?.field === 'pipeE')
+      ? `${hydraulicFieldLabel} is currently auto-filled from the selected pipe material. Entering a manual value will use this instead until a different material is selected or cleared.`
+      : `${hydraulicFieldLabel} is currently calculated automatically from related pipe parameters. Entering a manual value will stop the automatic calculation until one of its source parameters is changed. Do you want to accept the manual value?`;
 
-  const requestHydraulicOverride = (field: 'celerity' | 'friction') => {
-    const isAutomatic = field === 'celerity' ? waveSpeedIsAuto : frictionIsAuto;
+  const requestHydraulicOverride = (field: 'celerity' | 'friction' | 'manningsN' | 'pipeE') => {
+    const isAutomatic =
+      field === 'celerity' ? waveSpeedIsAuto :
+      field === 'friction' ? frictionIsAuto :
+      field === 'manningsN' ? manningsNIsAuto :
+      pipeEIsAuto;
     if (isAutomatic) {
       setPendingHydraulicOverride({ field, value: String(formData[field] ?? '') });
       return;
@@ -558,6 +573,22 @@ export function PropertiesPanel() {
       const K = currentUnit === 'SI' ? 124.58 : 185;
       if (!isNaN(f) && f > 0 && diam > 0) {
         handleChange('manningsN', parseFloat(Math.sqrt((f * Math.pow(diam, 1 / 3)) / K).toFixed(6)).toString());
+      }
+    } else if (field === 'manningsN') {
+      const n = parseFloat(value);
+      const diam = parseFloat(formData.diameter) || 0;
+      const K = currentUnit === 'SI' ? 124.58 : 185;
+      if (!isNaN(n) && n > 0 && diam > 0) {
+        handleChange('friction', parseFloat(((K * n * n) / Math.pow(diam, 1 / 3)).toFixed(6)).toString());
+      }
+    } else if (field === 'pipeE') {
+      const E = parseFloat(value);
+      const C0 = currentUnit === 'SI' ? 1440 : 4720;
+      const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
+      const D = parseFloat(formData.diameter) || 0;
+      const WT = parseFloat(formData.pipeWT) || 0;
+      if (!isNaN(E) && E > 0 && WT > 0 && D > 0) {
+        handleChange('celerity', parseFloat((C0 / Math.sqrt(1 + (Kw / E) * (D / WT))).toFixed(4)).toString());
       }
     }
     setManualHydraulicOverrides(prev => ({ ...prev, [field]: true }));
@@ -2297,9 +2328,18 @@ export function PropertiesPanel() {
                                     />
                                   </div>
                                   <div className="flex-1">
-                                    <div className="text-[10px] font-medium text-black mb-0.5" style={{ fontFamily: 'Poppins, sans-serif' }}>A ({areaLabel})</div>
+                                    {(() => {
+                                      const dNum = parseFloat(String(pair.d));
+                                      const dValid = !isNaN(dNum) && dNum > 0;
+                                      return (
+                                        <div className="flex items-center gap-1 text-[10px] font-medium text-black mb-0.5" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                                          A ({areaLabel})
+                                          {dValid && <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>}
+                                        </div>
+                                      );
+                                    })()}
                                     <NumericInput
-                                      className="h-6 text-[11px] font-medium text-black border-slate-300"
+                                      className={`h-6 text-[11px] font-medium text-black ${!isNaN(parseFloat(String(pair.d))) && parseFloat(String(pair.d)) > 0 ? 'bg-sky-50 border-sky-300' : 'border-slate-300'}`}
                                       value={pair.a ?? ''}
                                       onValueChange={(v) => {
                                         const a = parseFloat(v);
@@ -2426,10 +2466,23 @@ export function PropertiesPanel() {
                   </div>
                 </div>
               )}
-                <PropRow label="Manning's n" noBorder>
+                <PropRow label={
+                  <div className="flex items-center gap-1.5">
+                    <span>Manning's n</span>
+                    {manningsNIsAuto
+                      ? <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>
+                      : materialApplied
+                        ? <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Manual</span>
+                        : null}
+                  </div>
+                } noBorder>
                   <NumericInput
                     id="st-mannings-n"
                     placeholder="e.g. 0.013"
+                    readOnly={manningsNIsAuto}
+                    onFocus={() => requestHydraulicOverride('manningsN')}
+                    onClick={() => requestHydraulicOverride('manningsN')}
+                    title={manningsNIsAuto ? "Auto-filled from selected pipe material" : "Manual Manning's n entry"}
                     value={(() => {
                       if (formData.manningsN != null && formData.manningsN !== '') return formData.manningsN;
                       const f = parseFloat(formData.friction) || 0;
@@ -2439,6 +2492,7 @@ export function PropertiesPanel() {
                       return '';
                     })()}
                     onValueChange={(v) => {
+                      if (manningsNIsAuto) return;
                       const n = parseFloat(v);
                       handleChange('manningsN', v);
                       if (!isNaN(n) && n > 0) {
@@ -2449,7 +2503,7 @@ export function PropertiesPanel() {
                         }
                       }
                     }}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(manningsNIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
@@ -2496,11 +2550,12 @@ export function PropertiesPanel() {
                 const matId = formData.materialId ? Number(formData.materialId) : null;
                 const mat = matId != null ? PIPE_MATERIALS_BY_ID[matId] : null;
                 const applyStMaterial = (idStr: string) => {
-                  if (idStr === '__none__') { handleChange('materialId', ''); return; }
+                  if (idStr === '__none__') { handleChange('materialId', ''); setManualHydraulicOverrides(prev => ({ ...prev, manningsN: false, pipeE: false })); return; }
                   const id = parseInt(idStr, 10);
                   const m = PIPE_MATERIALS_BY_ID[id];
                   if (!m) return;
                   handleChange('materialId', String(id));
+                  setManualHydraulicOverrides(prev => ({ ...prev, manningsN: false, pipeE: false }));
                   const n = m.manningsN;
                   handleChange('manningsN', String(n));
                   const eVal = currentUnit === 'SI' ? m.youngsModulus_Pa : m.youngsModulus_psi;
@@ -2558,6 +2613,22 @@ export function PropertiesPanel() {
                           </Command>
                         </PopoverContent>
                       </Popover>
+                      {mat && (manningsNIsAuto || pipeEIsAuto) && (
+                        <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] text-sky-900">
+                          <div className="flex items-start gap-2">
+                            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" />
+                            <p className="leading-snug">
+                              <strong>Automatically filled:</strong>{' '}
+                              {manningsNIsAuto && pipeEIsAuto
+                                ? "Manning's n and E are auto-filled from this material."
+                                : manningsNIsAuto
+                                  ? "Manning's n is auto-filled from this material."
+                                  : "Young's Modulus (E) is auto-filled from this material."}{' '}
+                              Click a highlighted field to enter a manual value.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                       {mat && (
                         <div className="rounded border border-slate-200 bg-slate-50 overflow-hidden">
                           <button
@@ -2606,12 +2677,26 @@ export function PropertiesPanel() {
                     Enter both <strong>E</strong> and <strong>WT</strong> to calculate wave speed. Diameter is used automatically.
                   </p>
                 </div>
-                <PropRow label={`E (${currentUnit === 'SI' ? 'Pa' : 'psi'})`}>
+                <PropRow label={
+                  <div className="flex items-center gap-1.5">
+                    <span>E ({currentUnit === 'SI' ? 'Pa' : 'psi'})</span>
+                    {pipeEIsAuto
+                      ? <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>
+                      : materialApplied
+                        ? <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Manual</span>
+                        : null}
+                  </div>
+                }>
                   <NumericInput
                     id="st-pipe-e"
                     placeholder={currentUnit === 'SI' ? 'e.g. 2.07e11' : 'e.g. 30000000'}
+                    readOnly={pipeEIsAuto}
+                    onFocus={() => requestHydraulicOverride('pipeE')}
+                    onClick={() => requestHydraulicOverride('pipeE')}
+                    title={pipeEIsAuto ? "Auto-filled from selected pipe material" : "Manual E entry"}
                     value={formData.pipeE}
                     onValueChange={(v) => {
+                      if (pipeEIsAuto) return;
                       handleChange('pipeE', v);
                       const E = parseFloat(v);
                       const C0 = currentUnit === 'SI' ? 1440 : 4720;
@@ -2622,7 +2707,7 @@ export function PropertiesPanel() {
                         handleChange('celerity', parseFloat((C0 / Math.sqrt(1 + (Kw / E) * (D / WT))).toFixed(4)).toString());
                       }
                     }}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(pipeEIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
@@ -2821,6 +2906,7 @@ export function PropertiesPanel() {
                   const all = forceAll || applyMaterialToAllConduits;
                   if (idStr === '__none__') {
                     handleChange('materialId', '');
+                    setManualHydraulicOverrides(prev => ({ ...prev, manningsN: false, pipeE: false }));
                     const lbl = (formData.label as string) || '';
                     if (all || lbl) {
                       edges
@@ -2833,6 +2919,7 @@ export function PropertiesPanel() {
                   const m = PIPE_MATERIALS_BY_ID[id];
                   if (!m) return;
                   handleChange('materialId', String(id));
+                  setManualHydraulicOverrides(prev => ({ ...prev, manningsN: false, pipeE: false }));
                   const n = m.manningsN;
                   handleChange('manningsN', String(n));
                   const eVal = currentUnit === 'SI' ? m.youngsModulus_Pa : m.youngsModulus_psi;
@@ -2938,6 +3025,22 @@ export function PropertiesPanel() {
                           Apply to <strong>all conduits</strong> in network
                         </span>
                       </label>
+                      {mat && (manningsNIsAuto || pipeEIsAuto) && (
+                        <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] text-sky-900">
+                          <div className="flex items-start gap-2">
+                            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" />
+                            <p className="leading-snug">
+                              <strong>Automatically filled:</strong>{' '}
+                              {manningsNIsAuto && pipeEIsAuto
+                                ? "Manning's n and E are auto-filled from this material."
+                                : manningsNIsAuto
+                                  ? "Manning's n is auto-filled from this material."
+                                  : "Young's Modulus (E) is auto-filled from this material."}{' '}
+                              Click a highlighted field to enter a manual value.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                       {mat && (
                         <div className="rounded border border-slate-200 bg-slate-50 overflow-hidden">
                           <button
@@ -2987,13 +3090,27 @@ export function PropertiesPanel() {
                     Enter both <strong>E</strong> and <strong>WT</strong> to calculate wave speed. Diameter is used automatically.
                   </p>
                 </div>
-                <PropRow label={`E (${currentUnit === 'SI' ? 'Pa' : 'psi'})`}>
+                <PropRow label={
+                  <div className="flex items-center gap-1.5">
+                    <span>E ({currentUnit === 'SI' ? 'Pa' : 'psi'})</span>
+                    {pipeEIsAuto
+                      ? <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>
+                      : materialApplied
+                        ? <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Manual</span>
+                        : null}
+                  </div>
+                }>
                   <NumericInput
                     id="pipe-e"
                     data-testid="input-pipe-e"
                     placeholder={currentUnit === 'SI' ? 'e.g. 2.07e11' : 'e.g. 30000000'}
+                    readOnly={pipeEIsAuto}
+                    onFocus={() => requestHydraulicOverride('pipeE')}
+                    onClick={() => requestHydraulicOverride('pipeE')}
+                    title={pipeEIsAuto ? "Auto-filled from selected pipe material" : "Manual E entry"}
                     value={formData.pipeE}
                     onValueChange={(v) => {
+                      if (pipeEIsAuto) return;
                       handleChange('pipeE', v);
                       const E = parseFloat(v);
                       const C0 = currentUnit === 'SI' ? 1440 : 4720;
@@ -3005,7 +3122,7 @@ export function PropertiesPanel() {
                         handleChange('celerity', parseFloat(c.toFixed(4)).toString());
                       }
                     }}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(pipeEIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
@@ -3043,11 +3160,24 @@ export function PropertiesPanel() {
 
               {/* ── MANNING'S n ── */}
               <PropSection title="Manning's Coefficient">
-                <PropRow label="n" noBorder>
+                <PropRow label={
+                  <div className="flex items-center gap-1.5">
+                    <span>n</span>
+                    {manningsNIsAuto
+                      ? <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>
+                      : materialApplied
+                        ? <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Manual</span>
+                        : null}
+                  </div>
+                } noBorder>
                   <NumericInput
                     id="mannings-n"
                     data-testid="input-mannings-n"
                     placeholder="e.g. 0.013"
+                    readOnly={manningsNIsAuto}
+                    onFocus={() => requestHydraulicOverride('manningsN')}
+                    onClick={() => requestHydraulicOverride('manningsN')}
+                    title={manningsNIsAuto ? "Auto-filled from selected pipe material" : "Manual Manning's n entry"}
                     value={(() => {
                       if (formData.manningsN != null && formData.manningsN !== '') return formData.manningsN;
                       const f = parseFloat(formData.friction) || 0;
@@ -3057,6 +3187,7 @@ export function PropertiesPanel() {
                       return '';
                     })()}
                     onValueChange={(v) => {
+                      if (manningsNIsAuto) return;
                       const n = parseFloat(v);
                       handleChange('manningsN', v);
                       if (!isNaN(n) && n > 0) {
@@ -3068,7 +3199,7 @@ export function PropertiesPanel() {
                         }
                       }
                     }}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(manningsNIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
@@ -3189,10 +3320,7 @@ export function PropertiesPanel() {
               Override automatic calculation?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {hydraulicFieldLabel} is currently calculated automatically from
-              related pipe parameters. Entering a manual value will stop the
-              automatic calculation for this field until one of its source
-              parameters is changed. Do you want to accept the manual value?
+              {hydraulicFieldDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           {pendingHydraulicOverride && (

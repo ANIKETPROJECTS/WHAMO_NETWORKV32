@@ -355,6 +355,16 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
             </div>
           </div>
 
+          {/* Generated indicator */}
+          {generated && (
+            <div className="flex items-start gap-1.5 bg-sky-50 border border-sky-200 rounded px-2 py-1.5">
+              <Info className="h-3 w-3 text-sky-500 mt-0.5 flex-shrink-0" />
+              <p className="text-[10px] text-sky-800">
+                <strong>Automatically generated:</strong> TCHAR TYPE {tType} values were computed from the <strong>{nsGroup.label}</strong> hill chart library. Edit the tables directly to adjust manually.
+              </p>
+            </div>
+          )}
+
           {/* Preview block */}
           {previewBlock && (
             <div className="space-y-1">
