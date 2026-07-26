@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type ComponentProps } from 'react';
 import { useNetworkStore, type UnitSystem, type PcharType, type TcharType } from '@/lib/store';
 import { PropSection, PropRow } from '@/components/ui/prop-section';
 import { PIPE_MATERIALS, PIPE_MATERIALS_BY_ID } from '@/lib/pipe-materials';
+import { CROSS_SECTION_SHAPES } from '@/lib/cross-section-shapes';
 import { TurbineCurvePanel } from '@/components/TurbineCurvePanel';
 import { PumpCurvePanel } from '@/components/PumpCurvePanel';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -725,15 +726,9 @@ export function PropertiesPanel() {
     //      with the shape formula and avoids compounding rounding errors.
     //   4. For custom shapes (no D link): scale A with the area factor and
     //      perimeter with the length factor directly.
-    const SHAPE_FACTORS: Record<string, { aFactor: number; pFactor: number }> = {
-      circular:            { aFactor: 0.785, pFactor: 3.14  },
-      horseshoe:           { aFactor: 0.829, pFactor: 3.27  },
-      modified_horseshoe:  { aFactor: 0.893, pFactor: 3.58  },
-      dshaped:             { aFactor: 0.813, pFactor: 3.21  },
-    };
     const shapePairs: any[] = Array.isArray(formData.shape) ? (formData.shape as any[]) : [];
     const shapeTypeCurrent: string = String(formData.shapeType || 'custom');
-    const currentShapeFactor = SHAPE_FACTORS[shapeTypeCurrent];
+    const currentShapeFactor = CROSS_SECTION_SHAPES[shapeTypeCurrent];
 
     if (shapePairs.length > 0) {
       dataUpdate.shape = shapePairs.map((pair: any) => {
@@ -2224,13 +2219,7 @@ export function PropertiesPanel() {
                   <div className="px-3 pb-3 space-y-2">
                     {/* ── Shape Type selector ── */}
                     {(() => {
-                      const SHAPE_DEFS: Record<string, { label: string; aFactor: number; pFactor: number }> = {
-                        circular:          { label: 'Circular',              aFactor: 0.785, pFactor: 3.14 },
-                        horseshoe:         { label: 'Horse Shoe',            aFactor: 0.829, pFactor: 3.27 },
-                        modified_horseshoe:{ label: 'Modified Horse Shoe',   aFactor: 0.893, pFactor: 3.58 },
-                        dshaped:           { label: 'D-Shaped',              aFactor: 0.813, pFactor: 3.21 },
-                        custom:            { label: 'Custom',                aFactor: 0,     pFactor: 0    },
-                      };
+                      const SHAPE_DEFS = CROSS_SECTION_SHAPES;
                       const shapeType: string = (formData.shapeType as string) || 'custom';
                       const isAuto = shapeType !== 'custom' && !!SHAPE_DEFS[shapeType];
                       const def = SHAPE_DEFS[shapeType];
@@ -2806,13 +2795,7 @@ export function PropertiesPanel() {
                 {formData.variable && (
                   <div className="px-3 pb-3 space-y-3">
                     {(() => {
-                      const SHAPE_DEFS: Record<string, { label: string; aFactor: number; pFactor: number }> = {
-                        circular:           { label: 'Circular',            aFactor: 0.785, pFactor: 3.14 },
-                        horseshoe:          { label: 'Horse Shoe',          aFactor: 0.829, pFactor: 3.27 },
-                        modified_horseshoe: { label: 'Modified Horse Shoe', aFactor: 0.893, pFactor: 3.58 },
-                        dshaped:            { label: 'D-Shaped',            aFactor: 0.813, pFactor: 3.21 },
-                        custom:             { label: 'Custom',              aFactor: 0,     pFactor: 0    },
-                      };
+                      const SHAPE_DEFS = CROSS_SECTION_SHAPES;
                       const shapeType: string = (formData.shapeType as string) || 'custom';
                       const isAuto = shapeType !== 'custom' && !!SHAPE_DEFS[shapeType];
                       const def = SHAPE_DEFS[shapeType] ?? SHAPE_DEFS.custom;

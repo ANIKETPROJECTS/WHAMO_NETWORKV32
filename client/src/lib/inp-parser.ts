@@ -1,4 +1,5 @@
 import { WhamoNode, WhamoEdge, PcharType, TcharType } from './store';
+import { inferCrossSectionShape } from './cross-section-shapes';
 
 interface ParsedTopology {
   elemLinks: Map<string, { from: string; to: string; type: 'link' }>;
@@ -14,7 +15,7 @@ interface ParsedElements {
   conduits: Map<string, {
     length: number; diameter: number; celerity: number; friction: number;
     numseg?: number; hasAddedLoss?: boolean; cplus?: number; cminus?: number;
-    variable?: boolean; distance?: number; area?: number; d?: number; a?: number;
+    variable?: boolean; shapeType?: string; distance?: number; area?: number; d?: number; a?: number;
   }>;
   pumps: Map<string, { pumpType: number; rq: number; rhead: number; rspeed: number; rtorque: number; wr2: number }>;
   turbines: Map<string, { turbineType: number; syncSpeed: number; wr2: number; turbFriction: number; windage: number; turbineDiameter?: number }>;
@@ -474,7 +475,9 @@ function parseElementProperties(lines: string[]): ParsedElements {
         conduits.set(id, {
           length, diameter, celerity, friction,
           numseg, hasAddedLoss, cplus, cminus,
-          variable, distance, area, d, a
+          variable,
+          shapeType: variable ? inferCrossSectionShape(d, a) : undefined,
+          distance, area, d, a
         });
       }
       continue;
@@ -1248,6 +1251,7 @@ function buildReactFlowGraph(
             cplus: c.cplus,
             cminus: c.cminus,
             variable: c.variable,
+            shapeType: c.shapeType,
             distance: c.distance,
             area: c.area,
             d: c.d,

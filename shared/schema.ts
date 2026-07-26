@@ -96,6 +96,7 @@ export const conduitPropsSchema = z.object({
   comment: z.string().optional(),
   // VARIABLE section
   variable: z.boolean().optional(),
+  shapeType: z.string().optional(),
   distance: z.number().optional(),
   area: z.number().optional(),
   d: z.number().optional(),

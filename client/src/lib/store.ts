@@ -87,6 +87,8 @@ interface EdgeData extends Record<string, unknown> {
   hasAddedLoss?: boolean;
   comment?: string;
   variable?: boolean;
+  /** UI-only shape selection for VARIABLE D/A auto-calculation. */
+  shapeType?: string;
   distance?: number | string;
   area?: number | string;
   d?: number | string;
