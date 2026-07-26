@@ -520,12 +520,14 @@ export function PropertiesPanel() {
   const currentUnit = (formData.unit as UnitSystem) || globalUnit;
 
   const isConduit = !isNode && (element.data?.type === 'conduit' || !element.data?.type);
-  const waveSpeedIsAuto = isConduit
+  const isSurgeTank = isNode && (element.data?.type === 'surgeTank' || !!formData.type_st);
+  const hasHydraulicAutoCalculation = isConduit || isSurgeTank;
+  const waveSpeedIsAuto = hasHydraulicAutoCalculation
     && !manualHydraulicOverrides.celerity
     && parseFloat(formData.pipeE) > 0
     && parseFloat(formData.pipeWT) > 0
     && parseFloat(formData.diameter) > 0;
-  const frictionIsAuto = isConduit
+  const frictionIsAuto = hasHydraulicAutoCalculation
     && !manualHydraulicOverrides.friction
     && parseFloat(formData.manningsN) > 0
     && parseFloat(formData.diameter) > 0;
@@ -2362,16 +2364,33 @@ export function PropertiesPanel() {
                   <NumericInput
                     id="st-celerity"
                     value={formData.celerity}
-                    onValueChange={(v) => handleChange('celerity', v)}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    readOnly={waveSpeedIsAuto}
+                    onFocus={() => requestHydraulicOverride('celerity')}
+                    onClick={() => requestHydraulicOverride('celerity')}
+                    onValueChange={(v) => {
+                      if (!waveSpeedIsAuto) handleChange('celerity', v);
+                    }}
+                    title={waveSpeedIsAuto ? 'Automatically calculated from E, WT, and diameter' : 'Manual wave speed entry'}
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(waveSpeedIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
-                <PropRow label="Friction">
+                <PropRow label={
+                  <div className="flex items-center gap-1.5">
+                    <span>Friction</span>
+                    {frictionIsAuto
+                      ? <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>
+                      : <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Manual</span>}
+                  </div>
+                } noBorder>
                   <NumericInput
                     id="st-friction"
                     value={formData.friction}
+                    readOnly={frictionIsAuto}
+                    onFocus={() => requestHydraulicOverride('friction')}
+                    onClick={() => requestHydraulicOverride('friction')}
                     onValueChange={(v) => {
+                      if (frictionIsAuto) return;
                       handleChange('friction', v);
                       const f = parseFloat(v);
                       const diam = parseFloat(formData.diameter) || 0;
@@ -2380,10 +2399,33 @@ export function PropertiesPanel() {
                         handleChange('manningsN', parseFloat(Math.sqrt((f * Math.pow(diam, 1 / 3)) / K).toFixed(6)).toString());
                       }
                     }}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    title={frictionIsAuto ? "Automatically calculated from Manning's n and diameter" : 'Manual friction entry'}
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(frictionIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
+              {/* The same source fields are used by the conduit and surge-tank
+                  calculations, so show the explanation next to the values users
+                  may otherwise mistake for ordinary editable inputs. */}
+              {(waveSpeedIsAuto || frictionIsAuto) && (
+                <div
+                  className="mx-3 mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2.5 text-[11px] text-sky-900"
+                  data-testid="info-automatic-hydraulic-parameters-surge-tank"
+                >
+                  <div className="flex items-start gap-2">
+                    <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" />
+                    <p className="leading-snug">
+                      <strong>Automatically calculated:</strong>{' '}
+                      {waveSpeedIsAuto && frictionIsAuto
+                        ? 'Wave Speed and Friction are calculated from the related pipe inputs.'
+                        : waveSpeedIsAuto
+                          ? 'Wave Speed is calculated from E, WT, and diameter.'
+                          : 'Friction is calculated from Manning’s n and diameter.'}{' '}
+                      Click a highlighted field to review the warning before entering a manual value.
+                    </p>
+                  </div>
+                </div>
+              )}
                 <PropRow label="Manning's n" noBorder>
                   <NumericInput
                     id="st-mannings-n"

@@ -100,8 +100,8 @@ Preferred communication style: Simple, everyday language.
 - The WHAMO engine (`server/engines/WHAMO.EXE`) requires `wine` to run on Linux and is executed in an isolated temporary directory without invoking a shell
 
 ### Replit setup status
-- Root dependencies are installed with pnpm; run `npm run dev` to start the WHAMO Designer.
-- Workspace dependencies are installed from `GRAPHVISUALIZATIONCODE/pnpm-lock.yaml`.
+- Run `npm run setup:replit` after importing or cloning to install root dependencies from `package-lock.json` and workspace dependencies from `GRAPHVISUALIZATIONCODE/pnpm-lock.yaml`.
+- Run `npm run dev` to start the WHAMO Designer.
 - Run `cd GRAPHVISUALIZATIONCODE && pnpm run typecheck` to check the standalone workspace.
 - Run `cd GRAPHVISUALIZATIONCODE && pnpm run build` to build the standalone viewer, API, and preview packages.
 - The root app requires `MONGODB_URI` and `JWT_SECRET` at startup; keep both configured as Replit environment values.

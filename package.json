@@ -7,6 +7,7 @@
     "dev": "NODE_ENV=development node_modules/.bin/tsx server/index.ts",
     "build": "node_modules/.bin/tsx script/build.ts",
     "start": "NODE_ENV=production node dist/index.cjs",
+    "setup:replit": "npm install --no-audit && pnpm --dir GRAPHVISUALIZATIONCODE install --frozen-lockfile",
     "check": "npx tsc",
     "db:push": "npx drizzle-kit push"
   },
