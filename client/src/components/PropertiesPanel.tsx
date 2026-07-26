@@ -351,6 +351,7 @@ export function PropertiesPanel() {
   const [stMaterialPickerOpen, setStMaterialPickerOpen] = useState(false);
   const [stShowMaterialProps, setStShowMaterialProps] = useState(false);
   const [stShapeTypeOpen, setStShapeTypeOpen] = useState(false);
+  const [conduitShapeTypeOpen, setConduitShapeTypeOpen] = useState(false);
   const [manualHydraulicOverrides, setManualHydraulicOverrides] = useState({
     celerity: false,
     friction: false,
@@ -832,7 +833,7 @@ export function PropertiesPanel() {
 
   const PROFILE_FIELDS = [
     'type', 'length', 'diameter', 'celerity', 'friction', 'numSegments',
-    'variable', 'distance', 'area', 'd', 'a', 'pipeE', 'pipeWT', 'manningsN',
+    'variable', 'shapeType', 'distance', 'area', 'd', 'a', 'pipeE', 'pipeWT', 'manningsN',
     'cplus', 'cminus', 'hasAddedLoss', 'includeNumSegments',
   ];
 
@@ -2803,23 +2804,110 @@ export function PropertiesPanel() {
                   </label>
                 </PropRow>
                 {formData.variable && (
-                  <div className="px-3 pb-3 grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>Distance ({currentUnit === 'SI' ? 'm' : 'ft'})</div>
-                      <NumericInput id="distance" value={formData.distance} onValueChange={(v) => handleChange('distance', v)} className="h-7 text-[11px] border-slate-300" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>Area ({currentUnit === 'SI' ? 'm²' : 'ft²'})</div>
-                      <NumericInput id="area" value={formData.area} onValueChange={(v) => handleChange('area', v)} className="h-7 text-[11px] border-slate-300" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>D ({currentUnit === 'SI' ? 'm' : 'ft'})</div>
-                      <NumericInput id="d" value={formData.d} onValueChange={(v) => handleChange('d', v)} className="h-7 text-[11px] border-slate-300" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>A ({currentUnit === 'SI' ? 'm²' : 'ft²'})</div>
-                      <NumericInput id="a" value={formData.a} onValueChange={(v) => handleChange('a', v)} className="h-7 text-[11px] border-slate-300" />
-                    </div>
+                  <div className="px-3 pb-3 space-y-3">
+                    {(() => {
+                      const SHAPE_DEFS: Record<string, { label: string; aFactor: number; pFactor: number }> = {
+                        circular:           { label: 'Circular',            aFactor: 0.785, pFactor: 3.14 },
+                        horseshoe:          { label: 'Horse Shoe',          aFactor: 0.829, pFactor: 3.27 },
+                        modified_horseshoe: { label: 'Modified Horse Shoe', aFactor: 0.893, pFactor: 3.58 },
+                        dshaped:            { label: 'D-Shaped',            aFactor: 0.813, pFactor: 3.21 },
+                        custom:             { label: 'Custom',              aFactor: 0,     pFactor: 0    },
+                      };
+                      const shapeType: string = (formData.shapeType as string) || 'custom';
+                      const isAuto = shapeType !== 'custom' && !!SHAPE_DEFS[shapeType];
+                      const def = SHAPE_DEFS[shapeType] ?? SHAPE_DEFS.custom;
+                      const dimLabel = currentUnit === 'SI' ? 'm' : 'ft';
+                      const areaLabel = currentUnit === 'SI' ? 'm²' : 'ft²';
+                      const dNum = parseFloat(String(formData.d));
+                      const dValid = !isNaN(dNum) && dNum > 0;
+                      return (
+                        <>
+                          {/* Shape type selector */}
+                          <div>
+                            <div className="text-[10px] font-semibold text-black uppercase tracking-wide mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Shape Type</div>
+                            <Select
+                              open={conduitShapeTypeOpen}
+                              onOpenChange={setConduitShapeTypeOpen}
+                              value={shapeType}
+                              onValueChange={(v) => {
+                                setConduitShapeTypeOpen(false);
+                                handleChange('shapeType', v);
+                                const newDef = SHAPE_DEFS[v];
+                                if (newDef && v !== 'custom') {
+                                  const d = parseFloat(String(formData.d));
+                                  if (!isNaN(d) && d > 0) {
+                                    handleChange('a', parseFloat((newDef.aFactor * d * d).toFixed(6)).toString());
+                                  }
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="h-7 text-[11px] font-medium text-black border-slate-300 bg-white" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                                <SelectValue placeholder="— Select shape —" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(SHAPE_DEFS).map(([k, s]) => (
+                                  <SelectItem key={k} value={k} className="text-[11px]">{s.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {isAuto && (
+                              <div className="mt-1 rounded bg-slate-100 px-2 py-1 text-[10px] text-black font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                                A = {def.aFactor} · D² &nbsp;|&nbsp; P = {def.pFactor} · D
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Fields grid */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>Distance ({dimLabel})</div>
+                              <NumericInput id="distance" value={formData.distance} onValueChange={(v) => handleChange('distance', v)} className="h-7 text-[11px] border-slate-300" />
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>Area ({areaLabel})</div>
+                              <NumericInput id="area" value={formData.area} onValueChange={(v) => handleChange('area', v)} className="h-7 text-[11px] border-slate-300" />
+                            </div>
+                            <div className="space-y-1">
+                              <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>D ({dimLabel})</div>
+                              <NumericInput
+                                id="d"
+                                value={formData.d}
+                                onValueChange={(v) => {
+                                  handleChange('d', v);
+                                  if (isAuto) {
+                                    const d = parseFloat(v);
+                                    if (!isNaN(d) && d > 0) {
+                                      handleChange('a', parseFloat((def.aFactor * d * d).toFixed(6)).toString());
+                                    }
+                                  }
+                                }}
+                                className="h-7 text-[11px] border-slate-300"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1 text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                                A ({areaLabel})
+                                {isAuto && dValid && <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>}
+                              </div>
+                              <NumericInput
+                                id="a"
+                                value={formData.a}
+                                onValueChange={(v) => {
+                                  handleChange('a', v);
+                                  if (isAuto && def.aFactor > 0) {
+                                    const a = parseFloat(v);
+                                    if (!isNaN(a) && a > 0) {
+                                      handleChange('d', parseFloat(Math.sqrt(a / def.aFactor).toFixed(6)).toString());
+                                    }
+                                  }
+                                }}
+                                className={`h-7 text-[11px] ${isAuto && dValid ? 'bg-sky-50 border-sky-300' : 'border-slate-300'}`}
+                              />
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </PropSection>
