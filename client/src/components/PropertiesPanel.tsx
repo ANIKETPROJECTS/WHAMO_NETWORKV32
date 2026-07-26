@@ -14,7 +14,17 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, ChevronDown, ChevronRight, Plus, CheckCircle2, Save, AlertTriangle } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronRight, Plus, CheckCircle2, Save, AlertTriangle, Info } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { getNodeSequenceViolations } from '@/lib/validator';
 import saveIconImg from '@assets/diskette_(1)_1779571608664.png';
@@ -341,6 +351,14 @@ export function PropertiesPanel() {
   const [stMaterialPickerOpen, setStMaterialPickerOpen] = useState(false);
   const [stShowMaterialProps, setStShowMaterialProps] = useState(false);
   const [stShapeTypeOpen, setStShapeTypeOpen] = useState(false);
+  const [manualHydraulicOverrides, setManualHydraulicOverrides] = useState({
+    celerity: false,
+    friction: false,
+  });
+  const [pendingHydraulicOverride, setPendingHydraulicOverride] = useState<{
+    field: 'celerity' | 'friction';
+    value: string;
+  } | null>(null);
 
   useEffect(() => {
     const el = selectedElementId
@@ -358,6 +376,11 @@ export function PropertiesPanel() {
       setFormData({ ...element.data });
       setIsDirty(false);
     }
+  }, [selectedElementId]);
+
+  useEffect(() => {
+    setManualHydraulicOverrides({ celerity: false, friction: false });
+    setPendingHydraulicOverride(null);
   }, [selectedElementId]);
 
   // Re-sync formData when the underlying element's unit changes (e.g. via the
@@ -495,6 +518,49 @@ export function PropertiesPanel() {
   if (!element) return null;
 
   const currentUnit = (formData.unit as UnitSystem) || globalUnit;
+
+  const isConduit = !isNode && (element.data?.type === 'conduit' || !element.data?.type);
+  const waveSpeedIsAuto = isConduit
+    && !manualHydraulicOverrides.celerity
+    && parseFloat(formData.pipeE) > 0
+    && parseFloat(formData.pipeWT) > 0
+    && parseFloat(formData.diameter) > 0;
+  const frictionIsAuto = isConduit
+    && !manualHydraulicOverrides.friction
+    && parseFloat(formData.manningsN) > 0
+    && parseFloat(formData.diameter) > 0;
+  const calculatedInputClass = (isAuto: boolean) =>
+    isAuto
+      ? 'bg-sky-50 border-sky-300 focus-visible:ring-sky-400'
+      : 'bg-white border-slate-300';
+
+  const hydraulicFieldLabel = pendingHydraulicOverride?.field === 'celerity'
+    ? 'Wave Speed'
+    : 'Friction';
+
+  const requestHydraulicOverride = (field: 'celerity' | 'friction') => {
+    const isAutomatic = field === 'celerity' ? waveSpeedIsAuto : frictionIsAuto;
+    if (isAutomatic) {
+      setPendingHydraulicOverride({ field, value: String(formData[field] ?? '') });
+      return;
+    }
+  };
+
+  const acceptHydraulicOverride = () => {
+    if (!pendingHydraulicOverride) return;
+    const { field, value } = pendingHydraulicOverride;
+    handleChange(field, value);
+    if (field === 'friction') {
+      const f = parseFloat(value);
+      const diam = parseFloat(formData.diameter) || 0;
+      const K = currentUnit === 'SI' ? 124.58 : 185;
+      if (!isNaN(f) && f > 0 && diam > 0) {
+        handleChange('manningsN', parseFloat(Math.sqrt((f * Math.pow(diam, 1 / 3)) / K).toFixed(6)).toString());
+      }
+    }
+    setManualHydraulicOverrides(prev => ({ ...prev, [field]: true }));
+    setPendingHydraulicOverride(null);
+  };
 
   const SI_TO_FPS = {
     length: 3.28084, // m to ft
@@ -719,6 +785,16 @@ export function PropertiesPanel() {
 
     setFormData(prev => ({ ...prev, ...update }));
     setIsDirty(true);
+
+    // Editing any source input puts its dependent hydraulic value back into
+    // automatic mode. A confirmed manual override remains in effect until
+    // one of its source inputs changes.
+    if (key === 'pipeE' || key === 'pipeWT' || key === 'diameter') {
+      setManualHydraulicOverrides(prev => ({ ...prev, celerity: false }));
+    }
+    if (key === 'manningsN' || key === 'diameter') {
+      setManualHydraulicOverrides(prev => ({ ...prev, friction: false }));
+    }
   };
 
   const PROFILE_FIELDS = [
@@ -2623,10 +2699,29 @@ export function PropertiesPanel() {
 
               {/* ── HYDRAULICS ── */}
               <PropSection title="Hydraulics">
+                {(waveSpeedIsAuto || frictionIsAuto) && (
+                  <div
+                    className="mx-3 mt-3 rounded-md border border-sky-200 bg-sky-50 px-3 py-2.5 text-[11px] text-sky-900"
+                    data-testid="info-automatic-hydraulic-parameters"
+                  >
+                    <div className="flex items-start gap-2">
+                      <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" />
+                      <p className="leading-snug">
+                        <strong>Automatically calculated:</strong>{' '}
+                        {waveSpeedIsAuto && frictionIsAuto
+                          ? 'Wave Speed and Friction are calculated from the related pipe inputs.'
+                          : waveSpeedIsAuto
+                            ? 'Wave Speed is calculated from E, WT, and diameter.'
+                            : 'Friction is calculated from Manning’s n and diameter.'}{' '}
+                        To enter a value manually, edit the highlighted field and confirm the warning.
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <PropRow label={
                   <div className="flex items-center gap-1.5">
                     <span>Wave Speed ({currentUnit === 'SI' ? 'm/s' : 'ft/s'})</span>
-                    {(parseFloat(formData.pipeE) > 0 && parseFloat(formData.pipeWT) > 0)
+                    {waveSpeedIsAuto
                       ? <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>
                       : <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Manual</span>}
                   </div>
@@ -2634,17 +2729,32 @@ export function PropertiesPanel() {
                   <NumericInput
                     id="celerity"
                     value={formData.celerity}
-                    onValueChange={(v) => handleChange('celerity', v)}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    readOnly={waveSpeedIsAuto}
+                    onFocus={() => requestHydraulicOverride('celerity')}
+                    onValueChange={(v) => {
+                      if (!waveSpeedIsAuto) handleChange('celerity', v);
+                    }}
+                    title={waveSpeedIsAuto ? 'Automatically calculated from E, WT, and diameter' : 'Manual wave speed entry'}
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(waveSpeedIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
-                <PropRow label="Friction (f)" noBorder>
+                <PropRow label={
+                  <div className="flex items-center gap-1.5">
+                    <span>Friction (f)</span>
+                    {frictionIsAuto
+                      ? <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>
+                      : <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 text-amber-700 font-semibold">Manual</span>}
+                  </div>
+                } noBorder>
                   <NumericInput
                     id="friction"
                     data-testid="input-friction"
                     value={formData.friction}
+                    readOnly={frictionIsAuto}
+                    onFocus={() => requestHydraulicOverride('friction')}
                     onValueChange={(v) => {
+                      if (frictionIsAuto) return;
                       handleChange('friction', v);
                       const f = parseFloat(v);
                       const diam = parseFloat(formData.diameter) || 0;
@@ -2654,7 +2764,8 @@ export function PropertiesPanel() {
                         handleChange('manningsN', parseFloat(n.toFixed(6)).toString());
                       }
                     }}
-                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    title={frictionIsAuto ? "Automatically calculated from Manning's n and diameter" : 'Manual friction entry'}
+                    className={`h-7 text-[12px] font-medium text-black ${calculatedInputClass(frictionIsAuto)}`}
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
@@ -3022,6 +3133,62 @@ export function PropertiesPanel() {
         </div>
 
       </div>
+
+      <AlertDialog
+        open={pendingHydraulicOverride !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingHydraulicOverride(null);
+        }}
+      >
+        <AlertDialogContent data-testid="dialog-hydraulic-override">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-700">
+              <AlertTriangle className="h-5 w-5" />
+              Override automatic calculation?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {hydraulicFieldLabel} is currently calculated automatically from
+              related pipe parameters. Entering a manual value will stop the
+              automatic calculation for this field until one of its source
+              parameters is changed. Do you want to accept the manual value?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {pendingHydraulicOverride && (
+            <div className="space-y-1.5">
+              <label
+                htmlFor="hydraulic-override-value"
+                className="text-[11px] font-semibold text-slate-700"
+              >
+                Manual {hydraulicFieldLabel} value
+              </label>
+              <NumericInput
+                id="hydraulic-override-value"
+                data-testid="input-hydraulic-override-value"
+                autoFocus
+                value={pendingHydraulicOverride.value}
+                onValueChange={(value) =>
+                  setPendingHydraulicOverride(prev =>
+                    prev ? { ...prev, value } : prev
+                  )
+                }
+                className="h-9 text-sm border-amber-300 bg-amber-50 focus-visible:ring-amber-400"
+              />
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-hydraulic-override">
+              Keep automatic value
+            </AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="button-confirm-hydraulic-override"
+              onClick={acceptHydraulicOverride}
+              className="bg-amber-600 text-white hover:bg-amber-700"
+            >
+              Use manual value
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Fixed footer: pill-shaped Save / Delete ── */}
       <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3">
