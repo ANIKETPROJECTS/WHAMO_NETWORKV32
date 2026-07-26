@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useNetworkStore, type UnitSystem, type PcharType } from '@/lib/store';
 import { PIPE_MATERIALS, PIPE_MATERIALS_BY_ID } from '@/lib/pipe-materials';
+import { CROSS_SECTION_SHAPES, calculateCrossSectionArea } from '@/lib/cross-section-shapes';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -95,7 +96,7 @@ type ColKey = string;
 const COLS: Record<FilterKey, ColKey[]> = {
   all:         ['rowNum','type','unitToggle','label','pipeType','nodeNum','diameter','length','celerity','friction','elevation','comment'],
   conduit:     ['rowNum','unitToggle','label','pipeType','material','length','diameter','celerity','friction','manningsN','segments','inclSegments',
-                 'hasAddedLoss','cplus','cminus','pipeE','pipeWT','variable','distance','area','d','a','comment'],
+                 'hasAddedLoss','cplus','cminus','pipeE','pipeWT','variable','shapeType','distance','area','d','a','comment'],
   dummy:       ['rowNum','unitToggle','label','pipeType','diameter','hasAddedLoss','cplus','cminus','comment'],
   node:        ['rowNum','type','unitToggle','label','nodeNum','elevation','comment'],
   reservoir:   ['rowNum','unitToggle','label','nodeNum','elevation','mode','resElev','hSchedNum','thPairs','comment'],
@@ -969,6 +970,25 @@ function RowCells({
       <BoolCell key={col} value={!!d.variable} trueLabel="Yes" falseLabel="No"
         dimmed={!isConduit} onChange={isConduit ? v => changeEdge('variable', String(v)) : undefined} testId={`cell-variable-${row.id}`} />
     );
+    case 'shapeType': {
+      // Surge-tank shape pairs use the dedicated editor case below. This
+      // column entry is for conduit VARIABLE D/A fields.
+      const applicable = isConduit && !!d.variable;
+      return (
+        <SelectCell
+          key={col}
+          value={applicable ? String(d.shapeType || 'custom') : ''}
+          options={Object.entries(CROSS_SECTION_SHAPES).map(([value, shape]) => ({ label: shape.label, value }))}
+          dimmed={!applicable}
+          onChange={applicable ? (value) => {
+            const area = calculateCrossSectionArea(value, parseFloat(String(d.d)));
+            changeEdge('shapeType', value);
+            if (area !== undefined) changeEdge('a', String(area));
+          } : undefined}
+          testId={`cell-shapetype-${row.id}`}
+        />
+      );
+    }
     case 'distance': return (
       <EditableCell key={col} value={d.distance ?? ''} type="text" inputMode="decimal"
         readOnly={!d.variable} dimmed={!d.variable}
@@ -982,12 +1002,21 @@ function RowCells({
     case 'd': return (
       <EditableCell key={col} value={d.d ?? ''} type="text" inputMode="decimal"
         readOnly={!d.variable} dimmed={!d.variable}
-        onChange={v => changeEdge('d', v)} testId={`cell-d-${row.id}`} />
+        onChange={v => {
+          changeEdge('d', v);
+          const area = calculateCrossSectionArea(String(d.shapeType || 'custom'), parseFloat(v));
+          if (area !== undefined) changeEdge('a', String(area));
+        }} testId={`cell-d-${row.id}`} />
     );
     case 'a': return (
       <EditableCell key={col} value={d.a ?? ''} type="text" inputMode="decimal"
         readOnly={!d.variable} dimmed={!d.variable}
-        onChange={v => changeEdge('a', v)} testId={`cell-a-${row.id}`} />
+        onChange={v => {
+          changeEdge('a', v);
+          const factor = CROSS_SECTION_SHAPES[String(d.shapeType || 'custom')]?.aFactor;
+          const area = parseFloat(v);
+          if (factor && area > 0) changeEdge('d', String(parseFloat(Math.sqrt(area / factor).toFixed(6))));
+        }} testId={`cell-a-${row.id}`} />
     );
     case 'elevation': return (
       <EditableCell key={col} value={!isEdge ? fmt(d.elevation) : ''} type="text" inputMode="decimal"
@@ -1053,20 +1082,6 @@ function RowCells({
     case 'hasShape': return (
       <BoolCell key={col} value={!!d.hasShape} trueLabel="Yes" falseLabel="No"
         dimmed={!isSurge} onChange={isSurge ? v => changeNode('hasShape', String(v)) : undefined} testId={`cell-hasshape-${row.id}`} />
-    );
-    case 'shapeType': return (
-      <SelectCell key={col}
-        value={isSurge && d.hasShape ? (String(d.shapeType || 'custom')) : ''}
-        options={[
-          { label: 'Custom', value: 'custom' },
-          { label: 'Circular', value: 'circular' },
-          { label: 'Horse Shoe', value: 'horseshoe' },
-          { label: 'Mod. Horse Shoe', value: 'modified_horseshoe' },
-          { label: 'D-Shaped', value: 'dshaped' },
-        ]}
-        dimmed={!isSurge || !d.hasShape}
-        onChange={isSurge && d.hasShape ? v => changeNode('shapeType', v) : undefined}
-        testId={`cell-shapetype-${row.id}`} />
     );
     case 'shapePairs': return (
       <PairsPreviewCell

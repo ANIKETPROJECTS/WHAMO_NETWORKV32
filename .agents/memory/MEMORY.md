@@ -6,3 +6,4 @@
 - [OPPUMP mode parsing](oppump-mode.md) — oppumps changed from Set to Map storing {mode,toff?}; pumpOpMode/pumpToff added to both NodeData and EdgeData; generator writes SHUTOFF TOFF X vs PUMP correctly.
 - [Root typecheck baseline](root-typecheck-baseline.md) — the imported root app can build and run while its legacy npm run check still reports unrelated TypeScript errors.
 - [Hydraulic automatic overrides](hydraulic-automatic-overrides.md) — calculated celerity/friction fields must explain their source inputs and require confirmation before manual override.
+- [Conduit variable shapes](conduit-variable-shapes.md) — shape labels are UI metadata; persist numeric D/A and infer named shapes only when imported ratios match.

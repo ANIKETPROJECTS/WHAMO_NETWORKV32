@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { CROSS_SECTION_SHAPES, calculateCrossSectionArea } from './cross-section-shapes';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -104,6 +105,7 @@ export const TAB_COLS: Record<FilterKey, ColDef[]> = {
     { key: 'pipeE',              header: 'E (Modulus)',     type: 'number', width: 16 },
     { key: 'pipeWT',             header: 'WT (Wall Thick)', type: 'number', width: 16 },
     { key: 'variable',           header: 'VARIABLE',        type: 'dropdown', options: BOOL_OPTIONS, width: 14 },
+    { key: 'shapeType',          header: 'Shape Type',      type: 'dropdown', options: ['Custom', 'Circular', 'Horse Shoe', 'Modified Horse Shoe', 'D-Shaped'], width: 20 },
     { key: 'distance',           header: 'Distance',        type: 'number', width: 14 },
     { key: 'area',               header: 'Area',            type: 'number', width: 14 },
     { key: 'd',                  header: 'D',               type: 'number', width: 12 },
@@ -298,6 +300,9 @@ function getRowValue(
   }
   if (col.key === '_unit') return (data.unit as string) || globalUnit;
   if (col.key === '_materialLabel') return materialLabelById(data.materialId);
+  if (col.key === 'shapeType') {
+    return CROSS_SECTION_SHAPES[String(data.shapeType || 'custom')]?.label || 'Custom';
+  }
 
   // ── Element-category helpers (mirror FlexTable's isEdge / isDummy / etc.) ──
   const isEdgeSub    = subType === 'conduit' || subType === 'dummy';
@@ -321,7 +326,7 @@ function getRowValue(
 
   // ── NA: distance and area — only applicable when VARIABLE = true ────────────
   const isVariable = data.variable === true || data.variable === 'true';
-  if ((col.key === 'distance' || col.key === 'area' || col.key === 'd' || col.key === 'a') && !isVariable) return 'NA';
+  if ((col.key === 'distance' || col.key === 'area' || col.key === 'd' || col.key === 'a' || col.key === 'shapeType') && !isVariable) return 'NA';
 
   // ── NA: Manning's n, pipeE, pipeWT — conduit only ─────────────────────────
   if ((col.key === 'manningsN' || col.key === 'pipeE' || col.key === 'pipeWT') && !isConduitSub) return 'NA';
@@ -989,6 +994,22 @@ function _parseExcelDataRow(
 
     if (col.key === '_unit') {
       if (strVal === 'SI' || strVal === 'FPS') update.unit = strVal;
+      return;
+    }
+
+    if (col.key === 'shapeType') {
+      const shapeTypeByLabel: Record<string, string> = {
+        Custom: 'custom',
+        Circular: 'circular',
+        'Horse Shoe': 'horseshoe',
+        'Modified Horse Shoe': 'modified_horseshoe',
+        'D-Shaped': 'dshaped',
+      };
+      const shapeType = shapeTypeByLabel[strVal] ?? strVal.toLowerCase();
+      update.shapeType = CROSS_SECTION_SHAPES[shapeType] ? shapeType : 'custom';
+      const d = parseFloat(String(existingRow.data.d ?? ''));
+      const area = calculateCrossSectionArea(update.shapeType, d);
+      if (area !== undefined) update.a = area;
       return;
     }
 
