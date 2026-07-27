@@ -180,7 +180,7 @@ function addNodeModel(
   sphere.castShadow = true;
   sphere.receiveShadow = true;
 
-  // Overlay the 2D icon as a billboard sprite
+  // Overlay the 2D icon as a billboard sprite (or, for plain nodes, the label text)
   const iconTexture = textures.get(type);
   if (iconTexture) {
     const sprite = new THREE.Sprite(
@@ -192,6 +192,30 @@ function addNodeModel(
       }),
     );
     sprite.scale.set(SPHERE_RADIUS * 1.25, SPHERE_RADIUS * 1.25, 1);
+    sphere.add(sprite);
+  } else {
+    // For node type (no PNG icon) render the label text centred on the ball
+    const labelText = String(node.data?.label || node.id);
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d")!;
+    // Fit font size to canvas
+    let fontSize = 96;
+    ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+    while (ctx.measureText(labelText).width > 220 && fontSize > 24) {
+      fontSize -= 4;
+      ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+    }
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(labelText, 128, 128);
+    const texture = new THREE.CanvasTexture(canvas);
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }),
+    );
+    sprite.scale.set(SPHERE_RADIUS * 1.3, SPHERE_RADIUS * 1.3, 1);
     sphere.add(sprite);
   }
 
