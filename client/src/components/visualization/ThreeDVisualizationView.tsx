@@ -290,34 +290,49 @@ function setHighlight(object: THREE.Object3D | undefined, active: boolean, selec
   });
 }
 
-// ------ Flow particle geometry (created once) ------
-const PARTICLE_COLOR = 0x00e5ff;
-const PARTICLE_COUNT = 3; // per edge
+// ------ Flow particle geometry ------
+const PARTICLE_COLOR_CORE  = 0xffffff; // bright white core
+const PARTICLE_COLOR_MAIN  = 0x00cfff; // vivid cyan body
+const PARTICLE_COLOR_TRAIL = 0x0077cc; // deeper blue trail
+const PARTICLE_COUNT = 4; // per edge
 
 function createFlowParticle(direction: THREE.Vector3): THREE.Group {
   const g = new THREE.Group();
 
-  // Body cylinder
-  const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.055, 0.055, 0.32, 8),
-    new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR }),
+  // ---- Arrowhead (leading) ----
+  const cone = new THREE.Mesh(
+    new THREE.ConeGeometry(0.22, 0.45, 10),
+    new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR_CORE }),
   );
-  g.add(body);
+  cone.position.set(0, 0.38, 0);
+  g.add(cone);
 
-  // Arrowhead cone at the leading end
-  const head = new THREE.Mesh(
-    new THREE.ConeGeometry(0.13, 0.26, 8),
-    new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR }),
+  // ---- Main orb ----
+  const orb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 12, 10),
+    new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR_MAIN }),
   );
-  head.position.set(0, 0.29, 0);
-  g.add(head);
+  g.add(orb);
 
-  // Outer glow (slightly transparent, slightly bigger)
-  const glow = new THREE.Mesh(
-    new THREE.SphereGeometry(0.17, 8, 8),
-    new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR, transparent: true, opacity: 0.25 }),
+  // ---- Outer glow halo ----
+  const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.32, 12, 10),
+    new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR_MAIN, transparent: true, opacity: 0.18 }),
   );
-  g.add(glow);
+  g.add(halo);
+
+  // ---- Comet tail (3 fading spheres trailing behind) ----
+  const trailOffsets = [0.55, 1.0, 1.55];
+  const trailOpacity = [0.55, 0.3, 0.12];
+  const trailRadii   = [0.13, 0.09, 0.06];
+  for (let i = 0; i < trailOffsets.length; i++) {
+    const t = new THREE.Mesh(
+      new THREE.SphereGeometry(trailRadii[i], 8, 8),
+      new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR_TRAIL, transparent: true, opacity: trailOpacity[i] }),
+    );
+    t.position.set(0, -trailOffsets[i], 0); // negative Y = behind in local space
+    g.add(t);
+  }
 
   // Orient along edge direction
   const up = new THREE.Vector3(0, 1, 0);
@@ -623,8 +638,8 @@ export function ThreeDVisualizationView({
       renderer.domElement.addEventListener("pointerleave", onPointerLeave);
       renderer.domElement.addEventListener("click", onClick);
 
-      // Animation SPEED in units/second
-      const FLOW_SPEED = 1.4;
+      // Animation SPEED: each particle crosses its pipe in ~2.5 s regardless of pipe length
+      const FLOW_SPEED = 2.2;
       let lastTime = performance.now();
 
       const animate = () => {
@@ -635,18 +650,19 @@ export function ThreeDVisualizationView({
         // Update flow particles
         if (isAnimatingRef.current) {
           const now = performance.now();
-          const dt = Math.min((now - lastTime) / 1000, 0.05); // cap at 50ms to avoid jumps
+          const dt = Math.min((now - lastTime) / 1000, 0.05);
           lastTime = now;
           animTimeRef.current += dt;
+          const T = animTimeRef.current;
 
           flowEdgesRef.current.forEach((edgeData) => {
             edgeData.particles.forEach((particle, idx) => {
               const offset = idx / PARTICLE_COUNT;
-              let t = ((animTimeRef.current * FLOW_SPEED / Math.max(edgeData.length, 0.1)) + offset) % 1;
+              const t = ((T * FLOW_SPEED / Math.max(edgeData.length, 0.1)) + offset) % 1;
               particle.position.lerpVectors(edgeData.source, edgeData.target, t);
 
-              // Subtle pulsing scale for glow effect
-              const pulse = 0.9 + 0.1 * Math.sin(animTimeRef.current * 6 + idx * 2.1);
+              // Strong pulsing scale — orb breathes noticeably
+              const pulse = 0.85 + 0.25 * Math.sin(T * 8 + idx * 1.8);
               particle.scale.setScalar(pulse);
             });
           });
