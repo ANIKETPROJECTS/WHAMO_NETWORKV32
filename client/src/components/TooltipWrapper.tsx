@@ -170,7 +170,7 @@ export function DataList({ data, title }: { data: any, title: string }) {
                       ))}
                     </div>
                   )
-                  : (typeof value === 'number' ? value : String(value))
+                  : (typeof value === 'number' ? (Number.isInteger(value) ? value : parseFloat(value.toFixed(3))) : String(value))
                 }
                 {unitStr && <span className="ml-0.5 text-[9px] font-normal text-slate-400">{unitStr}</span>}
               </span>

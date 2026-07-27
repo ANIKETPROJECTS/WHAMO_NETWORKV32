@@ -207,6 +207,8 @@ export function ThreeDVisualizationView({
   const hoveredObjectRef = useRef<THREE.Object3D>();
   const selectElement = useNetworkStore((state) => state.selectElement);
   const selectedElementId = useNetworkStore((state) => state.selectedElementId);
+  const selectedElementIdRef = useRef(selectedElementId);
+  useEffect(() => { selectedElementIdRef.current = selectedElementId; }, [selectedElementId]);
   const showHoverData = useNetworkStore((state) => state.showHoverData);
   const setShowHoverData = useNetworkStore((state) => state.setShowHoverData);
   const [hovered, setHovered] = useState<{
@@ -360,9 +362,9 @@ export function ThreeDVisualizationView({
     const onPointerMove = (event: PointerEvent) => {
       const object = pickObject(event);
       if (object !== hoveredObjectRef.current) {
-        setHighlight(hoveredObjectRef.current, false, hoveredObjectRef.current?.userData.elementId === selectedElementId);
+        setHighlight(hoveredObjectRef.current, false, hoveredObjectRef.current?.userData.elementId === selectedElementIdRef.current);
         hoveredObjectRef.current = object;
-        setHighlight(object, true, object?.userData.elementId === selectedElementId);
+        setHighlight(object, true, object?.userData.elementId === selectedElementIdRef.current);
       }
 
       if (object && showHoverData) {
@@ -379,7 +381,7 @@ export function ThreeDVisualizationView({
     };
 
     const onPointerLeave = () => {
-      setHighlight(hoveredObjectRef.current, false, hoveredObjectRef.current?.userData.elementId === selectedElementId);
+      setHighlight(hoveredObjectRef.current, false, hoveredObjectRef.current?.userData.elementId === selectedElementIdRef.current);
       hoveredObjectRef.current = undefined;
       setHovered(null);
     };
@@ -433,7 +435,7 @@ export function ThreeDVisualizationView({
       controlsRef.current = null;
       graphGroupRef.current = null;
     };
-  }, [edges, nodes, selectElement, selectedElementId, showHoverData]);
+  }, [edges, nodes, selectElement, showHoverData]);
 
   useEffect(() => {
     const group = graphGroupRef.current;
