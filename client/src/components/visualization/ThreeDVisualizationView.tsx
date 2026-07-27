@@ -240,12 +240,13 @@ function addPipeModel(
   source: THREE.Vector3,
   target: THREE.Vector3,
   group: THREE.Group,
+  diamScale = 0.025,
 ) {
   const direction = new THREE.Vector3().subVectors(target, source);
   const length = direction.length();
   if (length < 0.001) return;
 
-  const radius = Math.max(0.06, Math.min(0.32, numberValue(edge.data?.diameter, 0.35) * 0.025));
+  const radius = Math.max(0.05, Math.min(0.22, numberValue(edge.data?.diameter, 0.35) * diamScale));
   const pipe = new THREE.Mesh(
     new THREE.CylinderGeometry(radius, radius, length, 16),
     new THREE.MeshStandardMaterial({
@@ -492,13 +493,23 @@ export function ThreeDVisualizationView({
         addNodeModel(node, position, graphGroup, textures);
       });
 
+      // Normalize pipe diameters relative to this network so visual thickness
+      // looks proportional regardless of the unit stored in the file.
+      const edgeDiameters = edges
+        .map((e) => numberValue(e.data?.diameter, 0))
+        .filter((d) => d > 0);
+      const maxDiam = edgeDiameters.length > 0 ? Math.max(...edgeDiameters) : 14;
+      // Largest pipe → visual radius 0.18; others scale proportionally (min 0.05)
+      const diamScale = maxDiam > 0 ? 0.18 / maxDiam : 0.025;
+
       let pipeCount = 0;
       const flowEdges: FlowEdgeData[] = [];
       edges.forEach((edge) => {
-        const source = modelPositions.get(edge.source);
-        const target = modelPositions.get(edge.target);
+        // Stringify IDs to handle old files where source/target are numbers
+        const source = modelPositions.get(String(edge.source));
+        const target = modelPositions.get(String(edge.target));
         if (source && target) {
-          addPipeModel(edge, source, target, graphGroup);
+          addPipeModel(edge, source, target, graphGroup, diamScale);
           const dir = new THREE.Vector3().subVectors(target, source);
           const len = dir.length();
           if (len > 0.001) {
