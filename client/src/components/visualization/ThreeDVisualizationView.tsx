@@ -112,7 +112,52 @@ function numberValue(value: unknown, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-const SPHERE_RADIUS = 0.75;
+const SPHERE_RADIUS = 1.1;
+
+/** Creates a canvas-text sprite that always faces the camera, positioned above the sphere. */
+function createLabelSprite(text: string): THREE.Sprite {
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+  const fontSize = 28;
+  ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+  const textWidth = ctx.measureText(text).width;
+  const padding = 14;
+  canvas.width = textWidth + padding * 2;
+  canvas.height = fontSize + padding;
+
+  // Re-apply font after resize (canvas reset clears it)
+  ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+  ctx.fillStyle = "rgba(15,23,42,0.82)"; // dark bg
+  const r = 8;
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(w - r, 0);
+  ctx.quadraticCurveTo(w, 0, w, r);
+  ctx.lineTo(w, h - r);
+  ctx.quadraticCurveTo(w, h, w - r, h);
+  ctx.lineTo(r, h);
+  ctx.quadraticCurveTo(0, h, 0, h - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, padding, h / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(material);
+  // Scale to world units — keep aspect ratio
+  const aspect = canvas.width / canvas.height;
+  const spriteHeight = 0.55;
+  sprite.scale.set(spriteHeight * aspect, spriteHeight, 1);
+  sprite.position.set(0, SPHERE_RADIUS + 0.55, 0);
+  return sprite;
+}
 
 function addNodeModel(
   node: WhamoNode,
@@ -150,9 +195,13 @@ function addNodeModel(
     sphere.add(sprite);
   }
 
+  // Label sprite above the sphere
+  const labelText = String(node.data?.label || node.id);
+  sphere.add(createLabelSprite(labelText));
+
   sphere.position.copy(position);
   sphere.userData = {
-    label: node.data?.label || node.id,
+    label: labelText,
     type,
     elementId: node.id,
     elementType: "node",
@@ -222,28 +271,24 @@ const PARTICLE_COUNT = 3; // per edge
 function createFlowParticle(direction: THREE.Vector3): THREE.Group {
   const g = new THREE.Group();
 
-  // Body
-  g.add(
-    Object.assign(
-      new THREE.Mesh(
-        new THREE.CylinderGeometry(0.045, 0.045, 0.28, 8),
-        new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR }),
-      ),
-      { position: new THREE.Vector3(0, 0, 0) },
-    ),
+  // Body cylinder
+  const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.055, 0.055, 0.32, 8),
+    new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR }),
   );
+  g.add(body);
 
   // Arrowhead cone at the leading end
   const head = new THREE.Mesh(
-    new THREE.ConeGeometry(0.11, 0.22, 8),
+    new THREE.ConeGeometry(0.13, 0.26, 8),
     new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR }),
   );
-  head.position.set(0, 0.25, 0);
+  head.position.set(0, 0.29, 0);
   g.add(head);
 
-  // Outer glow ring (slightly transparent, slightly bigger)
+  // Outer glow (slightly transparent, slightly bigger)
   const glow = new THREE.Mesh(
-    new THREE.SphereGeometry(0.14, 8, 8),
+    new THREE.SphereGeometry(0.17, 8, 8),
     new THREE.MeshBasicMaterial({ color: PARTICLE_COLOR, transparent: true, opacity: 0.25 }),
   );
   g.add(glow);
