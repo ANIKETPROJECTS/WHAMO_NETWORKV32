@@ -194,8 +194,9 @@ function addNodeModel(
     sprite.scale.set(SPHERE_RADIUS * 1.25, SPHERE_RADIUS * 1.25, 1);
     sphere.add(sprite);
   } else {
-    // For node type (no PNG icon) render the label text centred on the ball
-    const labelText = String(node.data?.label || node.id);
+    // For node type (no PNG icon) render the short node ID (N1, N2 …) centred on the ball
+    const nodeNum = node.data?.nodeNumber;
+    const labelText = nodeNum != null ? `N${nodeNum}` : String(node.data?.label || node.id);
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 256;
