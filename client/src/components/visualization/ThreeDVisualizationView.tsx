@@ -225,13 +225,21 @@ function addNodeModel(
   sphere.add(createLabelSprite(labelText));
 
   sphere.position.copy(position);
-  sphere.userData = {
+  const nodeUserData = {
     label: labelText,
     type,
     elementId: node.id,
     elementType: "node",
     data: node.data,
   };
+  sphere.userData = nodeUserData;
+
+  // Copy userData to all sprite children so the raycaster finds elementId
+  // regardless of which child is picked first
+  sphere.children.forEach((child) => {
+    child.userData = { ...nodeUserData };
+  });
+
   group.add(sphere);
 }
 
