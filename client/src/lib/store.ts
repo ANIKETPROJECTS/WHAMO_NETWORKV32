@@ -313,6 +313,8 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
 
     // Convert all nodes
     const newNodes = state.nodes.map(node => {
+      // Locked elements keep their own unit regardless of global changes
+      if (node.data?._unitLocked) return node;
       const dataUpdate: any = {};
       const nodeUnit = node.data?.unit || oldUnit;
       if (nodeUnit === unit) {
@@ -381,6 +383,8 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
 
     // Convert all edges
     const newEdges = state.edges.map(edge => {
+      // Locked elements keep their own unit regardless of global changes
+      if (edge.data?._unitLocked) return edge;
       const dataUpdate: any = {};
       const edgeUnit = edge.data?.unit || oldUnit;
       if (edgeUnit === unit) {

@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, ChevronDown, ChevronRight, Plus, CheckCircle2, Save, AlertTriangle, Info } from 'lucide-react';
+import { Trash2, ChevronDown, ChevronRight, Plus, CheckCircle2, Save, AlertTriangle, Info, Lock, LockOpen } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -660,7 +660,7 @@ export function PropertiesPanel() {
       [currentUnit]: { ...(existingCache[currentUnit] || {}), ...savedForCurrentUnit },
     };
 
-    const dataUpdate: any = { unit: newUnit, _unitCache: newCache };
+    const dataUpdate: any = { unit: newUnit, _unitCache: newCache, _unitLocked: true };
 
     // Use the cached target-unit value when it's consistent with the current
     // value (i.e. it round-trips back via math conversion). This preserves the
@@ -825,6 +825,47 @@ export function PropertiesPanel() {
     setTimeout(() => { isHandlingUnitToggle.current = false; }, 0);
   };
 
+  // Unlock: convert values to globalUnit and stop following a locked unit.
+  const handleUnlock = () => {
+    if (currentUnit !== globalUnit) {
+      // Convert values to globalUnit first, then clear the lock.
+      // We reuse handleUnitToggle logic by calling it targeting globalUnit,
+      // then override _unitLocked and unit back to unlocked state.
+      isHandlingUnitToggle.current = true;
+
+      const existingCache: Record<string, any> = (formData._unitCache as any) || {};
+      const savedForCurrentUnit: Record<string, any> = {};
+      cacheableFields.forEach(key => {
+        const val = (element.data as any)?.[key];
+        if (val !== undefined && val !== null && val !== '') savedForCurrentUnit[key] = val;
+      });
+      if (formData.schedulePoints) {
+        savedForCurrentUnit.schedulePoints = JSON.parse(JSON.stringify(formData.schedulePoints));
+      }
+      const newCache = {
+        ...existingCache,
+        [currentUnit]: { ...(existingCache[currentUnit] || {}), ...savedForCurrentUnit },
+      };
+
+      // Reuse the same conversion path as handleUnitToggle but target globalUnit
+      handleUnitToggle(globalUnit);
+
+      // After handleUnitToggle runs, clear the lock flag it set
+      setTimeout(() => {
+        const clearLock = { _unitLocked: false, unit: undefined as any };
+        if (isNode) updateNodeData(selectedElementId, clearLock);
+        else updateEdgeData(selectedElementId, clearLock);
+        setFormData(prev => ({ ...prev, _unitLocked: false, unit: undefined }));
+      }, 10);
+    } else {
+      // Already on globalUnit — just clear the lock
+      const clearLock = { _unitLocked: false, unit: undefined as any };
+      if (isNode) updateNodeData(selectedElementId, clearLock);
+      else updateEdgeData(selectedElementId, clearLock);
+      setFormData(prev => ({ ...prev, _unitLocked: false, unit: undefined }));
+    }
+  };
+
   const handleChange = (key: string, value: any) => {
     // Preserve raw string while typing so intermediate decimal forms like "1." or "1.50"
     // aren't collapsed by Number() conversion. saveChanges() converts strings to numbers
@@ -921,16 +962,27 @@ export function PropertiesPanel() {
             <div className="text-[16px] font-semibold text-black leading-tight truncate">{elementTypeLabel}</div>
             <div className="text-[11px] font-medium text-black mt-0.5">ID: {selectedElementId}</div>
           </div>
-          {/* SI / FPS pill — identical to header */}
-          <div className="flex items-center rounded-full border-2 border-slate-300 bg-white overflow-hidden shadow-sm shrink-0">
-            <button
-              onClick={() => handleUnitToggle('SI')}
-              className={`text-[12px] font-bold px-3 py-0.5 transition-colors ${currentUnit === 'SI' ? 'bg-blue-600 text-white' : 'text-black hover:bg-slate-50'}`}
-            >SI</button>
-            <button
-              onClick={() => handleUnitToggle('FPS')}
-              className={`text-[12px] font-bold px-3 py-0.5 transition-colors ${currentUnit === 'FPS' ? 'bg-blue-600 text-white' : 'text-black hover:bg-slate-50'}`}
-            >FPS</button>
+          {/* SI / FPS pill + optional lock indicator */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {formData._unitLocked && (
+              <button
+                onClick={handleUnlock}
+                title="Unit is locked to this element. Click to follow global unit."
+                className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors"
+              >
+                <Lock className="w-3.5 h-3.5 text-blue-600" />
+              </button>
+            )}
+            <div className="flex items-center rounded-full border-2 border-slate-300 bg-white overflow-hidden shadow-sm">
+              <button
+                onClick={() => handleUnitToggle('SI')}
+                className={`text-[12px] font-bold px-3 py-0.5 transition-colors ${currentUnit === 'SI' ? 'bg-blue-600 text-white' : 'text-black hover:bg-slate-50'}`}
+              >SI</button>
+              <button
+                onClick={() => handleUnitToggle('FPS')}
+                className={`text-[12px] font-bold px-3 py-0.5 transition-colors ${currentUnit === 'FPS' ? 'bg-blue-600 text-white' : 'text-black hover:bg-slate-50'}`}
+              >FPS</button>
+            </div>
           </div>
         </div>
       </div>
