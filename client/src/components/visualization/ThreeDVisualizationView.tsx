@@ -168,14 +168,10 @@ function addNodeModel(
   const type = (node.type as HydraulicNodeType | undefined) ?? "node";
   const color = NODE_COLORS[type] ?? 0x475569;
 
-  // All nodes are uniform spheres
+  // All nodes are uniform spheres — fully matte (roughness 1, metalness 0) so no specular highlight
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(SPHERE_RADIUS, 32, 24),
-    new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.28,
-      metalness: 0.15,
-    }),
+    new THREE.MeshStandardMaterial({ color, roughness: 1.0, metalness: 0.0 }),
   );
   sphere.castShadow = true;
   sphere.receiveShadow = true;
@@ -327,7 +323,7 @@ function addInlineElementBall(
 
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(SPHERE_RADIUS, 32, 24),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.28, metalness: 0.15 }),
+    new THREE.MeshStandardMaterial({ color, roughness: 1.0, metalness: 0.0 }),
   );
   sphere.castShadow = true;
 
@@ -454,6 +450,9 @@ export function ThreeDVisualizationView({
   const controlsRef = useRef<OrbitControls | null>(null);
   const graphGroupRef = useRef<THREE.Group | null>(null);
   const animGroupRef = useRef<THREE.Group | null>(null);
+  const gridRef = useRef<THREE.GridHelper | null>(null);
+  const groundRef = useRef<THREE.Mesh | null>(null);
+  const axesRef = useRef<THREE.AxesHelper | null>(null);
   const flowEdgesRef = useRef<FlowEdgeData[]>([]);
   const isAnimatingRef = useRef(false);
   const animTimeRef = useRef(0);
@@ -480,6 +479,17 @@ export function ThreeDVisualizationView({
   } | null>(null);
   const [modelStats, setModelStats] = useState({ nodes: nodes.length, pipes: 0 });
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showGrid, setShowGrid] = useState(true);
+  const [showAxes, setShowAxes] = useState(true);
+
+  useEffect(() => {
+    if (gridRef.current)   gridRef.current.visible   = showGrid;
+    if (groundRef.current) groundRef.current.visible  = showGrid;
+  }, [showGrid]);
+
+  useEffect(() => {
+    if (axesRef.current) axesRef.current.visible = showAxes;
+  }, [showAxes]);
 
   const resetCamera = useCallback(() => {
     const camera = cameraRef.current;
@@ -646,7 +656,11 @@ export function ThreeDVisualizationView({
       const grid = new THREE.GridHelper(gridSize, Math.round(gridSize / 2), 0x94a3b8, 0xcbd5e1);
       grid.position.y = -Math.max(2.5, extents * 0.3);
       scene.add(grid);
-      scene.add(new THREE.AxesHelper(Math.max(3, extents * 0.35)));
+      gridRef.current = grid;
+
+      const axes = new THREE.AxesHelper(Math.max(3, extents * 0.35));
+      scene.add(axes);
+      axesRef.current = axes;
 
       const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(gridSize, gridSize),
@@ -656,6 +670,7 @@ export function ThreeDVisualizationView({
       ground.position.y = grid.position.y - 0.02;
       ground.receiveShadow = true;
       scene.add(ground);
+      groundRef.current = ground;
 
       const resize = () => {
         const width = mount.clientWidth;
@@ -863,6 +878,22 @@ export function ThreeDVisualizationView({
           >
             {showHoverData ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
             {showHoverData ? "Labels on" : "Labels off"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowGrid(!showGrid)}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${showGrid ? "bg-slate-600 text-slate-100 hover:bg-slate-500" : "bg-slate-800 text-slate-400 hover:bg-slate-700"}`}
+          >
+            {showGrid ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            Grid
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowAxes(!showAxes)}
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${showAxes ? "bg-slate-600 text-slate-100 hover:bg-slate-500" : "bg-slate-800 text-slate-400 hover:bg-slate-700"}`}
+          >
+            {showAxes ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+            Axes
           </button>
           <button
             type="button"
