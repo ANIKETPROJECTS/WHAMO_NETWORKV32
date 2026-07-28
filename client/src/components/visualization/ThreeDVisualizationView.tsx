@@ -243,40 +243,120 @@ function addNodeModel(
   group.add(sphere);
 }
 
+const INLINE_ELEMENT_TYPES = new Set(["pump", "checkValve", "turbine"]);
+
 function addPipeModel(
   edge: WhamoEdge,
   source: THREE.Vector3,
   target: THREE.Vector3,
   group: THREE.Group,
 ) {
+  const edgeType = edge.data?.type as string | undefined;
   const direction = new THREE.Vector3().subVectors(target, source);
   const length = direction.length();
   if (length < 0.001) return;
 
-  // Fixed thin radius regardless of file or diameter unit so animation arrows are always visible
-  const radius = edge.data?.type === "dummy" ? 0.055 : 0.09;
-  const pipe = new THREE.Mesh(
-    new THREE.CylinderGeometry(radius, radius, length, 16),
-    new THREE.MeshStandardMaterial({
-      color: edge.data?.type === "dummy" ? 0x94a3b8 : 0x334155,
-      roughness: 0.5,
-      metalness: 0.2,
-    }),
-  );
-  pipe.position.copy(source).add(target).multiplyScalar(0.5);
-  pipe.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-  pipe.castShadow = true;
-  pipe.receiveShadow = true;
-  pipe.userData = {
+  const isDummy = edgeType === "dummy";
+  const isInline = INLINE_ELEMENT_TYPES.has(edgeType ?? "");
+  const radius = isDummy ? 0.055 : 0.09;
+  const pipeColor = isDummy ? 0x94a3b8 : 0x334155;
+  const pipeNorm = direction.clone().normalize();
+
+  const edgeUserData = {
     label: edge.data?.label || edge.id,
-    type: edge.data?.type || "conduit",
+    type: edgeType || "conduit",
     length: numberValue(edge.data?.length, length),
     diameter: numberValue(edge.data?.diameter),
     elementId: edge.id,
     elementType: "edge",
     data: edge.data,
   };
-  group.add(pipe);
+
+  if (isInline) {
+    // Split into two half-pipes so the inline-element ball sits between them
+    const mid = source.clone().lerp(target, 0.5);
+    const halfLen = length / 2;
+    const halfGap = SPHERE_RADIUS * 0.9; // gap near the ball so pipe doesn't clip through
+
+    [{ from: source, to: mid }, { from: mid, to: target }].forEach(({ from, to }) => {
+      const segDir = new THREE.Vector3().subVectors(to, from);
+      const segLen = segDir.length() - halfGap;
+      if (segLen < 0.05) return;
+      const segNorm = segDir.clone().normalize();
+      // Centre the shortened segment between the node and the ball
+      const segCenter = from.clone().add(segNorm.clone().multiplyScalar(halfGap / 2 + segLen / 2));
+      const seg = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, segLen, 16),
+        new THREE.MeshStandardMaterial({ color: pipeColor, roughness: 0.5, metalness: 0.2 }),
+      );
+      seg.position.copy(segCenter);
+      if (Math.abs(segNorm.dot(new THREE.Vector3(0, 1, 0))) < 0.999) {
+        seg.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), segNorm);
+      }
+      seg.castShadow = true;
+      seg.receiveShadow = true;
+      seg.userData = { ...edgeUserData };
+      group.add(seg);
+    });
+  } else {
+    const pipe = new THREE.Mesh(
+      new THREE.CylinderGeometry(radius, radius, length, 16),
+      new THREE.MeshStandardMaterial({ color: pipeColor, roughness: 0.5, metalness: 0.2 }),
+    );
+    pipe.position.copy(source).add(target).multiplyScalar(0.5);
+    pipe.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), pipeNorm);
+    pipe.castShadow = true;
+    pipe.receiveShadow = true;
+    pipe.userData = { ...edgeUserData };
+    group.add(pipe);
+  }
+}
+
+// Sphere + icon ball placed at the midpoint of an inline-element edge (pump / checkValve / turbine)
+function addInlineElementBall(
+  edge: WhamoEdge,
+  source: THREE.Vector3,
+  target: THREE.Vector3,
+  group: THREE.Group,
+  textures: Map<string, THREE.CanvasTexture>,
+) {
+  const edgeType = edge.data?.type as string;
+  const mid = source.clone().lerp(target, 0.5);
+  const color = (NODE_COLORS[edgeType] ?? 0x475569);
+  const labelText = String(edge.data?.label || edge.id);
+
+  const sphere = new THREE.Mesh(
+    new THREE.SphereGeometry(SPHERE_RADIUS, 32, 24),
+    new THREE.MeshStandardMaterial({ color, roughness: 0.28, metalness: 0.15 }),
+  );
+  sphere.castShadow = true;
+
+  // Icon sprite
+  const iconTexture = textures.get(edgeType);
+  if (iconTexture) {
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({ map: iconTexture, transparent: true, depthTest: false, sizeAttenuation: true }),
+    );
+    sprite.scale.set(SPHERE_RADIUS * 1.25, SPHERE_RADIUS * 1.25, 1);
+    sphere.add(sprite);
+  }
+
+  // Label pill above
+  sphere.add(createLabelSprite(labelText));
+
+  sphere.position.copy(mid);
+
+  const ballUserData = {
+    label: labelText,
+    type: edgeType,
+    elementId: edge.id,
+    elementType: "edge",
+    data: edge.data,
+  };
+  sphere.userData = ballUserData;
+  sphere.children.forEach((child) => { child.userData = { ...ballUserData }; });
+
+  group.add(sphere);
 }
 
 function getPickRoot(object: THREE.Object3D | undefined) {
@@ -524,6 +604,10 @@ export function ThreeDVisualizationView({
         const target = modelPositions.get(String(edge.target));
         if (source && target) {
           addPipeModel(edge, source, target, graphGroup);
+          // Add inline element ball for pump / checkValve / turbine edges
+          if (INLINE_ELEMENT_TYPES.has((edge.data?.type as string) ?? "")) {
+            addInlineElementBall(edge, source, target, graphGroup, textures);
+          }
           const dir = new THREE.Vector3().subVectors(target, source);
           const len = dir.length();
           if (len > 0.001) {
