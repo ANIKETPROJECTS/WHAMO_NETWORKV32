@@ -50,14 +50,15 @@ const AllHandles = () => (
 );
 
 // Circle with icon + label both inside
+// Extra props (e.g. onMouseEnter/Leave from Radix TooltipTrigger asChild) are forwarded to the root div
 function IconNode({
-  nodeId, selected, hasOrderError, icon, label, alt,
+  nodeId, selected, hasOrderError, icon, label, alt, ...rest
 }: {
   nodeId: string; selected: boolean; hasOrderError: boolean;
   icon: string; label: React.ReactNode; alt: string;
-}) {
+} & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div style={{ position: 'relative', width: CIRCLE_SIZE, height: CIRCLE_SIZE }} className="group">
+    <div style={{ position: 'relative', width: CIRCLE_SIZE, height: CIRCLE_SIZE }} className="group" {...rest}>
       <div style={{ ...circleStyle(selected, hasOrderError), gap: 3 }}>
         <img src={icon} style={{ width: ICON_SIZE, height: ICON_SIZE, objectFit: 'contain', pointerEvents: 'none' }} alt={alt} />
         <span style={{ fontSize: 11, fontWeight: 700, color: '#000', lineHeight: 1, whiteSpace: 'nowrap', userSelect: 'none' }}>
