@@ -771,6 +771,38 @@ export function PropertiesPanel() {
       });
     }
 
+    // Handle reservoir T/H schedule pairs — convert head values (elevation unit).
+    if (element?.data?.type === 'reservoir' && formData.mode === 'schedule') {
+      const schedNum = formData.hScheduleNumber || 1;
+      const currentSched = hSchedules.find((s: any) => s.number === schedNum);
+      if (currentSched?.points?.length) {
+        const convertedPoints = currentSched.points.map((p: any) => {
+          const headNum = typeof p.head === 'number' ? p.head : parseFloat(String(p.head));
+          return {
+            ...p,
+            head: isNaN(headNum) ? p.head : parseFloat(convertValue(headNum, currentUnit, newUnit, 'elevation').toFixed(8)),
+          };
+        });
+        updateHSchedule(schedNum, convertedPoints);
+      }
+    }
+
+    // Handle flowBoundary Q-schedule pairs — convert flow values.
+    if (element?.data?.type === 'flowBoundary') {
+      const schedNum = Number(formData.scheduleNumber ?? element.data?.scheduleNumber ?? 1);
+      const activeQPoints: any[] = (qSchedules[schedNum] as any[]) || (formData.schedulePoints as any[]) || [];
+      if (activeQPoints.length) {
+        const convertedPoints = activeQPoints.map((p: any) => {
+          const flowNum = typeof p.flow === 'number' ? p.flow : parseFloat(String(p.flow));
+          return {
+            ...p,
+            flow: isNaN(flowNum) ? p.flow : parseFloat(convertValue(flowNum, currentUnit, newUnit, 'flow').toFixed(8)),
+          };
+        });
+        updateQSchedule(schedNum, convertedPoints);
+      }
+    }
+
     // Carry over any unsaved local-only fields (materialId, manningsN, etc.)
     // that live in formData but haven't been persisted to the store yet.
     // Without this, the useEffect that re-reads from the store after the unit
