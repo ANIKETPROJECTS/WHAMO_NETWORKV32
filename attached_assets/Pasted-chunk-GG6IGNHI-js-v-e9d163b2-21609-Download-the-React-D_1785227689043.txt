@@ -1,0 +1,124 @@
+chunk-GG6IGNHI.js?v=e9d163b2:21609 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+react-resizable-panels.js?v=e9d163b2:1383 WARNING: Invalid layout total size: 75%. Layout normalization will be applied.
+validatePanelGroupLayout @ react-resizable-panels.js?v=e9d163b2:1383
+(anonymous) @ react-resizable-panels.js?v=e9d163b2:1765
+commitHookEffectListMount @ chunk-GG6IGNHI.js?v=e9d163b2:16963
+commitLayoutEffectOnFiber @ chunk-GG6IGNHI.js?v=e9d163b2:17050
+commitLayoutMountEffects_complete @ chunk-GG6IGNHI.js?v=e9d163b2:18030
+commitLayoutEffects_begin @ chunk-GG6IGNHI.js?v=e9d163b2:18019
+commitLayoutEffects @ chunk-GG6IGNHI.js?v=e9d163b2:17970
+commitRootImpl @ chunk-GG6IGNHI.js?v=e9d163b2:19406
+commitRoot @ chunk-GG6IGNHI.js?v=e9d163b2:19330
+finishConcurrentRender @ chunk-GG6IGNHI.js?v=e9d163b2:18858
+performConcurrentWorkOnRoot @ chunk-GG6IGNHI.js?v=e9d163b2:18768
+workLoop @ chunk-GG6IGNHI.js?v=e9d163b2:197
+flushWork @ chunk-GG6IGNHI.js?v=e9d163b2:176
+performWorkUntilDeadline @ chunk-GG6IGNHI.js?v=e9d163b2:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-GG6IGNHI.js?v=e9d163b2:407
+requestHostCallback @ chunk-GG6IGNHI.js?v=e9d163b2:418
+unstable_scheduleCallback @ chunk-GG6IGNHI.js?v=e9d163b2:330
+scheduleCallback$1 @ chunk-GG6IGNHI.js?v=e9d163b2:19879
+ensureRootIsScheduled @ chunk-GG6IGNHI.js?v=e9d163b2:18702
+scheduleUpdateOnFiber @ chunk-GG6IGNHI.js?v=e9d163b2:18612
+dispatchSetState @ chunk-GG6IGNHI.js?v=e9d163b2:12451
+(anonymous) @ AuthContext.tsx:84
+Promise.then
+(anonymous) @ AuthContext.tsx:83
+commitHookEffectListMount @ chunk-GG6IGNHI.js?v=e9d163b2:16963
+commitPassiveMountOnFiber @ chunk-GG6IGNHI.js?v=e9d163b2:18206
+commitPassiveMountEffects_complete @ chunk-GG6IGNHI.js?v=e9d163b2:18179
+commitPassiveMountEffects_begin @ chunk-GG6IGNHI.js?v=e9d163b2:18169
+commitPassiveMountEffects @ chunk-GG6IGNHI.js?v=e9d163b2:18159
+flushPassiveEffectsImpl @ chunk-GG6IGNHI.js?v=e9d163b2:19543
+flushPassiveEffects @ chunk-GG6IGNHI.js?v=e9d163b2:19500
+performSyncWorkOnRoot @ chunk-GG6IGNHI.js?v=e9d163b2:18921
+flushSyncCallbacks @ chunk-GG6IGNHI.js?v=e9d163b2:9166
+commitRootImpl @ chunk-GG6IGNHI.js?v=e9d163b2:19485
+commitRoot @ chunk-GG6IGNHI.js?v=e9d163b2:19330
+finishConcurrentRender @ chunk-GG6IGNHI.js?v=e9d163b2:18858
+performConcurrentWorkOnRoot @ chunk-GG6IGNHI.js?v=e9d163b2:18768
+workLoop @ chunk-GG6IGNHI.js?v=e9d163b2:197
+flushWork @ chunk-GG6IGNHI.js?v=e9d163b2:176
+performWorkUntilDeadline @ chunk-GG6IGNHI.js?v=e9d163b2:384
+postMessage
+schedulePerformWorkUntilDeadline @ chunk-GG6IGNHI.js?v=e9d163b2:407
+requestHostCallback @ chunk-GG6IGNHI.js?v=e9d163b2:418
+unstable_scheduleCallback @ chunk-GG6IGNHI.js?v=e9d163b2:330
+scheduleCallback$1 @ chunk-GG6IGNHI.js?v=e9d163b2:19879
+ensureRootIsScheduled @ chunk-GG6IGNHI.js?v=e9d163b2:18702
+scheduleUpdateOnFiber @ chunk-GG6IGNHI.js?v=e9d163b2:18612
+updateContainer @ chunk-GG6IGNHI.js?v=e9d163b2:20834
+ReactDOMHydrationRoot.render.ReactDOMRoot.render @ chunk-GG6IGNHI.js?v=e9d163b2:21174
+(anonymous) @ main.tsx:5
+chunk-GG6IGNHI.js?v=e9d163b2:521 Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()?
+
+Check the render method of `Primitive.button.SlotClone`.
+    at IconNode (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/src/components/NetworkNode.tsx?t=1785227609717:104:3)
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OWOQYTVV.js?v=e9d163b2:79:13
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OWOQYTVV.js?v=e9d163b2:56:13
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LB6ITG5J.js?v=e9d163b2:42:13
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OWOQYTVV.js?v=e9d163b2:79:13
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OWOQYTVV.js?v=e9d163b2:56:13
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LB6ITG5J.js?v=e9d163b2:42:13
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LD4Y4OVY.js?v=e9d163b2:1927:13
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e9d163b2:196:13
+    at Provider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BYK6IHWS.js?v=e9d163b2:37:15)
+    at Provider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BYK6IHWS.js?v=e9d163b2:37:15)
+    at Popper (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LD4Y4OVY.js?v=e9d163b2:1919:11)
+    at Tooltip (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e9d163b2:105:5)
+    at Provider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BYK6IHWS.js?v=e9d163b2:37:15)
+    at TooltipProvider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e9d163b2:61:5)
+    at TooltipWrapper (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/src/components/TooltipWrapper.tsx:26:3)
+    at https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/src/components/NetworkNode.tsx?t=1785227609717:141:52
+    at div
+    at NodeWrapper (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:6973:28)
+    at div
+    at NodeRendererComponent (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:7107:93)
+    at div
+    at Viewport (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:7578:31)
+    at div
+    at Pane (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:6415:17)
+    at div
+    at ZoomPane (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:6293:21)
+    at FlowRendererComponent (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:6886:44)
+    at GraphViewComponent (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:7707:31)
+    at Wrapper (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:8095:30)
+    at div
+    at ReactFlow (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:8109:22)
+    at div
+    at div
+    at div
+    at PanelWithForwardedRef (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/react-resizable-panels.js?v=e9d163b2:41:3)
+    at forwardRef(Panel)
+    at div
+    at PanelGroupWithForwardedRef (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/react-resizable-panels.js?v=e9d163b2:1440:3)
+    at forwardRef(PanelGroup)
+    at ResizablePanelGroup (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/src/components/ui/resizable.tsx:22:3)
+    at div
+    at div
+    at DesignerInner (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/src/pages/Designer.tsx?t=1785227609717:85:21)
+    at BatchProvider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:6009:36)
+    at ReactFlowProvider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@xyflow_react.js?v=e9d163b2:8077:44)
+    at Designer
+    at AuthGuard (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/src/components/AuthGuard.tsx:21:29)
+    at Route (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e9d163b2:225:16)
+    at Switch (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=e9d163b2:282:17)
+    at Router
+    at Provider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BYK6IHWS.js?v=e9d163b2:37:15)
+    at TooltipProvider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=e9d163b2:61:5)
+    at AuthProvider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/src/context/AuthContext.tsx:22:32)
+    at QueryClientProvider (https://19516d67-ffc6-475b-a592-f551db825d98-00-1ifh0fmc4g4ci.sisko.replit.dev:3000/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=e9d163b2:3103:3)
+    at App
+printWarning @ chunk-GG6IGNHI.js?v=e9d163b2:521
+error @ chunk-GG6IGNHI.js?v=e9d163b2:505
+validateFunctionComponentInDev @ chunk-GG6IGNHI.js?v=e9d163b2:15061
+mountIndeterminateComponent @ chunk-GG6IGNHI.js?v=e9d163b2:15036
+beginWork @ chunk-GG6IGNHI.js?v=e9d163b2:15962
+beginWork$1 @ chunk-GG6IGNHI.js?v=e9d163b2:19806
+performUnitOfWork @ chunk-GG6IGNHI.js?v=e9d163b2:19251
+workLoopSync @ chunk-GG6IGNHI.js?v=e9d163b2:19190
+renderRootSync @ chunk-GG6IGNHI.js?v=e9d163b2:19169
+performSyncWorkOnRoot @ chunk-GG6IGNHI.js?v=e9d163b2:18927
+flushSyncCallbacks @ chunk-GG6IGNHI.js?v=e9d163b2:9166
+(anonymous) @ chunk-GG6IGNHI.js?v=e9d163b2:18677

@@ -1,5 +1,5 @@
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { memo } from 'react';
+import { memo, forwardRef } from 'react';
 import { TooltipWrapper, DataList } from './TooltipWrapper';
 import { useNetworkStore } from '@/lib/store';
 import damIcon from '@assets/dam_1779522984604.png';
@@ -49,16 +49,17 @@ const AllHandles = () => (
   </>
 );
 
-// Circle with icon + label both inside
-// Extra props (e.g. onMouseEnter/Leave from Radix TooltipTrigger asChild) are forwarded to the root div
-function IconNode({
-  nodeId, selected, hasOrderError, icon, label, alt, ...rest
-}: {
+// Circle with icon + label both inside.
+// Uses forwardRef so Radix TooltipTrigger asChild can attach its ref + event handlers.
+const IconNode = forwardRef<HTMLDivElement, {
   nodeId: string; selected: boolean; hasOrderError: boolean;
   icon: string; label: React.ReactNode; alt: string;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & React.HTMLAttributes<HTMLDivElement>>(function IconNode(
+  { nodeId, selected, hasOrderError, icon, label, alt, ...rest },
+  ref,
+) {
   return (
-    <div style={{ position: 'relative', width: CIRCLE_SIZE, height: CIRCLE_SIZE }} className="group" {...rest}>
+    <div ref={ref} style={{ position: 'relative', width: CIRCLE_SIZE, height: CIRCLE_SIZE }} className="group" {...rest}>
       <div style={{ ...circleStyle(selected, hasOrderError), gap: 3 }}>
         <img src={icon} style={{ width: ICON_SIZE, height: ICON_SIZE, objectFit: 'contain', pointerEvents: 'none' }} alt={alt} />
         <span style={{ fontSize: 11, fontWeight: 700, color: '#000', lineHeight: 1, whiteSpace: 'nowrap', userSelect: 'none' }}>
@@ -68,7 +69,7 @@ function IconNode({
       <AllHandles />
     </div>
   );
-}
+});
 
 export const ReservoirNode = memo(({ id, data, selected }: NodeProps) => {
   const node = useNetworkStore(state => state.nodes.find(n => n.id === id));
