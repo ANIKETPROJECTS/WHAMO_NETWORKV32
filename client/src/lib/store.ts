@@ -15,6 +15,7 @@ import {
 } from '@xyflow/react';
 import { NodeType, LinkType } from '@shared/schema';
 import { getNodeSequenceViolations } from './validator';
+import { CONDUIT_SHAPE_OPTIONS, inferCrossSectionShape } from './cross-section-shapes';
 
 export type UnitSystem = 'SI' | 'FPS';
 
@@ -86,8 +87,9 @@ interface EdgeData extends Record<string, unknown> {
   cminus?: number | string;
   hasAddedLoss?: boolean;
   comment?: string;
+  /** Legacy INP flag retained only while importing older variable conduits. */
   variable?: boolean;
-  /** UI-only shape selection for VARIABLE D/A auto-calculation. */
+  /** Conduit profile used to convert the entered diameter to a circular equivalent. */
   shapeType?: string;
   distance?: number | string;
   area?: number | string;
@@ -116,6 +118,33 @@ interface EdgeData extends Record<string, unknown> {
   operationMode?: string;
   vScheduleNumber?: number;
   designHead?: number | string;
+}
+
+function normalizeConduitShapeData(data?: EdgeData): EdgeData | undefined {
+  if (!data || data.type !== 'conduit') return data;
+
+  const legacyDiameter = Number(data.d);
+  const storedDiameter = Number(data.diameter);
+  const diameter = data.variable && legacyDiameter > 0
+    ? data.d
+    : Number.isFinite(storedDiameter) && storedDiameter > 0
+      ? data.diameter
+      : legacyDiameter > 0
+        ? data.d
+        : data.diameter ?? 0;
+
+  const storedShape = String(data.shapeType || '');
+  let shapeType = CONDUIT_SHAPE_OPTIONS.some(shape => shape.value === storedShape)
+    ? storedShape
+    : '';
+  if (!shapeType) {
+    const inferredShape = data.variable
+      ? inferCrossSectionShape(legacyDiameter, Number(data.a))
+      : 'circular';
+    shapeType = inferredShape === 'custom' ? 'circular' : inferredShape;
+  }
+
+  return { ...data, diameter, shapeType, variable: false };
 }
 
 export type WhamoNode = Node<NodeData>;
@@ -714,6 +743,7 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
           data: { 
             label: connectionLabel, 
             type: 'conduit',
+            shapeType: 'circular',
           }
         },
         get().edges
@@ -1076,7 +1106,8 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
     );
     idCounter = maxId + 1;
     
-    // Flatten variableData for conduits if it exists; always normalize markerEnd to black
+    // Flatten legacy variableData and normalize old variable conduits into the
+    // current diameter + shape representation.
     const processedEdges = edges.map(edge => {
       const base = {
         ...edge,
@@ -1085,16 +1116,13 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       };
       if (edge.data?.variableData) {
         const { variableData, ...restData } = edge.data;
+        const data = { ...restData, ...variableData } as EdgeData;
         return {
           ...base,
-          data: {
-            ...restData,
-            ...variableData,
-            variable: true
-          }
+          data: normalizeConduitShapeData(data),
         };
       }
-      return base;
+      return { ...base, data: normalizeConduitShapeData(edge.data as EdgeData | undefined) };
     });
     
     // Convert all nodes

@@ -1,10 +1,12 @@
 ---
 name: Conduit variable cross-section shapes
-description: Rules for conduit VARIABLE shape selection and numeric D/A persistence
+description: Conduit shape selection, equivalent-diameter exports, and compatibility with legacy VARIABLE input
 ---
 
-Conduit VARIABLE shape selection is UI metadata because WHAMO INP stores only numeric D/A values. Keep the shape coefficients shared with surge-tank SHAPE editing, infer a named shape on import only when the A/D² ratio matches, and preserve custom mode otherwise.
+Conduits retain the user's entered diameter and selected profile in the project. INP export converts that diameter to an equivalent circular diameter using `sqrt(k / 0.785) × D`; Circular remains unchanged. Conduit editors offer named profiles only, not manual VARIABLE/D/A fields.
 
-**Why:** Without this rule, a conduit can calculate correctly in the editor but lose its selected shape during INP or spreadsheet round-trips.
+Legacy INP VARIABLE D/A data should be converted to the entered D and a matching named profile when its A/D² ratio identifies one. Unmatched legacy custom profiles fall back to Circular because manual custom shapes are no longer supported.
 
-**How to apply:** Keep numeric INP output unchanged; update every editing/import/export surface together when adding or changing shape options.
+**Why:** WHAMO receives a circular DIAM value, while the editor needs to preserve the selected tunnel profile and original input diameter.
+
+**How to apply:** Keep the profile coefficients, equivalent-diameter preview, unit conversion, import normalization, spreadsheet editor, and INP export consistent. Do not overwrite the user's entered diameter with the computed equivalent.

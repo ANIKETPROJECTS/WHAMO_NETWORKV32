@@ -1,5 +1,6 @@
 import { WhamoNode, WhamoEdge, useNetworkStore, TcharType } from './store';
 import { saveAs } from 'file-saver';
+import { calculateEquivalentDiameter } from './cross-section-shapes';
 
 export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDownload: boolean | string = true) {
   const state = useNetworkStore.getState();
@@ -247,20 +248,10 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     addL('CONDUIT');
     addL(` ID ${label}`);
     
-    if (d.variable) {
-      addL(' VARIABLE');
-      if (d.distance !== undefined) addL(` DISTANCE ${toFPS(Number(d.distance), unit, 'length')}`);
-      if (d.area !== undefined) addL(` AREA ${toFPS(Number(d.area), unit, 'area')}`);
-      if (d.d !== undefined) addL(` D ${toFPS(Number(d.d), unit, 'diameter')}`);
-      if (d.a !== undefined) addL(` A ${toFPS(Number(d.a), unit, 'area')}`);
-    }
-
     addL(` LENGTH ${toFPS(Number(d.length), unit, 'length')}`);
-    if (d.diameter !== undefined && d.diameter !== null && d.diameter !== '' && Number(d.diameter) !== 0) {
-      addL(` DIAM ${toFPS(Number(d.diameter), unit, 'diameter')}`);
-    } else if (!d.variable) {
-      addL(` DIAM 0`);
-    }
+    const inputDiameter = Number(d.variable && Number(d.d) > 0 ? d.d : d.diameter);
+    const equivalentDiameter = calculateEquivalentDiameter(String(d.shapeType || 'circular'), inputDiameter);
+    addL(` DIAM ${equivalentDiameter !== undefined ? toFPS(equivalentDiameter, unit, 'diameter') : '0'}`);
     addL(` CELERITY ${toFPS(Number(d.celerity), unit, 'celerity')}`);
     addL(` FRICTION ${d.friction}`);
     

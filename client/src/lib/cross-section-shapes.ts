@@ -5,9 +5,8 @@ export interface CrossSectionShapeDefinition {
 }
 
 /**
- * Shape coefficients used by both surge-tank SHAPE pairs and conduit
- * VARIABLE D/A fields. The coefficients match the values already used by
- * the WHAMO Designer UI.
+ * Shape coefficients shared by surge-tank SHAPE pairs and conduit equivalent
+ * diameter calculations. Values match the WHAMO Designer's existing shapes.
  */
 export const CROSS_SECTION_SHAPES: Record<string, CrossSectionShapeDefinition> = {
   circular:           { label: 'Circular',            aFactor: 0.785, pFactor: 3.14 },
@@ -16,6 +15,20 @@ export const CROSS_SECTION_SHAPES: Record<string, CrossSectionShapeDefinition> =
   dshaped:            { label: 'D-Shaped',            aFactor: 0.813, pFactor: 3.21 },
   custom:             { label: 'Custom',              aFactor: 0,     pFactor: 0 },
 };
+
+export const CONDUIT_SHAPE_OPTIONS = Object.entries(CROSS_SECTION_SHAPES)
+  .filter(([key]) => key !== 'custom')
+  .map(([value, shape]) => ({ value, label: shape.label }));
+
+export function calculateEquivalentDiameter(
+  shapeType: string | undefined,
+  diameter: number,
+): number | undefined {
+  if (!Number.isFinite(diameter) || diameter <= 0) return undefined;
+  const circularFactor = CROSS_SECTION_SHAPES.circular.aFactor;
+  const shapeFactor = CROSS_SECTION_SHAPES[shapeType || 'circular']?.aFactor || circularFactor;
+  return parseFloat((Math.sqrt(shapeFactor / circularFactor) * diameter).toFixed(6));
+}
 
 export function calculateCrossSectionArea(shapeType: string | undefined, diameter: number): number | undefined {
   const factor = shapeType ? CROSS_SECTION_SHAPES[shapeType]?.aFactor : undefined;

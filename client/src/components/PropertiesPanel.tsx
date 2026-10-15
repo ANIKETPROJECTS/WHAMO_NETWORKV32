@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type ComponentProps } from 'react';
 import { useNetworkStore, type UnitSystem, type PcharType, type TcharType } from '@/lib/store';
 import { PropSection, PropRow } from '@/components/ui/prop-section';
 import { PIPE_MATERIALS, PIPE_MATERIALS_BY_ID } from '@/lib/pipe-materials';
-import { CROSS_SECTION_SHAPES } from '@/lib/cross-section-shapes';
+import { CONDUIT_SHAPE_OPTIONS, CROSS_SECTION_SHAPES, calculateEquivalentDiameter } from '@/lib/cross-section-shapes';
 import { TurbineCurvePanel } from '@/components/TurbineCurvePanel';
 import { PumpCurvePanel } from '@/components/PumpCurvePanel';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -2827,153 +2827,80 @@ export function PropertiesPanel() {
                     style={{ fontFamily: 'Poppins, sans-serif' } as any}
                   />
                 </PropRow>
-                {!formData.variable && (
-                  <PropRow label={`Diameter (${currentUnit === 'SI' ? 'm' : 'ft'})`}>
-                    <NumericInput
-                      id="diam"
-                      value={formData.diameter}
-                      onValueChange={(v) => {
-                        const newDiam = parseFloat(v);
-                        handleChange('diameter', v);
-                        if (!isNaN(newDiam) && newDiam > 0) {
-                          const C0 = currentUnit === 'SI' ? 1440 : 4720;
-                          const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
-                          const E  = parseFloat(formData.pipeE) || 0;
-                          const WT = parseFloat(formData.pipeWT) || 0;
-                          if (E > 0 && WT > 0) {
-                            const c = C0 / Math.sqrt(1 + (Kw / E) * (newDiam / WT));
-                            handleChange('celerity', parseFloat(c.toFixed(4)).toString());
-                          }
-                          const K = currentUnit === 'SI' ? 124.58 : 185;
-                          const n = parseFloat(formData.manningsN);
-                          if (!isNaN(n) && n > 0) {
-                            const f = (K * n * n) / Math.pow(newDiam, 1 / 3);
-                            handleChange('friction', parseFloat(f.toFixed(6)).toString());
-                          } else {
-                            const f = parseFloat(formData.friction);
-                            if (!isNaN(f) && f > 0) {
-                              const nNew = Math.sqrt((f * Math.pow(newDiam, 1 / 3)) / K);
-                              handleChange('manningsN', parseFloat(nNew.toFixed(6)).toString());
-                            }
+                <PropRow label={`Diameter (${currentUnit === 'SI' ? 'm' : 'ft'})`}>
+                  <NumericInput
+                    id="diam"
+                    value={formData.diameter}
+                    onValueChange={(v) => {
+                      const newDiam = parseFloat(v);
+                      handleChange('diameter', v);
+                      if (!isNaN(newDiam) && newDiam > 0) {
+                        const C0 = currentUnit === 'SI' ? 1440 : 4720;
+                        const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
+                        const E  = parseFloat(formData.pipeE) || 0;
+                        const WT = parseFloat(formData.pipeWT) || 0;
+                        if (E > 0 && WT > 0) {
+                          const c = C0 / Math.sqrt(1 + (Kw / E) * (newDiam / WT));
+                          handleChange('celerity', parseFloat(c.toFixed(4)).toString());
+                        }
+                        const K = currentUnit === 'SI' ? 124.58 : 185;
+                        const n = parseFloat(formData.manningsN);
+                        if (!isNaN(n) && n > 0) {
+                          const f = (K * n * n) / Math.pow(newDiam, 1 / 3);
+                          handleChange('friction', parseFloat(f.toFixed(6)).toString());
+                        } else {
+                          const f = parseFloat(formData.friction);
+                          if (!isNaN(f) && f > 0) {
+                            const nNew = Math.sqrt((f * Math.pow(newDiam, 1 / 3)) / K);
+                            handleChange('manningsN', parseFloat(nNew.toFixed(6)).toString());
                           }
                         }
-                      }}
-                      className="h-7 text-[12px] font-medium text-black border-slate-300"
-                      style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                    />
-                  </PropRow>
-                )}
-                <PropRow label="Variable Cross-section" noBorder>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <Checkbox
-                      id="variable"
-                      checked={formData.variable || false}
-                      onCheckedChange={(checked) => handleChange('variable', !!checked)}
-                    />
-                    <span className="text-[12px] font-medium text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>Enable VARIABLE</span>
-                  </label>
+                      }
+                    }}
+                    className="h-7 text-[12px] font-medium text-black border-slate-300"
+                    style={{ fontFamily: 'Poppins, sans-serif' } as any}
+                  />
                 </PropRow>
-                {formData.variable && (
-                  <div className="px-3 pb-3 space-y-3">
-                    {(() => {
-                      const SHAPE_DEFS = CROSS_SECTION_SHAPES;
-                      const shapeType: string = (formData.shapeType as string) || 'custom';
-                      const isAuto = shapeType !== 'custom' && !!SHAPE_DEFS[shapeType];
-                      const def = SHAPE_DEFS[shapeType] ?? SHAPE_DEFS.custom;
-                      const dimLabel = currentUnit === 'SI' ? 'm' : 'ft';
-                      const areaLabel = currentUnit === 'SI' ? 'm²' : 'ft²';
-                      const dNum = parseFloat(String(formData.d));
-                      const dValid = !isNaN(dNum) && dNum > 0;
-                      return (
-                        <>
-                          {/* Shape type selector */}
-                          <div>
-                            <div className="text-[10px] font-semibold text-black uppercase tracking-wide mb-1" style={{ fontFamily: 'Poppins, sans-serif' }}>Shape Type</div>
-                            <Select
-                              open={conduitShapeTypeOpen}
-                              onOpenChange={setConduitShapeTypeOpen}
-                              value={shapeType}
-                              onValueChange={(v) => {
-                                setConduitShapeTypeOpen(false);
-                                handleChange('shapeType', v);
-                                const newDef = SHAPE_DEFS[v];
-                                if (newDef && v !== 'custom') {
-                                  const d = parseFloat(String(formData.d));
-                                  if (!isNaN(d) && d > 0) {
-                                    handleChange('a', parseFloat((newDef.aFactor * d * d).toFixed(6)).toString());
-                                  }
-                                }
-                              }}
-                            >
-                              <SelectTrigger className="h-7 text-[11px] font-medium text-black border-slate-300 bg-white" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                                <SelectValue placeholder="— Select shape —" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {Object.entries(SHAPE_DEFS).map(([k, s]) => (
-                                  <SelectItem key={k} value={k} className="text-[11px]">{s.label}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {isAuto && (
-                              <div className="mt-1 rounded bg-slate-100 px-2 py-1 text-[10px] text-black font-medium" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                                A = {def.aFactor} · D² &nbsp;|&nbsp; P = {def.pFactor} · D
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Fields grid */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>Distance ({dimLabel})</div>
-                              <NumericInput id="distance" value={formData.distance} onValueChange={(v) => handleChange('distance', v)} className="h-7 text-[11px] border-slate-300" />
-                            </div>
-                            <div className="space-y-1">
-                              <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>Area ({areaLabel})</div>
-                              <NumericInput id="area" value={formData.area} onValueChange={(v) => handleChange('area', v)} className="h-7 text-[11px] border-slate-300" />
-                            </div>
-                            <div className="space-y-1">
-                              <div className="text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>D ({dimLabel})</div>
-                              <NumericInput
-                                id="d"
-                                value={formData.d}
-                                onValueChange={(v) => {
-                                  handleChange('d', v);
-                                  if (isAuto) {
-                                    const d = parseFloat(v);
-                                    if (!isNaN(d) && d > 0) {
-                                      handleChange('a', parseFloat((def.aFactor * d * d).toFixed(6)).toString());
-                                    }
-                                  }
-                                }}
-                                className="h-7 text-[11px] border-slate-300"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1 text-[11px] font-semibold text-black" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                                A ({areaLabel})
-                                {isAuto && dValid && <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 text-green-700 font-semibold">Auto</span>}
-                              </div>
-                              <NumericInput
-                                id="a"
-                                value={formData.a}
-                                onValueChange={(v) => {
-                                  handleChange('a', v);
-                                  if (isAuto && def.aFactor > 0) {
-                                    const a = parseFloat(v);
-                                    if (!isNaN(a) && a > 0) {
-                                      handleChange('d', parseFloat(Math.sqrt(a / def.aFactor).toFixed(6)).toString());
-                                    }
-                                  }
-                                }}
-                                className={`h-7 text-[11px] ${isAuto && dValid ? 'bg-sky-50 border-sky-300' : 'border-slate-300'}`}
-                              />
-                            </div>
-                          </div>
-                        </>
-                      );
-                    })()}
-                  </div>
-                )}
+                {(() => {
+                  const storedShapeType = String(formData.shapeType || '');
+                  const shapeType = CONDUIT_SHAPE_OPTIONS.some(option => option.value === storedShapeType)
+                    ? storedShapeType
+                    : 'circular';
+                  const shape = CROSS_SECTION_SHAPES[shapeType];
+                  const diameter = parseFloat(String(formData.diameter));
+                  const equivalentDiameter = calculateEquivalentDiameter(shapeType, diameter);
+                  return (
+                    <>
+                      <PropRow label="Shape Type" noBorder>
+                        <Select
+                          open={conduitShapeTypeOpen}
+                          onOpenChange={setConduitShapeTypeOpen}
+                          value={shapeType}
+                          onValueChange={(value) => {
+                            setConduitShapeTypeOpen(false);
+                            handleChange('shapeType', value);
+                          }}
+                        >
+                          <SelectTrigger className="h-7 text-[11px] font-medium text-black border-slate-300 bg-white" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CONDUIT_SHAPE_OPTIONS.map(option => (
+                              <SelectItem key={option.value} value={option.value} className="text-[11px]">
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </PropRow>
+                      {shapeType !== 'circular' && equivalentDiameter !== undefined && (
+                        <div className="px-3 pb-3 text-[10px] text-slate-600" data-testid="equivalent-conduit-diameter">
+                          D<sub>eq</sub> = √({shape.aFactor} / {CROSS_SECTION_SHAPES.circular.aFactor}) × D = {equivalentDiameter.toFixed(2)} {currentUnit === 'SI' ? 'm' : 'ft'} (used in INP)
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </PropSection>
 
               {/* ── HYDRAULICS ── */}

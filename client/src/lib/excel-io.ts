@@ -1,5 +1,5 @@
 import ExcelJS from 'exceljs';
-import { CROSS_SECTION_SHAPES, calculateCrossSectionArea } from './cross-section-shapes';
+import { CONDUIT_SHAPE_OPTIONS, CROSS_SECTION_SHAPES, calculateCrossSectionArea } from './cross-section-shapes';
 import { PIPE_MATERIALS, PIPE_MATERIALS_BY_ID } from './pipe-materials';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -74,6 +74,7 @@ export const TAB_COLS: Record<FilterKey, ColDef[]> = {
     { key: '_materialLabel',     header: 'Pipe Material',   type: 'dropdown', options: PIPE_MATERIAL_OPTIONS, isLongList: true, width: 32 },
     { key: 'length',             header: 'Length',          type: 'number', width: 14 },
     { key: 'diameter',           header: 'Diameter',        type: 'number', width: 14 },
+    { key: 'shapeType',          header: 'Shape Type',      type: 'dropdown', options: CONDUIT_SHAPE_OPTIONS.map(option => option.label), width: 20 },
     { key: 'celerity',           header: 'Wave Speed',      type: 'number', width: 14 },
     { key: 'friction',           header: 'Friction',        type: 'number', width: 14 },
     { key: 'manningsN',          header: "Manning's n",     type: 'number', width: 14 },
@@ -84,12 +85,6 @@ export const TAB_COLS: Record<FilterKey, ColDef[]> = {
     { key: 'cminus',             header: 'CMINUS',          type: 'number', width: 12 },
     { key: 'pipeE',              header: 'E (Modulus)',     type: 'number', width: 16 },
     { key: 'pipeWT',             header: 'WT (Wall Thick)', type: 'number', width: 16 },
-    { key: 'variable',           header: 'VARIABLE',        type: 'dropdown', options: BOOL_OPTIONS, width: 14 },
-    { key: 'shapeType',          header: 'Shape Type',      type: 'dropdown', options: ['Custom', 'Circular', 'Horse Shoe', 'Modified Horse Shoe', 'D-Shaped'], width: 20 },
-    { key: 'distance',           header: 'Distance',        type: 'number', width: 14 },
-    { key: 'area',               header: 'Area',            type: 'number', width: 14 },
-    { key: 'd',                  header: 'D',               type: 'number', width: 12 },
-    { key: 'a',                  header: 'A',               type: 'number', width: 12 },
     { key: 'comment',            header: 'Comment',         type: 'text', width: 24 },
   ],
   dummy: [
@@ -279,7 +274,9 @@ function getRowValue(
   if (col.key === '_unit') return (data.unit as string) || globalUnit;
   if (col.key === '_materialLabel') return materialLabelById(data.materialId);
   if (col.key === 'shapeType') {
-    return CROSS_SECTION_SHAPES[String(data.shapeType || 'custom')]?.label || 'Custom';
+    const defaultShape = subType === 'conduit' ? 'circular' : 'custom';
+    return CROSS_SECTION_SHAPES[String(data.shapeType || defaultShape)]?.label
+      || (subType === 'conduit' ? 'Circular' : 'Custom');
   }
 
   // ── Element-category helpers (mirror FlexTable's isEdge / isDummy / etc.) ──
@@ -302,9 +299,9 @@ function getRowValue(
   // Wave Speed & Friction — applicable to pipe edges and surge tanks only
   if ((col.key === 'celerity' || col.key === 'friction') && !isEdgeSub && !isSurgeSub) return 'NA';
 
-  // ── NA: distance and area — only applicable when VARIABLE = true ────────────
+  // Legacy VARIABLE-only columns remain guarded for older workbooks.
   const isVariable = data.variable === true || data.variable === 'true';
-  if ((col.key === 'distance' || col.key === 'area' || col.key === 'd' || col.key === 'a' || col.key === 'shapeType') && !isVariable) return 'NA';
+  if ((col.key === 'distance' || col.key === 'area' || col.key === 'd' || col.key === 'a') && !isVariable) return 'NA';
 
   // ── NA: Manning's n, pipeE, pipeWT — conduit only ─────────────────────────
   if ((col.key === 'manningsN' || col.key === 'pipeE' || col.key === 'pipeWT') && !isConduitSub) return 'NA';
@@ -984,7 +981,9 @@ function _parseExcelDataRow(
         'D-Shaped': 'dshaped',
       };
       const shapeType = shapeTypeByLabel[strVal] ?? strVal.toLowerCase();
-      update.shapeType = CROSS_SECTION_SHAPES[shapeType] ? shapeType : 'custom';
+      update.shapeType = existingRow.subType === 'conduit' && shapeType === 'custom'
+        ? 'circular'
+        : CROSS_SECTION_SHAPES[shapeType] ? shapeType : 'custom';
       const d = parseFloat(String(existingRow.data.d ?? ''));
       const area = calculateCrossSectionArea(update.shapeType, d);
       if (area !== undefined) update.a = area;

@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useNetworkStore, type UnitSystem, type PcharType } from '@/lib/store';
 import { PIPE_MATERIALS, PIPE_MATERIALS_BY_ID } from '@/lib/pipe-materials';
-import { CROSS_SECTION_SHAPES, calculateCrossSectionArea } from '@/lib/cross-section-shapes';
+import { CONDUIT_SHAPE_OPTIONS } from '@/lib/cross-section-shapes';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -95,8 +95,8 @@ type ColKey = string;
 
 const COLS: Record<FilterKey, ColKey[]> = {
   all:         ['rowNum','type','unitToggle','label','pipeType','nodeNum','diameter','length','celerity','friction','elevation','comment'],
-  conduit:     ['rowNum','unitToggle','label','pipeType','material','length','diameter','celerity','friction','manningsN','segments','inclSegments',
-                 'hasAddedLoss','cplus','cminus','pipeE','pipeWT','variable','shapeType','distance','area','d','a','comment'],
+  conduit:     ['rowNum','unitToggle','label','pipeType','material','length','diameter','shapeType','celerity','friction','manningsN','segments','inclSegments',
+                 'hasAddedLoss','cplus','cminus','pipeE','pipeWT','comment'],
   dummy:       ['rowNum','unitToggle','label','pipeType','diameter','hasAddedLoss','cplus','cminus','comment'],
   node:        ['rowNum','type','unitToggle','label','nodeNum','elevation','comment'],
   reservoir:   ['rowNum','unitToggle','label','nodeNum','elevation','mode','resElev','hSchedNum','thPairs','comment'],
@@ -657,7 +657,6 @@ function PairsEditorModal({
 function ColHeader({ col, unit }: { col: ColKey; unit: UnitSystem }) {
   const L = unit === 'FPS' ? 'ft' : 'm';
   const V = unit === 'FPS' ? 'ft/s' : 'm/s';
-  const A = unit === 'FPS' ? 'ft²' : 'm²';
   const P = unit === 'FPS' ? 'psi' : 'Pa';
 
   const labels: Record<string, string> = {
@@ -667,10 +666,8 @@ function ColHeader({ col, unit }: { col: ColKey; unit: UnitSystem }) {
     inclSegments: 'Incl. in INP', hasAddedLoss: 'Added Loss',
     cplus: 'CPLUS', cminus: 'CMINUS',
     pipeE: `E (${P})`, pipeWT: `WT (${L})`,
-    manningsN: "Manning's n", variable: 'VARIABLE',
+    manningsN: "Manning's n", shapeType: 'Shape Type',
     material: 'Pipe Material',
-    distance: `Distance (${L})`, area: `Area (${A})`,
-    d: `D (${L})`, a: `A (${A})`,
     elevation: `Elevation (${L})`, resElev: `Res. Elev. (${L})`,
     mode: 'BC Mode', hSchedNum: 'H Sched #', thPairs: 'T/H Pairs',
     stType: 'Tank Type', tankTop: `Top Elev. (${L})`, tankBot: `Bot. Elev. (${L})`,
@@ -963,58 +960,19 @@ function RowCells({
         readOnly={!isConduit && !isSurge} dimmed={!isConduit && !isSurge}
         onChange={v => change('pipeWT', v)} testId={`cell-pipewt-${row.id}`} />
     );
-    case 'variable': return (
-      <BoolCell key={col} value={!!d.variable} trueLabel="Yes" falseLabel="No"
-        dimmed={!isConduit} onChange={isConduit ? v => changeEdge('variable', String(v)) : undefined} testId={`cell-variable-${row.id}`} />
-    );
     case 'shapeType': {
-      // Surge-tank shape pairs use the dedicated editor case below. This
-      // column entry is for conduit VARIABLE D/A fields.
-      const applicable = isConduit && !!d.variable;
+      const applicable = isConduit;
       return (
         <SelectCell
           key={col}
-          value={applicable ? String(d.shapeType || 'custom') : ''}
-          options={Object.entries(CROSS_SECTION_SHAPES).map(([value, shape]) => ({ label: shape.label, value }))}
+          value={applicable ? String(d.shapeType || 'circular') : ''}
+          options={CONDUIT_SHAPE_OPTIONS}
           dimmed={!applicable}
-          onChange={applicable ? (value) => {
-            const area = calculateCrossSectionArea(value, parseFloat(String(d.d)));
-            changeEdge('shapeType', value);
-            if (area !== undefined) changeEdge('a', String(area));
-          } : undefined}
+          onChange={applicable ? value => changeEdge('shapeType', value) : undefined}
           testId={`cell-shapetype-${row.id}`}
         />
       );
     }
-    case 'distance': return (
-      <EditableCell key={col} value={d.distance ?? ''} type="text" inputMode="decimal"
-        readOnly={!d.variable} dimmed={!d.variable}
-        onChange={v => changeEdge('distance', v)} testId={`cell-distance-${row.id}`} />
-    );
-    case 'area': return (
-      <EditableCell key={col} value={d.area ?? ''} type="text" inputMode="decimal"
-        readOnly={!d.variable} dimmed={!d.variable}
-        onChange={v => changeEdge('area', v)} testId={`cell-area-${row.id}`} />
-    );
-    case 'd': return (
-      <EditableCell key={col} value={d.d ?? ''} type="text" inputMode="decimal"
-        readOnly={!d.variable} dimmed={!d.variable}
-        onChange={v => {
-          changeEdge('d', v);
-          const area = calculateCrossSectionArea(String(d.shapeType || 'custom'), parseFloat(v));
-          if (area !== undefined) changeEdge('a', String(area));
-        }} testId={`cell-d-${row.id}`} />
-    );
-    case 'a': return (
-      <EditableCell key={col} value={d.a ?? ''} type="text" inputMode="decimal"
-        readOnly={!d.variable} dimmed={!d.variable}
-        onChange={v => {
-          changeEdge('a', v);
-          const factor = CROSS_SECTION_SHAPES[String(d.shapeType || 'custom')]?.aFactor;
-          const area = parseFloat(v);
-          if (factor && area > 0) changeEdge('d', String(parseFloat(Math.sqrt(area / factor).toFixed(6))));
-        }} testId={`cell-a-${row.id}`} />
-    );
     case 'elevation': return (
       <EditableCell key={col} value={!isEdge ? fmt(d.elevation) : ''} type="text" inputMode="decimal"
         readOnly={isEdge} dimmed={isEdge}

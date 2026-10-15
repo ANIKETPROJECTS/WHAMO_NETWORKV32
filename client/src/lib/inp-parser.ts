@@ -472,11 +472,12 @@ function parseElementProperties(lines: string[]): ParsedElements {
         if (afield) a = parseFloat(afield[1]);
       }
       if (id) {
+        const inferredShape = variable ? inferCrossSectionShape(d, a) : 'circular';
         conduits.set(id, {
-          length, diameter, celerity, friction,
+          length, diameter: variable && d ? d : diameter, celerity, friction,
           numseg, hasAddedLoss, cplus, cminus,
-          variable,
-          shapeType: variable ? inferCrossSectionShape(d, a) : undefined,
+          variable: false,
+          shapeType: inferredShape === 'custom' ? 'circular' : inferredShape,
           distance, area, d, a
         });
       }
