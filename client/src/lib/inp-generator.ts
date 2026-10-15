@@ -739,21 +739,8 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
       addL(' FINISH');
       addL('');
     }
-  } else {
-    addL('HISTORY');
-    addL(' NODE 2 Q HEAD');
-    addL(' ELEM ST Q ELEV');
-    addL(' FINISH');
   }
   addL('');
-  const snapshotTimes = state.snapshotTimes || [];
-  if (snapshotTimes.length > 0) {
-    snapshotTimes.forEach(t => {
-      addL(`SNAPSHOT TIME ${t} FINISH`);
-      addL('');
-    });
-  }
-
   addL('');
   addL('C COMPUTATIONAL PARAMETERS');
   addL('CONTROL');

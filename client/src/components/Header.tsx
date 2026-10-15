@@ -519,10 +519,8 @@ export function Header({
   const [selectedElementId, setSelectedElementId] = useState<string>("");
   const [selectedGroupType, setSelectedGroupType] = useState<"" | "nodes" | "elements" | "conduits" | "dummy">("");
   const [selectedVars, setSelectedVars] = useState<string[]>([]);
-  const [requestType, setRequestType] = useState<
-    "HISTORY" | "PLOT" | "SPREADSHEET" | "SNAPSHOT"
-  >("HISTORY");
-  const [snapshotTimeInput, setSnapshotTimeInput] = useState<string>("0");
+  const [requestType, setRequestType] = useState<"HISTORY" | "SNAPSHOT">("HISTORY");
+  const [snapshotTimeInput, setSnapshotTimeInput] = useState("0");
 
   useEffect(() => {
     setLocalParams(computationalParams);
@@ -539,84 +537,70 @@ export function Header({
     const node = nodes.find((n) => n.id === actualId);
     const type = node ? "node" : "edge";
 
-    const allTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
-    allTypes.forEach(reqType => {
-      const alreadyExists = outputRequests.some(
-        req => req.elementId === actualId && req.requestType === reqType && req.isElement === (mode === 'element')
-      );
-      if (!alreadyExists) {
-        addOutputRequest({
-          elementId: actualId,
-          elementType: type,
-          isElement: mode === 'element',
-          requestType: reqType,
-          variables: selectedVars,
-        });
-      }
-    });
+    const alreadyExists = outputRequests.some(
+      req => req.elementId === actualId && req.requestType === "HISTORY" && req.isElement === (mode === 'element')
+    );
+    if (!alreadyExists) {
+      addOutputRequest({
+        elementId: actualId,
+        elementType: type,
+        isElement: mode === 'element',
+        requestType: "HISTORY",
+        variables: selectedVars,
+      });
+    }
     toast({
       title: "Request Added",
-      description: "Output request added to History, Plot, and Spreadsheet.",
+      description: "History output request added.",
     });
   };
 
   const handleAddAllForType = () => {
     if (!selectedGroupType || selectedVars.length === 0) return;
-    const allTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
     let added = 0;
 
     if (selectedGroupType === "nodes") {
       nodes.forEach(node => {
-        allTypes.forEach(reqType => {
-          const exists = outputRequests.some(r => r.elementId === node.id && r.requestType === reqType && r.isElement === false);
-          if (!exists) {
-            addOutputRequest({ elementId: node.id, elementType: "node", requestType: reqType, isElement: false, variables: selectedVars });
-            added++;
-          }
-        });
+        const exists = outputRequests.some(r => r.elementId === node.id && r.requestType === "HISTORY" && r.isElement === false);
+        if (!exists) {
+          addOutputRequest({ elementId: node.id, elementType: "node", requestType: "HISTORY", isElement: false, variables: selectedVars });
+          added++;
+        }
       });
     } else if (selectedGroupType === "elements") {
       const specialNodes = nodes.filter(n => ["surgeTank","pump","checkValve","turbine"].includes(n.data?.type || n.type || ""));
       specialNodes.forEach(node => {
-        allTypes.forEach(reqType => {
-          const exists = outputRequests.some(r => r.elementId === node.id && r.requestType === reqType && r.isElement === true);
-          if (!exists) {
-            addOutputRequest({ elementId: node.id, elementType: "node", requestType: reqType, isElement: true, variables: selectedVars });
-            added++;
-          }
-        });
+        const exists = outputRequests.some(r => r.elementId === node.id && r.requestType === "HISTORY" && r.isElement === true);
+        if (!exists) {
+          addOutputRequest({ elementId: node.id, elementType: "node", requestType: "HISTORY", isElement: true, variables: selectedVars });
+          added++;
+        }
       });
       const turbineEdges = Array.from(new Map(edges.filter(e => e.data?.type === "turbine").map(e => [e.data?.label || e.id, e])).values());
       turbineEdges.forEach(edge => {
-        allTypes.forEach(reqType => {
-          const exists = outputRequests.some(r => r.elementId === edge.id && r.requestType === reqType);
-          if (!exists) {
-            addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: reqType, isElement: true, variables: selectedVars });
-            added++;
-          }
-        });
+        const exists = outputRequests.some(r => r.elementId === edge.id && r.requestType === "HISTORY");
+        if (!exists) {
+          addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: "HISTORY", isElement: true, variables: selectedVars });
+          added++;
+        }
       });
     } else if (selectedGroupType === "conduits") {
       const conduitEdges = Array.from(new Map(edges.filter(e => e.data?.type === "conduit").map(e => [e.data?.label || e.id, e])).values());
       conduitEdges.forEach(edge => {
-        allTypes.forEach(reqType => {
-          const exists = outputRequests.some(r => r.elementId === edge.id && r.requestType === reqType);
-          if (!exists) {
-            addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: reqType, isElement: true, variables: selectedVars });
-            added++;
-          }
-        });
+        const exists = outputRequests.some(r => r.elementId === edge.id && r.requestType === "HISTORY");
+        if (!exists) {
+          addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: "HISTORY", isElement: true, variables: selectedVars });
+          added++;
+        }
       });
     } else if (selectedGroupType === "dummy") {
       const dummyEdges = Array.from(new Map(edges.filter(e => e.data?.type === "dummy").map(e => [e.data?.label || e.id, e])).values());
       dummyEdges.forEach(edge => {
-        allTypes.forEach(reqType => {
-          const exists = outputRequests.some(r => r.elementId === edge.id && r.requestType === reqType);
-          if (!exists) {
-            addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: reqType, isElement: true, variables: selectedVars });
-            added++;
-          }
-        });
+        const exists = outputRequests.some(r => r.elementId === edge.id && r.requestType === "HISTORY");
+        if (!exists) {
+          addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: "HISTORY", isElement: true, variables: selectedVars });
+          added++;
+        }
       });
     }
 
@@ -624,7 +608,7 @@ export function Header({
     toast({
       title: "Requests Added",
       description: added > 0
-        ? `Added requests for all ${typeLabels[selectedGroupType]} (History, Plot & Spreadsheet).`
+        ? `Added History requests for all ${typeLabels[selectedGroupType]}.`
         : `All ${typeLabels[selectedGroupType]} already have requests configured.`,
     });
   };
@@ -1211,35 +1195,30 @@ export function Header({
                   className="h-7 text-[13px] px-4 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white border-0"
                   style={{ fontFamily: 'Poppins, sans-serif' }}
                   onClick={() => {
-                    const types: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
                     const variables = ["Q", "HEAD", "ELEV", "VEL", "PRESS", "PIEZHEAD"];
                     nodes.forEach(node => {
                       const isSurgeTank = node.data.type === 'surgeTank';
-                      types.forEach(type => {
-                        const existsNode = outputRequests.some(req =>
-                          req.elementId === node.id && req.requestType === type && req.isElement === false
+                      const existsNode = outputRequests.some(req =>
+                        req.elementId === node.id && req.requestType === "HISTORY" && req.isElement === false
+                      );
+                      if (!existsNode) {
+                        addOutputRequest({ elementId: node.id, elementType: "node", requestType: "HISTORY", isElement: false, variables: [...variables] });
+                      }
+                      if (isSurgeTank) {
+                        const existsElem = outputRequests.some(req =>
+                          req.elementId === node.id && req.requestType === "HISTORY" && req.isElement === true
                         );
-                        if (!existsNode) {
-                          addOutputRequest({ elementId: node.id, elementType: "node", requestType: type, isElement: false, variables: [...variables] });
+                        if (!existsElem) {
+                          addOutputRequest({ elementId: node.id, elementType: "node", requestType: "HISTORY", isElement: true, variables: [...variables] });
                         }
-                        if (isSurgeTank) {
-                          const existsElem = outputRequests.some(req =>
-                            req.elementId === node.id && req.requestType === type && req.isElement === true
-                          );
-                          if (!existsElem) {
-                            addOutputRequest({ elementId: node.id, elementType: "node", requestType: type, isElement: true, variables: [...variables] });
-                          }
-                        }
-                      });
+                      }
                     });
                     const uniqueEdges = Array.from(new Map(edges.map(e => [e.data?.label || e.id, e])).values());
                     uniqueEdges.forEach(edge => {
-                      types.forEach(type => {
-                        const exists = outputRequests.some(req => req.elementId === edge.id && req.requestType === type);
-                        if (!exists) {
-                          addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: type, isElement: true, variables: [...variables] });
-                        }
-                      });
+                      const exists = outputRequests.some(req => req.elementId === edge.id && req.requestType === "HISTORY");
+                      if (!exists) {
+                        addOutputRequest({ elementId: edge.id, elementType: "edge", requestType: "HISTORY", isElement: true, variables: [...variables] });
+                      }
                     });
                   }}
                   data-testid="button-select-all-requests"
@@ -1359,9 +1338,6 @@ export function Header({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="HISTORY">HISTORY</SelectItem>
-                      <SelectItem value="PLOT">PLOT</SelectItem>
-                      <SelectItem value="SPREADSHEET">SPREADSHEET</SelectItem>
-                      <SelectItem value="SNAPSHOT">SNAPSHOT</SelectItem>
                     </SelectContent>
                   </Select>
                 </PropRow>

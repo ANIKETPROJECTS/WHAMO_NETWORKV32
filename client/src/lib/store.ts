@@ -138,7 +138,7 @@ interface OutputRequest {
   elementId: string; // ID of the node or edge
   elementType: 'node' | 'edge';
   isElement?: boolean; // For nodes, distinguish between Node and Element (e.g. Surge Tank)
-  requestType: 'HISTORY' | 'PLOT' | 'SPREADSHEET';
+  requestType: 'HISTORY';
   variables: string[]; // e.g., ['Q', 'HEAD', 'ELEV']
 }
 
@@ -189,7 +189,6 @@ interface NetworkState {
   addVSchedule: (schedNum: number) => void;
   deleteVSchedule: (schedNum: number) => void;
   autoArrange: () => void;
-  autoSelectOutputRequests: () => void;
   updateComputationalParams: (params: Partial<ComputationalParameters>) => void;
   addOutputRequest: (request: Omit<OutputRequest, 'id'>) => void;
   removeOutputRequest: (id: string) => void;
@@ -750,18 +749,6 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       }
     }
 
-    // Auto-select output requests for the new edge
-    const availableVars = ["Q", "HEAD", "ELEV", "VEL", "PRESS", "PIEZHEAD"];
-    const requestTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
-    const newRequests: OutputRequest[] = requestTypes.map(reqType => ({
-      id: `req-${Date.now()}-${Math.random()}`,
-      elementId: id,
-      elementType: 'edge',
-      requestType: reqType,
-      variables: [...availableVars]
-    }));
-    
-    set({ outputRequests: [...get().outputRequests, ...newRequests] });
     get().recomputeNodeOrderErrors();
   },
 
@@ -863,36 +850,6 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       set({ pcharData: { ...get().pcharData, [newPumpTypeToInit]: defaultPchar } });
     }
     
-    // Auto-select output requests for the new node
-    const availableVars = ["Q", "HEAD", "ELEV", "VEL", "PRESS", "PIEZHEAD"];
-    const requestTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
-    const newRequests: OutputRequest[] = [];
-    
-    requestTypes.forEach(reqType => {
-      // Add Node request
-      newRequests.push({
-        id: `req-${Date.now()}-${Math.random()}`,
-        elementId: id,
-        elementType: 'node',
-        isElement: false,
-        requestType: reqType,
-        variables: [...availableVars]
-      });
-
-      // If it's a surge tank, pump, checkValve, or turbine, also add the Element request
-      if (type === 'surgeTank' || type === 'pump' || type === 'checkValve' || type === 'turbine') {
-        newRequests.push({
-          id: `req-${Date.now()}-${Math.random()}`,
-          elementId: id,
-          elementType: 'node',
-          isElement: true,
-          requestType: reqType,
-          variables: [...availableVars]
-        });
-      }
-    });
-    
-    set({ outputRequests: [...get().outputRequests, ...newRequests] });
   },
 
   addEdgeElement: (type, sourceId, targetId) => {
@@ -990,17 +947,6 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
 
     set({ edges: [...get().edges, newEdge] });
 
-    const availableVars = ['Q', 'HEAD', 'ELEV', 'VEL', 'PRESS', 'PIEZHEAD'];
-    const requestTypes: ('HISTORY' | 'PLOT' | 'SPREADSHEET')[] = ['HISTORY', 'PLOT', 'SPREADSHEET'];
-    const newRequests: OutputRequest[] = requestTypes.map(reqType => ({
-      id: `req-${Date.now()}-${Math.random()}`,
-      elementId: id,
-      elementType: 'edge',
-      isElement: true,
-      requestType: reqType,
-      variables: [...availableVars],
-    }));
-    set({ outputRequests: [...get().outputRequests, ...newRequests] });
   },
 
   updateNodeData: (id, data) => {
@@ -1226,7 +1172,7 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
       hSchedules: extractedHSchedules,
       qSchedules: extractedQSchedules,
       computationalParams: params || get().computationalParams,
-      outputRequests: requests || [],
+      outputRequests: (requests || []).filter((request) => request.requestType === "HISTORY"),
       snapshotTimes: snapshotTimes || [],
       projectName: projectName || get().projectName,
       loadedFileHandle: fileHandle || null,
@@ -1300,40 +1246,6 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
     const existing = { ...get().vSchedules };
     delete existing[schedNum];
     set({ vSchedules: existing });
-  },
-
-  autoSelectOutputRequests: () => {
-    const { nodes, edges } = get();
-    const availableVars = ["Q", "HEAD", "ELEV", "VEL", "PRESS", "PIEZHEAD"];
-    const requestTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
-    
-    const newRequests: OutputRequest[] = [];
-    
-    nodes.forEach(node => {
-      requestTypes.forEach(reqType => {
-        newRequests.push({
-          id: `req-${Date.now()}-${Math.random()}`,
-          elementId: node.id,
-          elementType: 'node',
-          requestType: reqType,
-          variables: [...availableVars]
-        });
-      });
-    });
-
-    edges.forEach(edge => {
-      requestTypes.forEach(reqType => {
-        newRequests.push({
-          id: `req-${Date.now()}-${Math.random()}`,
-          elementId: edge.id,
-          elementType: 'edge',
-          requestType: reqType,
-          variables: [...availableVars]
-        });
-      });
-    });
-
-    set({ outputRequests: newRequests });
   },
 
   updateComputationalParams: (params) => {

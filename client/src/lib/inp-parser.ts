@@ -1302,7 +1302,7 @@ export function parseInpFile(content: string): {
   pcharData: Record<number, PcharType>;
   tcharData: Record<number, TcharType>;
   vSchedules: Record<number, { t: number; g: number }[]>;
-  outputRequests: { id: string; elementId: string; elementType: 'node' | 'edge'; isElement?: boolean; requestType: 'HISTORY' | 'PLOT' | 'SPREADSHEET'; variables: string[] }[];
+  outputRequests: { id: string; elementId: string; elementType: 'node' | 'edge'; isElement?: boolean; requestType: 'HISTORY'; variables: string[] }[];
   nodeSelectionSet: string[];
 } {
   // ── Strip all comment lines first (lines whose first non-space token is "C") ──
@@ -1524,8 +1524,9 @@ export function parseInpFile(content: string): {
 
   // Map WHAMO IDs → React Flow IDs
   let reqCounter = 1;
-  const outputRequests: { id: string; elementId: string; elementType: 'node' | 'edge'; isElement?: boolean; requestType: 'HISTORY' | 'PLOT' | 'SPREADSHEET'; variables: string[] }[] = [];
+  const outputRequests: { id: string; elementId: string; elementType: 'node' | 'edge'; isElement?: boolean; requestType: 'HISTORY'; variables: string[] }[] = [];
   for (const raw of rawRequests) {
+    if (raw.reqType !== 'HISTORY') continue;
     let elementId: string | null = null;
     let elementType: 'node' | 'edge' = 'node';
     if (raw.isElem) {

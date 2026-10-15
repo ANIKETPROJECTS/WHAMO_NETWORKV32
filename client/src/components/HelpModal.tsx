@@ -787,7 +787,7 @@ function downloadPDF() {
     'Click Analysis → Configure to open the Output Requests panel.',
     'Select a node or element, or choose a group type (Nodes, Conduits, Elements).',
     'Tick the variables you want: Q, HEAD, ELEV, VEL, PRESS, PIEZHEAD (or Q, HEAD, SPEED, POWER for turbines).',
-    'Click Add Request (or Add All for Group). History, Plot, and Spreadsheet request types are added simultaneously.',
+    'Choose HISTORY, select an element and variables, then click Add Request. Requests are only created when you add them manually.',
     'Review the Current Requests list at the bottom.',
   ], y);
   y = subHeading('Generating the .OUT File', y);
@@ -2373,7 +2373,7 @@ function SimulationSection() {
         'Click Analysis → Configure to open the Output Requests panel.',
         'Select a node or element, or choose a group type (Nodes, Conduits, Elements).',
         'Tick the variables: Q, HEAD, ELEV, VEL, PRESS, PIEZHEAD (or Q, HEAD, SPEED, POWER for turbines).',
-        'Click Add Request (or Add All for Group). History, Plot, and Spreadsheet types are added simultaneously.',
+        'Choose HISTORY, select an element and variables, then click Add Request. Requests are only created when you add them manually.',
         'Review the Current Requests list at the bottom.',
       ]} />
 

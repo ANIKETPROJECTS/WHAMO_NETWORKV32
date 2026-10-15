@@ -77,21 +77,18 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
     const edge = edges.find(e => e.id === actualId);
     const type = node ? 'node' : 'edge';
 
-    const allTypes: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
-    allTypes.forEach(reqType => {
-      const alreadyExists = outputRequests.some(
-        req => req.elementId === actualId && req.requestType === reqType && req.isElement === (mode === 'element')
-      );
-      if (!alreadyExists) {
-        addOutputRequest({
-          elementId: actualId,
-          elementType: type,
-          isElement: mode === 'element',
-          requestType: reqType,
-          variables: selectedVars
-        });
-      }
-    });
+    const alreadyExists = outputRequests.some(
+      req => req.elementId === actualId && req.requestType === "HISTORY" && req.isElement === (mode === 'element')
+    );
+    if (!alreadyExists) {
+      addOutputRequest({
+        elementId: actualId,
+        elementType: type,
+        isElement: mode === 'element',
+        requestType: "HISTORY",
+        variables: selectedVars
+      });
+    }
   };
 
   const selectedActualId = selectedElementId.includes(':') ? selectedElementId.split(':')[1] : selectedElementId;
@@ -194,47 +191,42 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        const types: ("HISTORY" | "PLOT" | "SPREADSHEET")[] = ["HISTORY", "PLOT", "SPREADSHEET"];
                         const variables = ["Q", "HEAD", "ELEV", "VEL", "PRESS", "PIEZHEAD"];
                         
                         nodes.forEach(node => {
                           const isSpecialElem = node.data.type === 'surgeTank' || node.data.type === 'pump' || node.data.type === 'checkValve' || node.type === 'surgeTank' || node.type === 'pump' || node.type === 'checkValve';
                           
-                          types.forEach(type => {
-                            // Regular node request
-                            const existsNode = outputRequests.some(req => 
-                              req.elementId === node.id && 
-                              req.requestType === type &&
-                              req.isElement === false
+                          const existsNode = outputRequests.some(req =>
+                            req.elementId === node.id &&
+                            req.requestType === "HISTORY" &&
+                            req.isElement === false
+                          );
+                          if (!existsNode) {
+                            addOutputRequest({
+                              elementId: node.id,
+                              elementType: "node",
+                              requestType: "HISTORY",
+                              isElement: false,
+                              variables: [...variables]
+                            });
+                          }
+
+                          if (isSpecialElem) {
+                            const existsElem = outputRequests.some(req =>
+                              req.elementId === node.id &&
+                              req.requestType === "HISTORY" &&
+                              req.isElement === true
                             );
-                            if (!existsNode) {
+                            if (!existsElem) {
                               addOutputRequest({
                                 elementId: node.id,
                                 elementType: "node",
-                                requestType: type,
-                                isElement: false,
+                                requestType: "HISTORY",
+                                isElement: true,
                                 variables: [...variables]
                               });
                             }
-
-                            // If it's a surge tank, pump, or check valve, also add the ELEM request
-                            if (isSpecialElem) {
-                              const existsElem = outputRequests.some(req => 
-                                req.elementId === node.id && 
-                                req.requestType === type &&
-                                req.isElement === true
-                              );
-                              if (!existsElem) {
-                                addOutputRequest({
-                                  elementId: node.id,
-                                  elementType: "node",
-                                  requestType: type,
-                                  isElement: true,
-                                  variables: [...variables]
-                                });
-                              }
-                            }
-                          });
+                          }
                         });
                         
                         // Deduplicate edges by label
@@ -243,21 +235,19 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
                         ).values());
                         
                         uniqueEdges.forEach(edge => {
-                          types.forEach(type => {
-                            const exists = outputRequests.some(req => 
-                              req.elementId === edge.id && 
-                              req.requestType === type
-                            );
-                            if (!exists) {
-                              addOutputRequest({
-                                elementId: edge.id,
-                                elementType: "edge",
-                                requestType: type,
-                                isElement: true,
-                                variables: [...variables]
-                              });
-                            }
-                          });
+                          const exists = outputRequests.some(req =>
+                            req.elementId === edge.id &&
+                            req.requestType === "HISTORY"
+                          );
+                          if (!exists) {
+                            addOutputRequest({
+                              elementId: edge.id,
+                              elementType: "edge",
+                              requestType: "HISTORY",
+                              isElement: true,
+                              variables: [...variables]
+                            });
+                          }
                         });
                       }}
                       data-testid="button-select-all-requests-toolbar"
@@ -352,9 +342,6 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="HISTORY">HISTORY</SelectItem>
-                      <SelectItem value="PLOT">PLOT</SelectItem>
-                      <SelectItem value="SPREADSHEET">SPREADSHEET</SelectItem>
-                      <SelectItem value="SNAPSHOT">SNAPSHOT</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
