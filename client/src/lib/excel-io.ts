@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { CROSS_SECTION_SHAPES, calculateCrossSectionArea } from './cross-section-shapes';
+import { PIPE_MATERIALS, PIPE_MATERIALS_BY_ID } from './pipe-materials';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -39,28 +40,7 @@ const VALVE_STATUS_OPTIONS = ['OPEN', 'CLOSED'];
 const TURBINE_MODE_OPTIONS = ['TURBINE', 'GENERATE', 'TURBGOV', 'EMERGENCY'];
 const BOOL_OPTIONS = ['true', 'false'];
 
-export const PIPE_MATERIAL_OPTIONS = [
-  '-- None --',
-  'Aluminum','Aluminum structural plate 32 in CR','Aluminum structural plate 32 in CR Historic',
-  'Asbestos Cement','Asphalt ditch','Asphalt pavement (rough)','Asphalt pavement (smooth)',
-  'Asphalted cast iron (new)','Bare soil','Best concrete','Brick in mortar','Brick sewer',
-  'Cast iron','CMP','Concrete','Concrete (centrif. spun)','Concrete (steel forms)',
-  'Concrete (wood forms)','Concrete gutter (broom finish)','Concrete gutter (troweled finish)',
-  'Concrete gutter, asphalt pavement (rough)','Concrete gutter, asphalt pavement (smooth)',
-  'Concrete pavement (float finish)','Copper','Curled wood mat','Ductile Iron',
-  'Fiberglass roving','Flood plain, brush','Flood plain, cultivated','Galvanized iron',
-  'Glass','Gravel riprap, 25 mm (1 in) D50','Gravel riprap, 50 mm (2 in) D50',
-  'Grouted riprap','Jute net','Natural stream, clean','Natural stream, stony notes',
-  'Natural stream, weedy','PVC','Riveted steel (new, rough)','Riveted steel (new, smooth)',
-  'Rock cut','Rock riprap, 150 mm (6 in) D50','Rock riprap, 300 mm (12 in) D50',
-  'Rough channel, with grass','Rough earth','Rough rocks','Soil cement','Steel',
-  'Steel and Aluminum 18 In or less CR 3x1 Corrugations Historic',
-  'Steel and Aluminum 5x1 and 3x1 Corrugations','Steel and Aluminum Var CR',
-  'Steel and Aluminum Var CR Historic','Steel structural plate 18 In CR',
-  'Steel structural plate 31 In CR','Steel structural plate 47 In CR',
-  'Stone masonry','Stony bottom','Straw with net','Synthetic mat',
-  'Very rough channel, with grass','Wood Stave (new, smooth)','Woven paper net',
-];
+export const PIPE_MATERIAL_OPTIONS = PIPE_MATERIALS.map(material => material.label);
 
 // ─── Row-number sentinel ───────────────────────────────────────────────────────
 // The '#' column is always first; it is read-only and never imported back.
@@ -231,8 +211,6 @@ export const TAB_COLS: Record<FilterKey, ColDef[]> = {
 };
 
 // ─── Material helpers ─────────────────────────────────────────────────────────
-
-import { PIPE_MATERIALS, PIPE_MATERIALS_BY_ID } from './pipe-materials';
 
 function materialLabelById(id: number | string | undefined): string {
   if (!id) return '-- None --';

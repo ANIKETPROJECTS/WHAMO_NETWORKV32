@@ -2674,9 +2674,6 @@ export function PropertiesPanel() {
                             <CommandList className="max-h-64">
                               <CommandEmpty>No material found.</CommandEmpty>
                               <CommandGroup>
-                                <CommandItem value="-- None (manual entry) --" onSelect={() => { applyStMaterial('__none__'); setStMaterialPickerOpen(false); }}>
-                                  — None (manual entry) —
-                                </CommandItem>
                                 {PIPE_MATERIALS.map(m => (
                                   <CommandItem key={m.id} value={m.label} onSelect={() => { applyStMaterial(String(m.id)); setStMaterialPickerOpen(false); }}>
                                     {m.label}
@@ -3152,9 +3149,6 @@ export function PropertiesPanel() {
                             <CommandList className="max-h-64">
                               <CommandEmpty>No material found.</CommandEmpty>
                               <CommandGroup>
-                                <CommandItem value="-- None (manual entry) --" onSelect={() => { applyMaterial('__none__'); setMaterialPickerOpen(false); }} data-testid="material-option-none">
-                                  — None (manual entry) —
-                                </CommandItem>
                                 {PIPE_MATERIALS.map(m => (
                                   <CommandItem key={m.id} value={m.label} onSelect={() => { applyMaterial(String(m.id)); setMaterialPickerOpen(false); }} data-testid={`material-option-${m.id}`}>
                                     {m.label}

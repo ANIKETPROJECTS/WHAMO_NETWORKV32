@@ -839,10 +839,7 @@ function RowCells({
     case 'material': {
       if (!isConduit) return <NACell key={col} />;
       const currentId = d.materialId ? String(d.materialId) : '__none__';
-      const options = [
-        { label: '-- None --', value: '__none__' },
-        ...PIPE_MATERIALS.map(m => ({ label: m.label, value: String(m.id) })),
-      ];
+      const options = PIPE_MATERIALS.map(m => ({ label: m.label, value: String(m.id) }));
       const propagateToSiblings = (updater: (e: any, eUnit: UnitSystem) => any) => {
         const lbl = (d.label as string) || '';
         const { edges: allEdges, updateEdgeData: upd, applyMaterialToAllConduits: all } =

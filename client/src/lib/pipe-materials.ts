@@ -15,7 +15,7 @@ export interface PipeMaterial {
   poissonsRatio: number;
 }
 
-export const PIPE_MATERIALS: PipeMaterial[] = [
+const ALL_PIPE_MATERIALS: PipeMaterial[] = [
   {
     id: 1,
     label: "Aluminum",
@@ -836,5 +836,9 @@ export const PIPE_MATERIALS: PipeMaterial[] = [
     poissonsRatio: 0,
   },
 ];
+
+export const PIPE_MATERIALS: PipeMaterial[] = ALL_PIPE_MATERIALS.filter(
+  material => material.id === 15 || material.id === 50,
+).sort((a, b) => b.id - a.id);
 
 export const PIPE_MATERIALS_BY_ID: Record<number, PipeMaterial> = Object.fromEntries(PIPE_MATERIALS.map(m => [m.id, m]));
