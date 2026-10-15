@@ -86,7 +86,8 @@ Preferred communication style: Simple, everyday language.
 | Name | Where set | Purpose |
 |---|---|---|
 | `MONGODB_URI` | Replit Secret | MongoDB connection string (required at startup) |
-| `JWT_SECRET` | `.replit` `[userenv.shared]` | JWT signing secret |
+| `SESSION_SECRET` | Replit Secret | JWT signing secret; required unless a separate `JWT_SECRET` secret is configured |
+| `JWT_SECRET` | Replit Secret (optional) | Overrides `SESSION_SECRET` for JWT signing; never store signing keys in `.replit` |
 | `PORT` | `.replit` `[env]` | Port for the main Express server (default 5000) |
 
 ### Workflows
@@ -104,4 +105,8 @@ Preferred communication style: Simple, everyday language.
 - Run `npm run dev` to start the WHAMO Designer.
 - Run `cd GRAPHVISUALIZATIONCODE && pnpm run typecheck` to check the standalone workspace.
 - Run `cd GRAPHVISUALIZATIONCODE && pnpm run build` to build the standalone viewer, API, and preview packages.
-- The root app requires `MONGODB_URI` and `JWT_SECRET` at startup; keep both configured as Replit environment values.
+- The root app requires `MONGODB_URI` and either `SESSION_SECRET` or `JWT_SECRET` at startup. Keep credentials in Replit Secrets, not source-controlled configuration.
+- The existing Run button starts **Start application** on port 5000. Its `/login`, `/designer`, and `/admin` routes belong to the Designer. The standalone viewer has a separate web service on port 21454.
+- Setup verification: both the root production build (`npm run build`) and standalone viewer build (`cd GRAPHVISUALIZATIONCODE && pnpm --filter @workspace/whamo-viewer run build`) pass. MongoDB connects, demo and admin logins respond successfully, normal users cannot access admin endpoints, and `/api/healthz` on the standalone API responds successfully.
+- To verify the Admin panel manually: open the main app preview on port 5000, sign in with an existing master-admin account, then visit `/admin`. Expected: the user list and section-access controls load. A normal user visiting `/admin` should see access denied.
+- The imported project includes publicly documented demo/admin credentials. Replace these accounts' passwords and harden the automatic seeding before publishing to untrusted users.

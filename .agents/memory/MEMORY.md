@@ -7,3 +7,4 @@
 - [Root typecheck baseline](root-typecheck-baseline.md) — the imported root app can build and run while its legacy npm run check still reports unrelated TypeScript errors.
 - [Hydraulic automatic overrides](hydraulic-automatic-overrides.md) — calculated celerity/friction fields must explain their source inputs and require confirmation before manual override.
 - [Conduit variable shapes](conduit-variable-shapes.md) — shape labels are UI metadata; persist numeric D/A and infer named shapes only when imported ratios match.
+- [Imported app verification](imported-app-verification.md) — independently verify Designer login/database and standalone viewer assets; one healthy app does not validate the other.

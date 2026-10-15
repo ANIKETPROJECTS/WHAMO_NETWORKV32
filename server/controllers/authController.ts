@@ -3,8 +3,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { userStore } from "../auth/inMemoryUserStore";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is required");
+const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET;
+if (!JWT_SECRET) throw new Error("JWT_SECRET or SESSION_SECRET environment variable is required");
 const JWT_EXPIRES = "7d";
 
 function makeToken(user: { id: string; email: string; fullName: string; role: string; sectionAccess: string[] }) {
