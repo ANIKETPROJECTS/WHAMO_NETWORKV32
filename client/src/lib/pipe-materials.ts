@@ -643,7 +643,7 @@ const ALL_PIPE_MATERIALS: PipeMaterial[] = [
   {
     id: 50,
     label: "Steel",
-    manningsN: 0.013,
+    manningsN: 0.011,
     roughnessHeight_m: 0.0000984252,
     roughnessHeight_ft: 0.000322917,
     kuttersN: 0.013,
