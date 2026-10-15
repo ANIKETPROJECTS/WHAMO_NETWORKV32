@@ -2869,6 +2869,9 @@ export function PropertiesPanel() {
                   const shape = CROSS_SECTION_SHAPES[shapeType];
                   const diameter = parseFloat(String(formData.diameter));
                   const equivalentDiameter = calculateEquivalentDiameter(shapeType, diameter);
+                  const circularAreaFactor = CROSS_SECTION_SHAPES.circular.aFactor;
+                  const diameterText = String(formData.diameter ?? '');
+                  const displayUnit = currentUnit === 'SI' ? 'm' : 'ft';
                   return (
                     <>
                       <PropRow label="Shape Type" noBorder>
@@ -2894,8 +2897,21 @@ export function PropertiesPanel() {
                         </Select>
                       </PropRow>
                       {shapeType !== 'circular' && equivalentDiameter !== undefined && (
-                        <div className="px-3 pb-3 text-[10px] text-slate-600" data-testid="equivalent-conduit-diameter">
-                          D<sub>eq</sub> = √({shape.aFactor} / {CROSS_SECTION_SHAPES.circular.aFactor}) × D = {equivalentDiameter.toFixed(2)} {currentUnit === 'SI' ? 'm' : 'ft'} (used in INP)
+                        <div
+                          className="mx-3 mb-3 rounded-md border border-blue-200 bg-blue-50 p-2.5 text-[11px] leading-5 text-slate-700"
+                          data-testid="equivalent-conduit-diameter"
+                        >
+                          <div className="mb-1 font-semibold text-blue-900">
+                            Equivalent diameter <span className="font-normal">(used in INP)</span>
+                          </div>
+                          <div className="space-y-0.5 font-mono text-[10px]">
+                            <div>D<sub>eq</sub> = √(k / {circularAreaFactor}) × D</div>
+                            <div>= √({shape.aFactor} / {circularAreaFactor}) × {diameterText} {displayUnit}</div>
+                            <div>= {Math.sqrt(shape.aFactor / circularAreaFactor).toFixed(3)} × {diameterText} {displayUnit}</div>
+                          </div>
+                          <div className="mt-1 border-t border-blue-200 pt-1 font-semibold text-blue-900">
+                            D<sub>eq</sub> = {equivalentDiameter.toFixed(2)} {displayUnit}
+                          </div>
                         </div>
                       )}
                     </>
