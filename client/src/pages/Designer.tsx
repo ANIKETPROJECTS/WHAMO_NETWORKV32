@@ -7,6 +7,16 @@ import {
   ArrowRightCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   ReactFlow, 
   Background, 
@@ -723,6 +733,7 @@ function DesignerInner() {
   const [previewLightMode, setPreviewLightMode] = useState(false);
   const [previewEditing, setPreviewEditing] = useState(false);
   const [previewEditedContent, setPreviewEditedContent] = useState('');
+  const [showInpEditWarning, setShowInpEditWarning] = useState(false);
   const [serverProjectId, setServerProjectId] = useState<string | null>(null);
   const serverProjectIdRef = useRef<string | null>(null);
   useEffect(() => { serverProjectIdRef.current = serverProjectId; }, [serverProjectId]);
@@ -1131,6 +1142,30 @@ function DesignerInner() {
         errors={validationData?.errors || []}
         warnings={validationData?.warnings || []}
       />
+      <AlertDialog open={showInpEditWarning} onOpenChange={setShowInpEditWarning}>
+        <AlertDialogContent data-testid="dialog-inp-edit-warning">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Editing this INP won’t change the network</AlertDialogTitle>
+            <AlertDialogDescription>
+              This editor changes only the INP text; it does not update the values in your network. To use your edits for an OUT file, download the edited INP, import it back into the network, then generate the OUT again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-inp-edit-cancel">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="button-inp-edit-continue"
+              onClick={() => {
+                if (filePreview?.type === 'inp') {
+                  setPreviewEditedContent(filePreview.content);
+                  setPreviewEditing(true);
+                }
+              }}
+            >
+              Continue to Edit
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* Hidden File Input */}
       <input 
         type="file" 
@@ -1356,8 +1391,7 @@ function DesignerInner() {
                               <button
                                 onClick={() => {
                                   if (!previewEditing) {
-                                    setPreviewEditedContent(filePreview.content);
-                                    setPreviewEditing(true);
+                                    setShowInpEditWarning(true);
                                   } else {
                                     setPreviewEditing(false);
                                   }
