@@ -2721,8 +2721,6 @@ export function PropertiesPanel() {
                               <div className="font-mono text-right text-black">{mat.hazenWilliamsC}</div>
                               <div className="text-black font-medium">Modified H-W CR</div>
                               <div className="font-mono text-right text-black">{mat.modifiedHWCR}</div>
-                              <div className="text-black font-medium">Roughness ε ({currentUnit === 'SI' ? 'm' : 'ft'})</div>
-                              <div className="font-mono text-right text-black">{currentUnit === 'SI' ? mat.roughnessHeight_m : mat.roughnessHeight_ft}</div>
                               <div className="text-black font-medium">Young's E ({currentUnit === 'SI' ? 'Pa' : 'psi'})</div>
                               <div className="font-mono text-right text-black">
                                 {(() => { const v = currentUnit === 'SI' ? mat.youngsModulus_Pa : mat.youngsModulus_psi; if (!v) return <span className="text-amber-600">n/a</span>; return v.toLocaleString(undefined, { maximumFractionDigits: 2 }); })()}
@@ -3155,8 +3153,6 @@ export function PropertiesPanel() {
                               <div className="font-mono text-right text-black">{mat.hazenWilliamsC}</div>
                               <div className="text-black font-medium">Modified H-W CR</div>
                               <div className="font-mono text-right text-black">{mat.modifiedHWCR}</div>
-                              <div className="text-black font-medium">Roughness ε ({currentUnit === 'SI' ? 'm' : 'ft'})</div>
-                              <div className="font-mono text-right text-black">{currentUnit === 'SI' ? mat.roughnessHeight_m : mat.roughnessHeight_ft}</div>
                               <div className="text-black font-medium">Young's E ({currentUnit === 'SI' ? 'Pa' : 'psi'})</div>
                               <div className="font-mono text-right text-black" data-testid="mat-prop-e">
                                 {(() => { const v = currentUnit === 'SI' ? mat.youngsModulus_Pa : mat.youngsModulus_psi; if (!v) return <span className="text-amber-600">n/a</span>; return v.toLocaleString(undefined, { maximumFractionDigits: 2 }); })()}
