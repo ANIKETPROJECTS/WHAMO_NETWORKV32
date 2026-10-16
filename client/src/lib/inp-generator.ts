@@ -331,7 +331,12 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
         addL(`   A  ${toFPS(Number(pair.a), unit, 'area')}`);
       });
     } else if (d.diameter !== undefined) {
-      addL(` DIAM ${toFPS(Number(d.diameter), unit, 'diameter')}`);
+      const enteredDiameter = Number(d.diameter);
+      const equivalentDiameter = calculateEquivalentDiameter(
+        String(d.diameterShapeType || 'circular'),
+        enteredDiameter,
+      );
+      addL(` DIAM ${toFPS(equivalentDiameter ?? enteredDiameter, unit, 'diameter')}`);
     }
 
     addL(` CELERITY ${toFPS(Number(d.celerity), unit, 'celerity')}`);

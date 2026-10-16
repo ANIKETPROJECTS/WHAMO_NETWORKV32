@@ -51,6 +51,7 @@ export const surgeTankPropsSchema = z.object({
   tankTop: z.number(),
   tankBottom: z.number(),
   diameter: z.number().optional(),
+  diameterShapeType: z.enum(["circular", "horseshoe", "modified_horseshoe", "dshaped"]).optional(),
   initialWaterLevel: z.number().optional(), // HTANK
   riserDiameter: z.number().optional(),     // RISERDIAM
   riserTop: z.number().optional(),          // RISERTOP

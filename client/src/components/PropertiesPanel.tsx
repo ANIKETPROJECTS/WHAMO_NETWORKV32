@@ -2270,34 +2270,91 @@ export function PropertiesPanel() {
                   </label>
                 </PropRow>
                 {!formData.hasShape && (
-                  <PropRow label={`Diameter (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder>
-                    <NumericInput
-                      id="diam"
-                      value={formData.diameter}
-                      onValueChange={(v) => {
-                        const newDiam = parseFloat(v);
-                        handleChange('diameter', v);
-                        if (!isNaN(newDiam) && newDiam > 0) {
-                          const C0 = currentUnit === 'SI' ? 1440 : 4720;
-                          const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
-                          const E  = parseFloat(formData.pipeE) || 0;
-                          const WT = parseFloat(formData.pipeWT) || 0;
-                          if (E > 0 && WT > 0) {
-                            const c = C0 / Math.sqrt(1 + (Kw / E) * (newDiam / WT));
-                            handleChange('celerity', parseFloat(c.toFixed(4)).toString());
+                  <>
+                    <PropRow label={`Diameter (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder>
+                      <NumericInput
+                        id="diam"
+                        value={formData.diameter}
+                        onValueChange={(v) => {
+                          const newDiam = parseFloat(v);
+                          handleChange('diameter', v);
+                          if (!isNaN(newDiam) && newDiam > 0) {
+                            const C0 = currentUnit === 'SI' ? 1440 : 4720;
+                            const Kw = currentUnit === 'SI' ? 2.07e9 : 3e5;
+                            const E  = parseFloat(formData.pipeE) || 0;
+                            const WT = parseFloat(formData.pipeWT) || 0;
+                            if (E > 0 && WT > 0) {
+                              const c = C0 / Math.sqrt(1 + (Kw / E) * (newDiam / WT));
+                              handleChange('celerity', parseFloat(c.toFixed(4)).toString());
+                            }
+                            const K = currentUnit === 'SI' ? 124.58 : 185;
+                            const n = parseFloat(formData.manningsN);
+                            if (!isNaN(n) && n > 0) {
+                              const f = (K * n * n) / Math.pow(newDiam, 1 / 3);
+                              handleChange('friction', parseFloat(f.toFixed(6)).toString());
+                            }
                           }
-                          const K = currentUnit === 'SI' ? 124.58 : 185;
-                          const n = parseFloat(formData.manningsN);
-                          if (!isNaN(n) && n > 0) {
-                            const f = (K * n * n) / Math.pow(newDiam, 1 / 3);
-                            handleChange('friction', parseFloat(f.toFixed(6)).toString());
-                          }
-                        }
-                      }}
-                      className="h-7 text-[12px] font-medium text-black border-slate-300"
-                      style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                    />
-                  </PropRow>
+                        }}
+                        className="h-7 text-[12px] font-medium text-black border-slate-300"
+                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
+                      />
+                    </PropRow>
+                    {(() => {
+                      const storedShapeType = String(formData.diameterShapeType || '');
+                      const shapeType = CONDUIT_SHAPE_OPTIONS.some(option => option.value === storedShapeType)
+                        ? storedShapeType
+                        : 'circular';
+                      const shape = CROSS_SECTION_SHAPES[shapeType];
+                      const diameter = parseFloat(String(formData.diameter));
+                      const equivalentDiameter = calculateEquivalentDiameter(shapeType, diameter);
+                      const circularAreaFactor = CROSS_SECTION_SHAPES.circular.aFactor;
+                      const diameterText = String(formData.diameter ?? '');
+                      const displayUnit = currentUnit === 'SI' ? 'm' : 'ft';
+                      return (
+                        <>
+                          <PropRow label="Diameter Shape Type" noBorder>
+                            <Select
+                              value={shapeType}
+                              onValueChange={value => handleChange('diameterShapeType', value)}
+                            >
+                              <SelectTrigger
+                                id="surge-tank-diameter-shape-type"
+                                className="h-7 text-[11px] font-medium text-black border-slate-300 bg-white"
+                                style={{ fontFamily: 'Poppins, sans-serif' }}
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {CONDUIT_SHAPE_OPTIONS.map(option => (
+                                  <SelectItem key={option.value} value={option.value} className="text-[11px]">
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </PropRow>
+                          {shapeType !== 'circular' && shape && equivalentDiameter !== undefined && (
+                            <div
+                              className="mx-3 mb-3 rounded-md border border-blue-200 bg-blue-50 p-2.5 text-[11px] leading-5 text-slate-700"
+                              data-testid="equivalent-surge-tank-diameter"
+                            >
+                              <div className="mb-1 font-semibold text-blue-900">
+                                Equivalent diameter <span className="font-normal">(used in INP)</span>
+                              </div>
+                              <div className="space-y-0.5 font-mono text-[10px]">
+                                <div>D<sub>eq</sub> = √(k / {circularAreaFactor}) × D</div>
+                                <div>= √({shape.aFactor} / {circularAreaFactor}) × {diameterText} {displayUnit}</div>
+                                <div>= {Math.sqrt(shape.aFactor / circularAreaFactor).toFixed(3)} × {diameterText} {displayUnit}</div>
+                              </div>
+                              <div className="mt-1 border-t border-blue-200 pt-1 font-semibold text-blue-900">
+                                D<sub>eq</sub> = {equivalentDiameter} {displayUnit}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </>
                 )}
                 {formData.hasShape && (
                   <div className="px-3 pb-3 space-y-2">

@@ -144,6 +144,7 @@ export const TAB_COLS: Record<FilterKey, ColDef[]> = {
     { key: 'riserTop',          header: 'Riser Top',             type: 'number', width: 14 },
     { key: 'hasShape',          header: 'Use SHAPE',             type: 'dropdown', options: BOOL_OPTIONS, width: 12 },
     { key: 'diameter',          header: 'Diameter',              type: 'number', width: 14 },
+    { key: 'diameterShapeType', header: 'Diameter Shape Type',   type: 'dropdown', options: CONDUIT_SHAPE_OPTIONS.map(option => option.label), width: 22 },
     { key: 'celerity',          header: 'Wave Speed',            type: 'number', width: 14 },
     { key: 'friction',          header: 'Friction',              type: 'number', width: 14 },
     { key: 'hasAddedLoss',      header: 'Added Loss',            type: 'dropdown', options: BOOL_OPTIONS, width: 14 },
@@ -277,6 +278,10 @@ function getRowValue(
     const defaultShape = subType === 'conduit' ? 'circular' : 'custom';
     return CROSS_SECTION_SHAPES[String(data.shapeType || defaultShape)]?.label
       || (subType === 'conduit' ? 'Circular' : 'Custom');
+  }
+  if (col.key === 'diameterShapeType') {
+    if (subType === 'surgeTank' && (data.hasShape === true || data.hasShape === 'true')) return 'NA';
+    return CROSS_SECTION_SHAPES[String(data.diameterShapeType || 'circular')]?.label || 'Circular';
   }
 
   // ── Element-category helpers (mirror FlexTable's isEdge / isDummy / etc.) ──
@@ -987,6 +992,19 @@ function _parseExcelDataRow(
       const d = parseFloat(String(existingRow.data.d ?? ''));
       const area = calculateCrossSectionArea(update.shapeType, d);
       if (area !== undefined) update.a = area;
+      return;
+    }
+    if (col.key === 'diameterShapeType') {
+      const shapeTypeByLabel: Record<string, string> = {
+        Circular: 'circular',
+        'Horse Shoe': 'horseshoe',
+        'Modified Horse Shoe': 'modified_horseshoe',
+        'D-Shaped': 'dshaped',
+      };
+      const shapeType = shapeTypeByLabel[strVal] ?? strVal.toLowerCase();
+      update.diameterShapeType = CONDUIT_SHAPE_OPTIONS.some(option => option.value === shapeType)
+        ? shapeType
+        : 'circular';
       return;
     }
 

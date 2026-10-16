@@ -102,7 +102,7 @@ const COLS: Record<FilterKey, ColKey[]> = {
   reservoir:   ['rowNum','unitToggle','label','nodeNum','elevation','mode','resElev','hSchedNum','thPairs','comment'],
   junction:    ['rowNum','unitToggle','label','nodeNum','elevation','comment'],
   surgeTank:   ['rowNum','unitToggle','label','nodeNum','elevation','stType','tankTop','tankBot',
-                 'initWaterLevel','riserDiam','riserTop','hasShape','shapeType','diameter',
+                 'initWaterLevel','riserDiam','riserTop','hasShape','shapeType','diameter','diameterShapeType',
                  'celerity','friction','manningsN','pipeE','pipeWT',
                  'hasAddedLoss','cplus','cminus','shapePairs','comment'],
   flowBoundary:['rowNum','unitToggle','label','nodeNum','elevation','schedNum','qSchedPairs','comment'],
@@ -667,6 +667,7 @@ function ColHeader({ col, unit }: { col: ColKey; unit: UnitSystem }) {
     cplus: 'CPLUS', cminus: 'CMINUS',
     pipeE: `E (${P})`, pipeWT: `WT (${L})`,
     manningsN: "Manning's n", shapeType: 'Shape Type',
+    diameterShapeType: 'DIAM Shape Type',
     material: 'Pipe Material',
     elevation: `Elevation (${L})`, resElev: `Res. Elev. (${L})`,
     mode: 'BC Mode', hSchedNum: 'H Sched #', thPairs: 'T/H Pairs',
@@ -970,6 +971,19 @@ function RowCells({
           dimmed={!applicable}
           onChange={applicable ? value => changeEdge('shapeType', value) : undefined}
           testId={`cell-shapetype-${row.id}`}
+        />
+      );
+    }
+    case 'diameterShapeType': {
+      const applicable = isSurge && !d.hasShape;
+      return (
+        <SelectCell
+          key={col}
+          value={applicable ? String(d.diameterShapeType || 'circular') : ''}
+          options={CONDUIT_SHAPE_OPTIONS}
+          dimmed={!applicable}
+          onChange={applicable ? value => changeNode('diameterShapeType', value) : undefined}
+          testId={`cell-diameter-shape-type-${row.id}`}
         />
       );
     }

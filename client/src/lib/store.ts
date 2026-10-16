@@ -51,6 +51,7 @@ interface NodeData extends Record<string, unknown> {
   topElevation?: number | string;
   bottomElevation?: number | string;
   diameter?: number | string;
+  diameterShapeType?: string;
   celerity?: number | string;
   friction?: number | string;
   scheduleNumber?: number;
