@@ -6,21 +6,39 @@ id = "968X9LbH1y7YSjpuF3F1c"
 uri = "file://TCHAR_Block_Mathematical_Derivation_Turbine.docx"
 type = "word_document"
 title = "TCHAR Block — Mathematical Derivation for Turbine"
+logical_id = "3c7252a1-def5-4040-a3f8-de488ed18c40"
 
 [[outputs]]
 id = "s_DJjrqwtY4gyu5Zd-Blw"
 uri = "file://PCHAR_Block_Mathematical_Derivation_Pump.docx"
 type = "word_document"
 title = "PCHAR Block — Mathematical Derivation for Pump"
+logical_id = "a8169d94-e753-46fd-a09f-e317e976b9bd"
 
 [[outputs]]
 id = "YmWdGhk0xFKNhZUdrsbix"
 uri = "file://WHAMO_Designer_Phase1_Status_Report.docx"
 type = "word_document"
 title = "Phase 1 Status Report (corrected)"
+logical_id = "749f0f50-0285-496d-8356-c08d18837fe9"
 
 [[outputs]]
 id = "sNoaI7k9j1PWJGx9M4VZ4"
 uri = "file://WHAMO_Phase1_Current_Status.docx"
 type = "word_document"
 title = "WHAMO Phase 1 — Current Status"
+logical_id = "96043897-8d07-4e70-988e-074d3a0f253e"
+
+[[outputs]]
+id = "dVx1l_WYNtw3sJtu0YXDS"
+uri = "file://WHAMO_Turbine_Mode_Reference.md"
+type = "text"
+title = "WHAMO Turbine Mode Reference"
+description = "Manual references, label mapping, and test inputs for checking turbine modes with WHAMO.exe."
+logical_id = "212aa399-5f96-48a0-a19a-1ba4207a7901"
+content_hash = "sha256:22ff0002e4f17959c67b74f7aa4e69cd1ab70f28f325835523487bfc8787e7bb"
+size = 3629
+mtime_ms = 1792392149132
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/212aa399-5f96-48a0-a19a-1ba4207a7901/48e55e2e-531c-4082-9937-2d0a10fe41ae"
+storage_version_token = "1792392180359756"
+content_type = "text/markdown"
