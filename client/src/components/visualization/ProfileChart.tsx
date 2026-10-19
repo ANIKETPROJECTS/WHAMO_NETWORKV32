@@ -9,6 +9,8 @@ import {
 } from "recharts";
 import type { SimulationNode } from "@/lib/out-parser";
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import DisplayUnitToggle, { type DisplayUnit } from "./DisplayUnitToggle";
+import { convertElevation } from "./unitConversions";
 import {
   Play, Pause, RotateCcw, Info,
   Maximize2, X, ZoomIn, ZoomOut,
@@ -17,6 +19,8 @@ import {
 interface ProfileChartProps {
   nodes: SimulationNode[];
   units: "english" | "metric";
+  displayUnit: DisplayUnit;
+  onDisplayUnitChange: (unit: DisplayUnit) => void;
 }
 
 const MAX_SIM_FRAMES = 200;
@@ -72,6 +76,8 @@ interface ZoomDomain {
 function FullscreenProfileChart({
   nodes,
   units,
+  displayUnit,
+  onDisplayUnitChange,
   chartData,
   nodeLabels,
   xTicks,
@@ -92,6 +98,8 @@ function FullscreenProfileChart({
 }: {
   nodes: SimulationNode[];
   units: "english" | "metric";
+  displayUnit: DisplayUnit;
+  onDisplayUnitChange: (unit: DisplayUnit) => void;
   chartData: any[];
   nodeLabels: Record<number, number>;
   xTicks: number[];
@@ -110,7 +118,7 @@ function FullscreenProfileChart({
   onSetSpeed: (s: number) => void;
   onClose: () => void;
 }) {
-  const elevUnit = units === "metric" ? "m" : "ft";
+  const elevUnit = displayUnit === "SI" ? "m" : "ft";
   const fullXDomain: [number, number] = [0, nodes.length - 1];
   const fullYDomain: [number, number] = activeDomain;
 
@@ -261,6 +269,7 @@ function FullscreenProfileChart({
         <div className="shrink-0 mr-1">
           <span className="text-sm font-bold text-gray-900">Profile Graph — Simulation Summary</span>
         </div>
+        <DisplayUnitToggle value={displayUnit} onChange={onDisplayUnitChange} />
         <div className="w-px h-4 bg-gray-200 shrink-0" />
         <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
           {[
@@ -402,24 +411,42 @@ function FullscreenProfileChart({
   );
 }
 
-export default function ProfileChart({ nodes, units }: ProfileChartProps) {
+export default function ProfileChart({
+  nodes,
+  units,
+  displayUnit,
+  onDisplayUnitChange,
+}: ProfileChartProps) {
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const rafRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const speedRef = useRef(1);
   const [speed, setSpeed] = useState(1);
-  const elevUnit = units === "metric" ? "m" : "ft";
+  const elevUnit = displayUnit === "SI" ? "m" : "ft";
+  const displayDataUnits = displayUnit === "SI" ? "metric" : "english";
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const displayNodes = useMemo(
+    () => nodes.map((node) => ({
+      ...node,
+      maxEnergyElev: convertElevation(node.maxEnergyElev, units, displayUnit),
+      minEnergyElev: convertElevation(node.minEnergyElev, units, displayUnit),
+      pipeElevation: node.pipeElevation == null
+        ? null
+        : convertElevation(node.pipeElevation, units, displayUnit),
+    })),
+    [nodes, units, displayUnit],
+  );
 
   const isStationary = useMemo(() => {
     return nodes.every((n) => Math.abs(n.maxEnergyElev - n.minEnergyElev) < 0.01);
   }, [nodes]);
 
   const { chartData, nodeLabels } = useMemo(() => {
-    const animFrame = buildAnimFrame(nodes, frame / MAX_SIM_FRAMES);
+    const animFrame = buildAnimFrame(displayNodes, frame / MAX_SIM_FRAMES);
     const labels: Record<number, number> = {};
-    const data = nodes.map((n, i) => {
+    const data = displayNodes.map((n, i) => {
       labels[i] = n.nodeNumber;
       return {
         idx: i,
@@ -431,7 +458,7 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
       };
     });
     return { chartData: data, nodeLabels: labels };
-  }, [nodes, frame, isStationary]);
+  }, [displayNodes, frame, isStationary]);
 
   const animate = useCallback((timestamp: number) => {
     const elapsed = timestamp - lastTimeRef.current;
@@ -468,24 +495,24 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
   const handleReset = () => { setPlaying(false); setFrame(0); };
 
   const stats = useMemo(() => {
-    if (!nodes.length) return null;
+    if (!displayNodes.length) return null;
     return {
-      peakMaxElev: Math.max(...nodes.map((n) => n.maxEnergyElev)),
-      peakMinElev: Math.min(...nodes.map((n) => n.minEnergyElev)),
+      peakMaxElev: Math.max(...displayNodes.map((n) => n.maxEnergyElev)),
+      peakMinElev: Math.min(...displayNodes.map((n) => n.minEnergyElev)),
     };
-  }, [nodes]);
+  }, [displayNodes]);
 
   const simTime = useMemo(() => {
     const maxT = Math.max(...nodes.map((n) => Math.max(n.maxEnergyElevTime, n.minEnergyElevTime)));
     return ((frame / MAX_SIM_FRAMES) * (maxT || 300)).toFixed(1);
   }, [frame, nodes]);
 
-  const hasPipe = nodes.some((n) => n.pipeElevation != null);
+  const hasPipe = displayNodes.some((n) => n.pipeElevation != null);
   const [showPipe, setShowPipe] = useState(false);
 
   const activeDomain = useMemo((): [number, number] => {
     const elevVals: number[] = [];
-    nodes.forEach((n) => {
+    displayNodes.forEach((n) => {
       elevVals.push(n.maxEnergyElev, n.minEnergyElev);
       if (showPipe && n.pipeElevation != null) elevVals.push(n.pipeElevation);
     });
@@ -495,7 +522,7 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
     const range = dataMax - dataMin;
     const pad = range < 1 ? 20 : Math.max(range * 0.12, 5);
     return [Math.floor((dataMin - pad) / 5) * 5, Math.ceil((dataMax + pad) / 5) * 5];
-  }, [nodes, showPipe]);
+  }, [displayNodes, showPipe]);
 
   const xTicks = useMemo(() => {
     const step = nodes.length > 30 ? 2 : 1;
@@ -510,6 +537,7 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
           <p className="text-xs text-gray-400 mt-0.5">Max/Min Energy Elevation envelopes + animated transient HGL</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          <DisplayUnitToggle value={displayUnit} onChange={onDisplayUnitChange} />
           {stats && (
             <div className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
               <div className="text-center">
@@ -602,7 +630,7 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
               tickFormatter={(v) => v.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               label={{ value: `Elevation (${elevUnit})`, angle: -90, position: "insideLeft", offset: 15, style: { fontSize: 11, fill: "#9ca3af" } }}
             />
-            <Tooltip content={<CustomTooltip nodeLabels={nodeLabels} units={units} />} />
+            <Tooltip content={<CustomTooltip nodeLabels={nodeLabels} units={displayDataUnits} />} />
             {hasPipe && showPipe && (
               <Line type="stepAfter" dataKey="pipeElev" name="Pipe Centerline" stroke="#9ca3af" strokeWidth={1.5} strokeDasharray="5 4" dot={false} activeDot={false} isAnimationActive={false} />
             )}
@@ -617,7 +645,11 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
 
       {isFullscreen && (
         <FullscreenProfileChart
-          nodes={nodes} units={units} chartData={chartData} nodeLabels={nodeLabels}
+          nodes={displayNodes}
+          units={displayDataUnits}
+          displayUnit={displayUnit}
+          onDisplayUnitChange={onDisplayUnitChange}
+          chartData={chartData} nodeLabels={nodeLabels}
           xTicks={xTicks} activeDomain={activeDomain} isStationary={isStationary}
           hasPipe={hasPipe} showPipe={showPipe} onTogglePipe={() => setShowPipe((p) => !p)}
           frame={frame} playing={playing} simTime={simTime}

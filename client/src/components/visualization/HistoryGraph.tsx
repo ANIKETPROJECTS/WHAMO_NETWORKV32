@@ -10,6 +10,8 @@ import {
   ChevronDown, ChevronUp, Maximize2, X, ZoomIn, ZoomOut, RotateCcw,
 } from "lucide-react";
 import type { HistoryData, HistoryNode, HistoryChannel } from "@/lib/history-parser";
+import DisplayUnitToggle, { type DisplayUnit } from "./DisplayUnitToggle";
+import { convertHistoryMeasurement } from "./unitConversions";
 
 // ─── constants ──────────────────────────────────────────────────────────────
 const PALETTE = [
@@ -60,17 +62,25 @@ function downsample(
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 function NodeStatCard({
-  node, channel, currentTime, color,
+  node, channel, currentTime, color, displayUnit,
 }: {
   node: HistoryNode;
   channel: HistoryChannel;
   currentTime: number;
   color: string;
+  displayUnit: DisplayUnit;
 }) {
-  const unit = formatUnit(channel.unit);
-  const current = getValueAt(channel.data, currentTime);
-  const max = useMemo(() => Math.max(...channel.data.map((d) => d.value)), [channel]);
-  const min = useMemo(() => Math.min(...channel.data.map((d) => d.value)), [channel]);
+  const unit = formatUnit(convertHistoryMeasurement(0, channel.unit, displayUnit).unit);
+  const rawCurrent = getValueAt(channel.data, currentTime);
+  const current = rawCurrent == null
+    ? null
+    : convertHistoryMeasurement(rawCurrent, channel.unit, displayUnit).value;
+  const values = useMemo(
+    () => channel.data.map((d) => convertHistoryMeasurement(d.value, channel.unit, displayUnit).value),
+    [channel, displayUnit],
+  );
+  const max = useMemo(() => Math.max(...values), [values]);
+  const min = useMemo(() => Math.min(...values), [values]);
 
   return (
     <div
@@ -98,11 +108,12 @@ function NodeStatCard({
 const PAGE_SIZE = 100;
 
 function RawDataTable({
-  data, metric, selectedNodeIds,
+  data, metric, selectedNodeIds, displayUnit,
 }: {
   data: HistoryData;
   metric: string;
   selectedNodeIds: Set<string>;
+  displayUnit: DisplayUnit;
 }) {
   const [page, setPage] = useState(0);
 
@@ -142,7 +153,7 @@ function RawDataTable({
               <th className="text-left py-2 px-3 text-gray-500 font-semibold sticky left-0 bg-white">Time (s)</th>
               {nodeChannels.map(({ node, ch }) => (
                 <th key={node.id} className="text-right py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {node.label} ({formatUnit(ch!.unit)})
+                  {node.label} ({formatUnit(convertHistoryMeasurement(0, ch!.unit, displayUnit).unit)})
                 </th>
               ))}
             </tr>
@@ -155,7 +166,7 @@ function RawDataTable({
                   const pt = ch!.data.find((d) => d.time === t);
                   return (
                     <td key={node.id} className="py-1.5 px-3 text-right font-mono text-gray-700">
-                      {pt ? pt.value.toFixed(4) : "—"}
+                      {pt ? convertHistoryMeasurement(pt.value, ch!.unit, displayUnit).value.toFixed(4) : "—"}
                     </td>
                   );
                 })}
@@ -199,6 +210,8 @@ function FullscreenChart({
   nodeColors,
   selectedMetric,
   activeUnit,
+  displayUnit,
+  onDisplayUnitChange,
   currentTime,
   fullXDomain,
   fullYDomain,
@@ -228,6 +241,8 @@ function FullscreenChart({
   nodeColors: Map<string, string>;
   selectedMetric: string;
   activeUnit: string;
+  displayUnit: DisplayUnit;
+  onDisplayUnitChange: (unit: DisplayUnit) => void;
   currentTime: number;
   fullXDomain: [number, number];
   fullYDomain: [number, number];
@@ -417,6 +432,7 @@ function FullscreenChart({
           )}
         </div>
 
+        <DisplayUnitToggle value={displayUnit} onChange={onDisplayUnitChange} />
         <div className="w-px h-4 bg-gray-200 shrink-0" />
 
         {/* Node pills */}
@@ -662,9 +678,16 @@ function FullscreenChart({
 interface HistoryGraphProps {
   data: HistoryData;
   summaryTitle?: string;
+  displayUnit: DisplayUnit;
+  onDisplayUnitChange: (unit: DisplayUnit) => void;
 }
 
-export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) {
+export default function HistoryGraph({
+  data,
+  summaryTitle,
+  displayUnit,
+  onDisplayUnitChange,
+}: HistoryGraphProps) {
   const allMetrics = useMemo(() => {
     const s = new Set<string>();
     data.nodes.forEach((n) => n.channels.forEach((c) => s.add(c.metric)));
@@ -762,24 +785,26 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
       if (!ch) continue;
       for (const pt of downsample(ch.data, 800)) {
         if (!map.has(pt.time)) map.set(pt.time, { time: pt.time });
-        map.get(pt.time)![node.id] = pt.value;
+        map.get(pt.time)![node.id] = convertHistoryMeasurement(pt.value, ch.unit, displayUnit).value;
       }
     }
     return Array.from(map.values()).sort((a, b) => (a.time as number) - (b.time as number));
-  }, [activeNodes, selectedMetric]);
+  }, [activeNodes, selectedMetric, displayUnit]);
 
   const yDomain = useMemo((): [number, number] => {
     const vals: number[] = [];
     for (const node of activeNodes) {
       const ch = node.channels.find((c) => c.metric === selectedMetric);
-      if (ch) ch.data.forEach((d) => vals.push(d.value));
+      if (ch) {
+        ch.data.forEach((d) => vals.push(convertHistoryMeasurement(d.value, ch.unit, displayUnit).value));
+      }
     }
     if (!vals.length) return [0, 1];
     const mn = Math.min(...vals), mx = Math.max(...vals);
     const range = mx - mn;
     const pad = range < 0.01 ? Math.abs(mx * 0.05) + 1 : range * 0.1;
     return [Math.floor((mn - pad) * 10) / 10, Math.ceil((mx + pad) * 10) / 10];
-  }, [activeNodes, selectedMetric]);
+  }, [activeNodes, selectedMetric, displayUnit]);
 
   const globalMax = yDomain[1] - (yDomain[1] - yDomain[0]) * 0.1;
   const globalMin = yDomain[0] + (yDomain[1] - yDomain[0]) * 0.1;
@@ -788,10 +813,10 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
   const activeUnit = useMemo(() => {
     for (const node of data.nodes) {
       const ch = node.channels.find((c) => c.metric === selectedMetric);
-      if (ch) return formatUnit(ch.unit);
+      if (ch) return formatUnit(convertHistoryMeasurement(0, ch.unit, displayUnit).unit);
     }
     return "";
-  }, [data.nodes, selectedMetric]);
+  }, [data.nodes, selectedMetric, displayUnit]);
 
   const sliderPct = data.timeMax > data.timeMin
     ? ((currentTime - data.timeMin) / (data.timeMax - data.timeMin)) * 100
@@ -804,6 +829,10 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
 
       {/* ── Controls bar ── */}
       <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Display units</span>
+          <DisplayUnitToggle value={displayUnit} onChange={onDisplayUnitChange} />
+        </div>
         {/* Row 1: nodes + parameter */}
         <div className="flex flex-wrap items-start justify-between gap-4">
           {/* Node pills */}
@@ -1092,6 +1121,7 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
                   channel={ch}
                   currentTime={currentTime}
                   color={nodeColors.get(node.id)!}
+                  displayUnit={displayUnit}
                 />
               );
             })}
@@ -1121,6 +1151,7 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
               data={data}
               metric={selectedMetric}
               selectedNodeIds={selectedNodeIds}
+              displayUnit={displayUnit}
             />
           </div>
         )}
@@ -1134,6 +1165,8 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
           nodeColors={nodeColors}
           selectedMetric={selectedMetric}
           activeUnit={activeUnit}
+          displayUnit={displayUnit}
+          onDisplayUnitChange={onDisplayUnitChange}
           currentTime={currentTime}
           fullXDomain={[data.timeMin, data.timeMax]}
           fullYDomain={yDomain}

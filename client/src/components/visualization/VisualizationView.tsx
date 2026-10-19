@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import ProfileChart from "./ProfileChart";
 import DataTable from "./DataTable";
 import HistoryGraph from "./HistoryGraph";
+import type { DisplayUnit } from "./DisplayUnitToggle";
+import { displayUnitFromSource } from "./unitConversions";
 import { parseOutFile, type SimulationSummary } from "@/lib/out-parser";
 import { parseHistoryData, type HistoryData } from "@/lib/history-parser";
 import {
@@ -23,6 +25,7 @@ export function VisualizationView({ onClose, initialOutContent, initialFileName 
   const [isLoading, setIsLoading] = useState(false);
   const [activeGraph, setActiveGraph] = useState<"profile" | "history">("profile");
   const [showTable, setShowTable] = useState(false);
+  const [displayUnit, setDisplayUnit] = useState<DisplayUnit>("FPS");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const parseContent = useCallback((content: string, name: string) => {
@@ -33,6 +36,7 @@ export function VisualizationView({ onClose, initialOutContent, initialFileName 
       if (parsed.nodes.length === 0)
         throw new Error("No valid data rows found in the Simulation Summary section.");
       setSummary(parsed);
+      setDisplayUnit(displayUnitFromSource(parsed.units));
       setFileName(name);
       const history = parseHistoryData(content);
       setHistoryData(history.nodes.length > 0 ? history : null);
@@ -120,29 +124,31 @@ export function VisualizationView({ onClose, initialOutContent, initialFileName 
           <div className="flex-1" />
 
           {summary && (
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 shrink-0">
-              <button
-                onClick={() => setActiveGraph("profile")}
-                className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  activeGraph === "profile"
-                    ? "bg-blue-500 text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                Profile Graph
-              </button>
-              {historyData && (
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
                 <button
-                  onClick={() => setActiveGraph("history")}
+                  onClick={() => setActiveGraph("profile")}
                   className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                    activeGraph === "history"
+                    activeGraph === "profile"
                       ? "bg-blue-500 text-white shadow-sm"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
-                  History Graph
+                  Profile Graph
                 </button>
-              )}
+                {historyData && (
+                  <button
+                    onClick={() => setActiveGraph("history")}
+                    className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                      activeGraph === "history"
+                        ? "bg-blue-500 text-white shadow-sm"
+                        : "text-gray-500 hover:text-gray-700"
+                    }`}
+                  >
+                    History Graph
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -235,7 +241,12 @@ export function VisualizationView({ onClose, initialOutContent, initialFileName 
             <div className="space-y-5">
               {activeGraph === "profile" && (
                 <>
-                  <ProfileChart nodes={summary.nodes} units={summary.units} />
+                  <ProfileChart
+                    nodes={summary.nodes}
+                    units={summary.units}
+                    displayUnit={displayUnit}
+                    onDisplayUnitChange={setDisplayUnit}
+                  />
                   <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
                     <button
                       onClick={() => setShowTable(!showTable)}
@@ -252,7 +263,7 @@ export function VisualizationView({ onClose, initialOutContent, initialFileName 
                     </button>
                     {showTable && (
                       <div className="border-t border-gray-100">
-                        <DataTable nodes={summary.nodes} units={summary.units} />
+                        <DataTable nodes={summary.nodes} units={summary.units} displayUnit={displayUnit} />
                       </div>
                     )}
                   </div>
@@ -260,7 +271,12 @@ export function VisualizationView({ onClose, initialOutContent, initialFileName 
               )}
 
               {activeGraph === "history" && historyData && (
-                <HistoryGraph data={historyData} summaryTitle={chartTitle} />
+                <HistoryGraph
+                  data={historyData}
+                  summaryTitle={chartTitle}
+                  displayUnit={displayUnit}
+                  onDisplayUnitChange={setDisplayUnit}
+                />
               )}
 
               <div className="text-center pt-2">
