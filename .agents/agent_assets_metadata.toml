@@ -42,3 +42,73 @@ mtime_ms = 1792392149132
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/212aa399-5f96-48a0-a19a-1ba4207a7901/48e55e2e-531c-4082-9937-2d0a10fe41ae"
 storage_version_token = "1792392180359756"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "cbTSV7FRh-i7_vRxbZoEA"
+uri = "file://turbine-mode-tests.zip"
+type = "unspecified"
+title = "Turbine mode INP test pack"
+description = "Four test inputs based on your working turbine file: TURBINE, GENERATE, TURBGOV, and EMERGENCY."
+logical_id = "a8e341fb-147a-4b48-851e-1888db9149bc"
+content_hash = "sha256:bf287c76b819ec324083c14ecc38c2793650b9e0aa45013182313adc087ecd06"
+size = 3542
+mtime_ms = 1792392486496
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/a8e341fb-147a-4b48-851e-1888db9149bc/53a43941-f137-480a-b9e2-5ed6aebba813"
+storage_version_token = "1792392504892075"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "SJ5STrcBBO1tkNf0XGGM4"
+uri = "file://turbine-mode-tests/Turbinev1inp_mode_TURBINE.INP"
+type = "unspecified"
+title = "TURBINE mode test input"
+description = "Only T1's OPTURB mode differs; T2 remains GENERATE as a control."
+logical_id = "a82fde2b-04fc-4461-ad71-76160bd363cc"
+content_hash = "sha256:551fff7c7b0719a65a2def293e8d31df9f6fafa43a9b26588a75f2a01d50f364"
+size = 2229
+mtime_ms = 1792392467573
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/a82fde2b-04fc-4461-ad71-76160bd363cc/2287549b-df62-40b1-aa51-1a2052b96c56"
+storage_version_token = "1792392506242184"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "vZ0yzPhAL_UGBDNC1OZKl"
+uri = "file://turbine-mode-tests/Turbinev1inp_mode_GENERATE.INP"
+type = "unspecified"
+title = "GENERATE mode test input"
+description = "Baseline copy of your working input; T2 remains GENERATE as a control."
+logical_id = "51b771c7-44cc-43f3-889a-3f16a829cdd7"
+content_hash = "sha256:4c02e382836ddc14b519358bca535001e3b33b232986cf3f98cbf84dd71363ab"
+size = 2243
+mtime_ms = 1792392467572
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/51b771c7-44cc-43f3-889a-3f16a829cdd7/ef7f3a4a-e99f-475f-b0bc-4773725c4ff5"
+storage_version_token = "1792392507608064"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "Sgrq5mMCARr7wFqkNoDJP"
+uri = "file://turbine-mode-tests/Turbinev1inp_mode_TURBGOV.INP"
+type = "unspecified"
+title = "TURBGOV mode test input"
+description = "Only T1's OPTURB mode differs; T2 remains GENERATE as a control."
+logical_id = "1109c226-29e3-429e-9ddc-67cd70363f56"
+content_hash = "sha256:2faae7795652705f9f8c81d4271afe26fd5ab0ee7d10fefb2803009a5e779666"
+size = 2242
+mtime_ms = 1792392467575
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/1109c226-29e3-429e-9ddc-67cd70363f56/a226ccb7-3485-47e2-b75f-3acac2572097"
+storage_version_token = "1792392509065383"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "n3Jt6leZBAOI5kRwBPMBV"
+uri = "file://turbine-mode-tests/Turbinev1inp_mode_EMERGENCY.INP"
+type = "unspecified"
+title = "EMERGENCY mode test input"
+description = "Only T1's OPTURB mode differs; T2 remains GENERATE as a control."
+logical_id = "028431ee-5d4c-422b-a937-1ab1a749f772"
+content_hash = "sha256:30ebc82baef038181ffeefd61d7ea1e008700931c0b4fa5e5b8727e2b6d64d4a"
+size = 2244
+mtime_ms = 1792392467576
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/028431ee-5d4c-422b-a937-1ab1a749f772/1f31762c-9953-47a9-a1c9-1fea31290cd0"
+storage_version_token = "1792392511248103"
+content_type = "application/octet-stream"
