@@ -1,9 +1,11 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import ProfileChart from "@/components/ProfileChart";
 import DataTable from "@/components/DataTable";
 import HistoryGraph from "@/components/HistoryGraph";
 import { parseOutFile, type SimulationSummary } from "@/lib/parser";
 import { parseHistoryData, type HistoryData } from "@/lib/historyParser";
+import { convertSummaryNode } from "@/lib/unitConversions";
+import type { DisplayUnits } from "@/components/UnitToggle";
 import {
   Table, ChevronDown, ChevronUp,
   AlertTriangle, X, Upload, FileText, Calendar, Info,
@@ -17,6 +19,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeGraph, setActiveGraph] = useState<"profile" | "history">("profile");
   const [showTable, setShowTable] = useState(false);
+  const [profileUnits, setProfileUnits] = useState<DisplayUnits>("english");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((file: File) => {
@@ -30,6 +33,7 @@ export default function App() {
         if (parsed.nodes.length === 0)
           throw new Error("No valid data rows found in the Simulation Summary section.");
         setSummary(parsed);
+        setProfileUnits(parsed.units);
         setFileName(file.name);
         const history = parseHistoryData(content);
         setHistoryData(history.nodes.length > 0 ? history : null);
@@ -57,6 +61,10 @@ export default function App() {
   const chartTitle = summary
     ? `${summary.title || "Simulation"} (${summary.nodes.length} nodes · ${summary.runDate || fileName})`
     : "";
+  const displayedSummaryNodes = useMemo(
+    () => summary?.nodes.map((node) => convertSummaryNode(node, summary.units, profileUnits)) ?? [],
+    [summary, profileUnits],
+  );
 
   return (
     <div className="min-h-screen bg-gray-50/60">
@@ -176,7 +184,11 @@ export default function App() {
             {/* ─── PROFILE TAB ─── */}
             {activeGraph === "profile" && (
               <>
-                <ProfileChart nodes={summary.nodes} units={summary.units} />
+                <ProfileChart
+                  nodes={displayedSummaryNodes}
+                  units={profileUnits}
+                  onUnitsChange={setProfileUnits}
+                />
 
                 {/* Raw Simulation Summary Data */}
                 <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
@@ -197,7 +209,7 @@ export default function App() {
                   </button>
                   {showTable && (
                     <div className="border-t border-gray-100">
-                      <DataTable nodes={summary.nodes} units={summary.units} />
+                      <DataTable nodes={displayedSummaryNodes} units={profileUnits} />
                     </div>
                   )}
                 </div>

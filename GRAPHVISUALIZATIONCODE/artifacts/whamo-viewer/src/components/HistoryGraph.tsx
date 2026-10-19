@@ -10,6 +10,8 @@ import {
   ChevronDown, ChevronUp, Maximize2, X, ZoomIn, ZoomOut, RotateCcw,
 } from "lucide-react";
 import type { HistoryData, HistoryNode, HistoryChannel } from "@/lib/historyParser";
+import UnitToggle, { type DisplayUnits } from "@/components/UnitToggle";
+import { convertHistoryValue, getHistoryDisplayUnit } from "@/lib/unitConversions";
 
 // ─── constants ──────────────────────────────────────────────────────────────
 const PALETTE = [
@@ -25,14 +27,6 @@ function playStepPerMs(timeRange: number, speed: number) {
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
-function formatUnit(u: string) {
-  const m: Record<string, string> = {
-    FEET: "ft", FT: "ft", METERS: "m", M: "m",
-    CFS: "cfs", CMS: "cms", FPS: "fps", MPS: "mps",
-  };
-  return m[u?.toUpperCase()] ?? u ?? "";
-}
-
 function getValueAt(data: { time: number; value: number }[], t: number): number | null {
   if (!data.length) return null;
   let lo = 0, hi = data.length - 1;
@@ -60,17 +54,28 @@ function downsample(
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 function NodeStatCard({
-  node, channel, currentTime, color,
+  node, channel, currentTime, color, sourceUnits, displayUnits,
 }: {
   node: HistoryNode;
   channel: HistoryChannel;
   currentTime: number;
   color: string;
+  sourceUnits: DisplayUnits;
+  displayUnits: DisplayUnits;
 }) {
-  const unit = formatUnit(channel.unit);
+  const unit = getHistoryDisplayUnit(channel.unit, displayUnits);
   const current = getValueAt(channel.data, currentTime);
-  const max = useMemo(() => Math.max(...channel.data.map((d) => d.value)), [channel]);
-  const min = useMemo(() => Math.min(...channel.data.map((d) => d.value)), [channel]);
+  const displayCurrent = current == null
+    ? null
+    : convertHistoryValue(current, channel.unit, sourceUnits, displayUnits);
+  const max = useMemo(
+    () => Math.max(...channel.data.map((d) => convertHistoryValue(d.value, channel.unit, sourceUnits, displayUnits))),
+    [channel, sourceUnits, displayUnits],
+  );
+  const min = useMemo(
+    () => Math.min(...channel.data.map((d) => convertHistoryValue(d.value, channel.unit, sourceUnits, displayUnits))),
+    [channel, sourceUnits, displayUnits],
+  );
 
   return (
     <div
@@ -84,7 +89,7 @@ function NodeStatCard({
         {channel.metric.replace(/\.$/, "")}
       </div>
       <div className="text-lg font-bold text-gray-900 leading-none">
-        {current != null ? current.toFixed(2) : "—"}
+        {displayCurrent != null ? displayCurrent.toFixed(2) : "—"}
         <span className="text-xs font-normal text-gray-400 ml-1">{unit}</span>
       </div>
       <div className="text-[10px] text-gray-400 mt-1">
@@ -98,11 +103,12 @@ function NodeStatCard({
 const PAGE_SIZE = 100;
 
 function RawDataTable({
-  data, metric, selectedNodeIds,
+  data, metric, selectedNodeIds, displayUnits,
 }: {
   data: HistoryData;
   metric: string;
   selectedNodeIds: Set<string>;
+  displayUnits: DisplayUnits;
 }) {
   const [page, setPage] = useState(0);
 
@@ -142,7 +148,7 @@ function RawDataTable({
               <th className="text-left py-2 px-3 text-gray-500 font-semibold sticky left-0 bg-white">Time (s)</th>
               {nodeChannels.map(({ node, ch }) => (
                 <th key={node.id} className="text-right py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {node.label} ({formatUnit(ch!.unit)})
+                  {node.label} ({getHistoryDisplayUnit(ch!.unit, displayUnits)})
                 </th>
               ))}
             </tr>
@@ -155,7 +161,9 @@ function RawDataTable({
                   const pt = ch!.data.find((d) => d.time === t);
                   return (
                     <td key={node.id} className="py-1.5 px-3 text-right font-mono text-gray-700">
-                      {pt ? pt.value.toFixed(4) : "—"}
+                      {pt
+                        ? convertHistoryValue(pt.value, ch!.unit, data.units, displayUnits).toFixed(4)
+                        : "—"}
                     </td>
                   );
                 })}
@@ -222,6 +230,8 @@ function FullscreenChart({
   timeMin,
   timeMax,
   sliderPct,
+  displayUnits,
+  onUnitsChange,
 }: {
   chartData: Record<string, number>[];
   activeNodes: HistoryNode[];
@@ -251,6 +261,8 @@ function FullscreenChart({
   timeMin: number;
   timeMax: number;
   sliderPct: number;
+  displayUnits: DisplayUnits;
+  onUnitsChange: (units: DisplayUnits) => void;
 }) {
   const [zoom, setZoom] = useState<ZoomDomain>({
     x: fullXDomain,
@@ -416,6 +428,10 @@ function FullscreenChart({
             <span className="text-[10px] text-gray-400 ml-2">{summaryTitle}</span>
           )}
         </div>
+
+        <div className="w-px h-4 bg-gray-200 shrink-0" />
+
+        <UnitToggle units={displayUnits} onChange={onUnitsChange} />
 
         <div className="w-px h-4 bg-gray-200 shrink-0" />
 
@@ -680,6 +696,7 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
   const [speed, setSpeed] = useState(1);
   const [showRawData, setShowRawData] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [displayUnits, setDisplayUnits] = useState<DisplayUnits>(data.units);
 
   const rafRef = useRef<number | null>(null);
   const lastTsRef = useRef<number>(0);
@@ -762,24 +779,33 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
       if (!ch) continue;
       for (const pt of downsample(ch.data, 800)) {
         if (!map.has(pt.time)) map.set(pt.time, { time: pt.time });
-        map.get(pt.time)![node.id] = pt.value;
+        map.get(pt.time)![node.id] = convertHistoryValue(
+          pt.value,
+          ch.unit,
+          data.units,
+          displayUnits,
+        );
       }
     }
     return Array.from(map.values()).sort((a, b) => (a.time as number) - (b.time as number));
-  }, [activeNodes, selectedMetric]);
+  }, [activeNodes, selectedMetric, data.units, displayUnits]);
 
   const yDomain = useMemo((): [number, number] => {
     const vals: number[] = [];
     for (const node of activeNodes) {
       const ch = node.channels.find((c) => c.metric === selectedMetric);
-      if (ch) ch.data.forEach((d) => vals.push(d.value));
+      if (ch) {
+        ch.data.forEach((d) =>
+          vals.push(convertHistoryValue(d.value, ch.unit, data.units, displayUnits))
+        );
+      }
     }
     if (!vals.length) return [0, 1];
     const mn = Math.min(...vals), mx = Math.max(...vals);
     const range = mx - mn;
     const pad = range < 0.01 ? Math.abs(mx * 0.05) + 1 : range * 0.1;
     return [Math.floor((mn - pad) * 10) / 10, Math.ceil((mx + pad) * 10) / 10];
-  }, [activeNodes, selectedMetric]);
+  }, [activeNodes, selectedMetric, data.units, displayUnits]);
 
   const globalMax = yDomain[1] - (yDomain[1] - yDomain[0]) * 0.1;
   const globalMin = yDomain[0] + (yDomain[1] - yDomain[0]) * 0.1;
@@ -788,10 +814,10 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
   const activeUnit = useMemo(() => {
     for (const node of data.nodes) {
       const ch = node.channels.find((c) => c.metric === selectedMetric);
-      if (ch) return formatUnit(ch.unit);
+      if (ch) return getHistoryDisplayUnit(ch.unit, displayUnits);
     }
     return "";
-  }, [data.nodes, selectedMetric]);
+  }, [data.nodes, selectedMetric, displayUnits]);
 
   const sliderPct = data.timeMax > data.timeMin
     ? ((currentTime - data.timeMin) / (data.timeMax - data.timeMin)) * 100
@@ -862,6 +888,7 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
               ))}
             </div>
           </div>
+          <UnitToggle units={displayUnits} onChange={setDisplayUnits} className="shrink-0" />
         </div>
 
         {/* Row 2: playback */}
@@ -1092,6 +1119,8 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
                   channel={ch}
                   currentTime={currentTime}
                   color={nodeColors.get(node.id)!}
+                  sourceUnits={data.units}
+                  displayUnits={displayUnits}
                 />
               );
             })}
@@ -1121,6 +1150,7 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
               data={data}
               metric={selectedMetric}
               selectedNodeIds={selectedNodeIds}
+              displayUnits={displayUnits}
             />
           </div>
         )}
@@ -1157,6 +1187,8 @@ export default function HistoryGraph({ data, summaryTitle }: HistoryGraphProps) 
           timeMin={data.timeMin}
           timeMax={data.timeMax}
           sliderPct={sliderPct}
+          displayUnits={displayUnits}
+          onUnitsChange={setDisplayUnits}
         />
       )}
     </div>

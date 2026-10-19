@@ -13,10 +13,12 @@ import {
   Play, Pause, RotateCcw, Info,
   Maximize2, X, ZoomIn, ZoomOut,
 } from "lucide-react";
+import UnitToggle, { type DisplayUnits } from "@/components/UnitToggle";
 
 interface ProfileChartProps {
   nodes: SimulationNode[];
   units: "english" | "metric";
+  onUnitsChange: (units: DisplayUnits) => void;
 }
 
 const MAX_SIM_FRAMES = 200;
@@ -73,6 +75,7 @@ interface ZoomDomain {
 function FullscreenProfileChart({
   nodes,
   units,
+  onUnitsChange,
   chartData,
   nodeLabels,
   xTicks,
@@ -93,6 +96,7 @@ function FullscreenProfileChart({
 }: {
   nodes: SimulationNode[];
   units: "english" | "metric";
+  onUnitsChange: (units: DisplayUnits) => void;
   chartData: any[];
   nodeLabels: Record<number, number>;
   xTicks: number[];
@@ -294,6 +298,8 @@ function FullscreenProfileChart({
           )}
         </div>
 
+        <UnitToggle units={units} onChange={onUnitsChange} />
+
         <div className="w-px h-4 bg-gray-200 shrink-0" />
 
         {/* Zoom controls */}
@@ -486,7 +492,7 @@ function FullscreenProfileChart({
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function ProfileChart({ nodes, units }: ProfileChartProps) {
+export default function ProfileChart({ nodes, units, onUnitsChange }: ProfileChartProps) {
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const rafRef = useRef<number | null>(null);
@@ -618,7 +624,8 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
             Max/Min Energy Elevation envelopes + animated transient HGL
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          <UnitToggle units={units} onChange={onUnitsChange} />
           {stats && (
             <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
               <span>
@@ -871,6 +878,7 @@ export default function ProfileChart({ nodes, units }: ProfileChartProps) {
         <FullscreenProfileChart
           nodes={nodes}
           units={units}
+          onUnitsChange={onUnitsChange}
           chartData={chartData}
           nodeLabels={nodeLabels}
           xTicks={xTicks}
