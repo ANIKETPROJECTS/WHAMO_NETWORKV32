@@ -880,17 +880,17 @@ const ALL_SHEET_TYPES: Array<{ filter: FilterKey; label: string }> = [
   { filter: 'junction',     label: 'Junction'    },
   { filter: 'conduit',      label: 'Conduit'     },
   { filter: 'dummy',        label: 'Dummy Pipe'  },
-  { filter: 'pump',         label: 'Pump'        },
-  { filter: 'checkValve',   label: 'Check Valve' },
   { filter: 'surgeTank',    label: 'Surge Tank'  },
   { filter: 'flowBoundary', label: 'Flow BC'     },
   { filter: 'turbine',      label: 'Turbine'     },
 ];
 
 // Map sheet label → FilterKey for import
-const SHEET_LABEL_TO_FILTER: Record<string, FilterKey> = Object.fromEntries(
-  ALL_SHEET_TYPES.map(({ filter, label }) => [label, filter])
-);
+const SHEET_LABEL_TO_FILTER: Record<string, FilterKey> = {
+  ...Object.fromEntries(ALL_SHEET_TYPES.map(({ filter, label }) => [label, filter])),
+  Pump: 'pump',
+  'Check Valve': 'checkValve',
+};
 
 export async function exportAllSheetsToExcel(
   allRows: ExportRow[],

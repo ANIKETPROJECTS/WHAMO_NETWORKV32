@@ -360,8 +360,8 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
   // differently than what is shown on the canvas.
   const uniqueIdTypes: Record<string, string> = {
     flowBoundary: 'Flow Boundary',
-    pump: 'Pump',
-    checkValve: 'Check Valve',
+    pump: 'Legacy element',
+    checkValve: 'Legacy element',
     turbine: 'Turbine',
   };
   const labelOwners = new Map<string, { typeName: string; count: number }>();

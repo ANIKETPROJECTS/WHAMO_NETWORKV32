@@ -39,8 +39,8 @@ const NODE_LABELS: Record<string, string> = {
   junction: "Junction",
   surgeTank: "Surge tank",
   flowBoundary: "Flow boundary",
-  pump: "Pump",
-  checkValve: "Check valve",
+  pump: "Legacy element",
+  checkValve: "Legacy element",
   turbine: "Turbine",
 };
 

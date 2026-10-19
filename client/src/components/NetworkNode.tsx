@@ -130,9 +130,9 @@ export const PumpNode = memo(({ id, data, selected }: NodeProps) => {
   const displayData = node ? node.data : data;
   const hasOrderError = useNodeOrderError(id);
   return (
-    <TooltipWrapper content={<DataList data={displayData} title="Pump Properties" />}>
+    <TooltipWrapper content={<DataList data={displayData} title="Legacy element" />}>
       <IconNode nodeId={id} selected={!!selected} hasOrderError={hasOrderError}
-        icon={waterPumpIcon} label={data.label as React.ReactNode} alt="Pump" />
+        icon={waterPumpIcon} label={data.label as React.ReactNode} alt="Legacy element" />
     </TooltipWrapper>
   );
 });
@@ -142,9 +142,9 @@ export const CheckValveNode = memo(({ id, data, selected }: NodeProps) => {
   const displayData = node ? node.data : data;
   const hasOrderError = useNodeOrderError(id);
   return (
-    <TooltipWrapper content={<DataList data={displayData} title="Check Valve Properties" />}>
+    <TooltipWrapper content={<DataList data={displayData} title="Legacy element" />}>
       <IconNode nodeId={id} selected={!!selected} hasOrderError={hasOrderError}
-        icon={pipeIcon} label={data.label as React.ReactNode} alt="Check Valve" />
+        icon={pipeIcon} label={data.label as React.ReactNode} alt="Legacy element" />
     </TooltipWrapper>
   );
 });

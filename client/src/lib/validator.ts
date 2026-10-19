@@ -227,13 +227,13 @@ export function validateNetwork(nodes: WhamoNode[], edges: WhamoEdge[]): { error
 
     if (n.type === 'pump') {
       if (connections.length < 1) {
-        addError(n.id, `Pump ${d.label} must connect to at least one pipe.`, d.label, n.type);
+        addError(n.id, `Legacy element ${d.label} must connect to at least one pipe.`, d.label, n.type);
       }
     }
 
     if (n.type === 'checkValve') {
       if (connections.length < 1) {
-        addError(n.id, `Check Valve ${d.label} must connect to at least one pipe.`, d.label, n.type);
+        addError(n.id, `Legacy element ${d.label} must connect to at least one pipe.`, d.label, n.type);
       }
     }
 

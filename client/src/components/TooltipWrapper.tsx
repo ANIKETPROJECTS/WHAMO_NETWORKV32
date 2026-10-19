@@ -44,9 +44,13 @@ export function TooltipWrapper({
 }
 
 export function DataList({ data, title }: { data: any, title: string }) {
-  if (!data) return null;
-  
   const globalUnit = useNetworkStore(state => state.globalUnit);
+
+  if (!data) return null;
+  if (data.type === 'pump' || data.type === 'checkValve') {
+    return <div className="text-xs text-slate-600">Legacy element retained for file compatibility.</div>;
+  }
+  
   const unit = (data.unit as string) || globalUnit;
 
   const HIDDEN_KEYS = new Set([
@@ -57,11 +61,6 @@ export function DataList({ data, title }: { data: any, title: string }) {
   const entries = Object.entries(data).filter(([key]) => {
     if (HIDDEN_KEYS.has(key)) return false;
 
-    // Pump and Check Valve do not have node number or elevation
-    if (data.type === 'pump' || data.type === 'checkValve') {
-      if (key === 'nodeNumber' || key === 'elevation') return false;
-    }
-    
     // Surge Tank specific filtering
     if (data.type === 'surgeTank' || data.type_st) {
       const type_st = data.type_st || 'SIMPLE';

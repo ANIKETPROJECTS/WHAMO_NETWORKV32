@@ -156,11 +156,11 @@ function DesignerInner() {
     nodeSelectionSet,
   } = useNetworkStore();
 
-  const [activeLinkTool, setActiveLinkTool] = useState<'pump' | 'checkValve' | 'turbine' | null>(null);
+  const [activeLinkTool, setActiveLinkTool] = useState<'turbine' | null>(null);
   const [linkSourceNodeId, setLinkSourceNodeId] = useState<string | null>(null);
 
   // Refs always hold the latest values — used in event listeners to avoid stale closures
-  const activeLinkToolRef = useRef<'pump' | 'checkValve' | 'turbine' | null>(null);
+  const activeLinkToolRef = useRef<'turbine' | null>(null);
   const linkSourceNodeIdRef = useRef<string | null>(null);
   const rfContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => { activeLinkToolRef.current = activeLinkTool; }, [activeLinkTool]);
@@ -1291,15 +1291,9 @@ function DesignerInner() {
               <div ref={rfContainerRef} className={cn("flex-1 relative h-full bg-white transition-all duration-300", activeLinkTool && "link-mode-active")}>
                 {activeLinkTool && (
                   <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
-                    <div className="flex items-center gap-2 px-4 py-2 rounded-full shadow-lg text-white text-sm font-medium"
-                      style={{
-                        background: activeLinkTool === 'pump' ? '#f97316'
-                          : activeLinkTool === 'checkValve' ? '#8b5cf6'
-                          : '#16a34a'
-                      }}
-                    >
+                    <div className="flex items-center gap-2 px-4 py-2 rounded-full shadow-lg text-white text-sm font-medium bg-green-700">
                       <span>
-                        {activeLinkTool === 'pump' ? '🔄 Pump' : activeLinkTool === 'checkValve' ? '🛡 Check Valve' : '⚙ Turbine'}
+                        Turbine connection mode
                       </span>
                       <span className="opacity-80">—</span>
                       <span>
@@ -1555,8 +1549,6 @@ function DesignerInner() {
                           { label: 'Flow BC',     shape: <svg width="22" height="16" viewBox="-2 -2 26 20"><rect x="0" y="0" width="22" height="16" rx="4" fill="#9C27B0" stroke="#6A1B9A" strokeWidth="2"/></svg> },
                           { label: 'Node',        shape: <svg width="16" height="16" viewBox="-2 -2 20 20"><circle cx="8" cy="8" r="8" fill="#90A4AE" stroke="#546E7A" strokeWidth="2"/></svg> },
                           { label: 'Junction',    shape: <svg width="16" height="16" viewBox="-2 -2 20 20"><circle cx="8" cy="8" r="8" fill="#F44336" stroke="#B71C1C" strokeWidth="2"/></svg> },
-                          { label: 'Pump',        shape: <svg width="16" height="16" viewBox="-2 -2 20 20"><circle cx="8" cy="8" r="8" fill="#00BCD4" stroke="#006064" strokeWidth="2"/></svg> },
-                          { label: 'Check Valve', shape: <svg width="16" height="16" viewBox="-2 -2 20 20"><circle cx="8" cy="8" r="8" fill="#37474F" stroke="#102027" strokeWidth="2"/></svg> },
                           { label: 'Turbine',     shape: <svg width="16" height="16" viewBox="-2 -2 20 20"><polygon points="8,0 16,8 8,16 0,8" fill="#16a34a" stroke="#166534" strokeWidth="2"/></svg> },
                           { label: 'Conduit',     shape: <svg width="28" height="12" viewBox="0 0 28 12"><line x1="1" y1="6" x2="22" y2="6" stroke="#555" strokeWidth="1.5"/><polygon points="18,3 28,6 18,9" fill="#555"/></svg> },
                         ].map(({ label, shape }) => (
@@ -1628,7 +1620,7 @@ function DesignerInner() {
 
                       if (node) {
                         const d = node.data;
-                        const typeName = d.type === 'checkValve' ? 'Check Valve'
+                        const typeName = d.type === 'checkValve' || d.type === 'pump' ? 'Legacy element'
                           : d.type === 'flowBoundary' ? 'Flow BC'
                           : d.type === 'surgeTank' ? 'Surge Tank'
                           : d.type ? d.type.charAt(0).toUpperCase() + d.type.slice(1) : 'Node';
@@ -1645,7 +1637,7 @@ function DesignerInner() {
                         if (d.comment) rows.push({ label: 'Comment', value: String(d.comment) });
                       } else if (edge) {
                         const d = edge.data!;
-                        const typeName = d.type === 'checkValve' ? 'Check Valve'
+                        const typeName = d.type === 'checkValve' || d.type === 'pump' ? 'Legacy element'
                           : d.type === 'dummy' ? 'Dummy Pipe'
                           : d.type === 'conduit' ? 'Conduit'
                           : d.type ? d.type.charAt(0).toUpperCase() + d.type.slice(1) : 'Edge';
@@ -1656,11 +1648,8 @@ function DesignerInner() {
                         if (d.celerity !== undefined && d.celerity !== '') rows.push({ label: `Wave Speed`, value: String(d.celerity) });
                         if (d.friction !== undefined && d.friction !== '') rows.push({ label: 'Friction', value: String(d.friction) });
                         if (d.numSegments !== undefined) rows.push({ label: 'Segments', value: String(d.numSegments) });
-                        if (d.pumpStatus) rows.push({ label: 'Pump Status', value: String(d.pumpStatus) });
                         if (d.rq !== undefined && d.rq !== '') rows.push({ label: 'Rated Flow', value: String(d.rq) });
                         if (d.rhead !== undefined && d.rhead !== '') rows.push({ label: 'Rated Head', value: String(d.rhead) });
-                        if (d.valveStatus) rows.push({ label: 'Valve Status', value: String(d.valveStatus) });
-                        if (d.valveDiam !== undefined && d.valveDiam !== '') rows.push({ label: 'Valve Diam', value: String(d.valveDiam) });
                         if (d.turbineType !== undefined) rows.push({ label: 'Turbine Type', value: String(d.turbineType) });
                         if (d.syncSpeed !== undefined && d.syncSpeed !== '') rows.push({ label: 'Sync Speed', value: String(d.syncSpeed) });
                         if (d.comment) rows.push({ label: 'Comment', value: String(d.comment) });

@@ -44,7 +44,7 @@ function buildCacheUpdate(
 
 type FilterKey =
   | 'all' | 'conduit' | 'dummy'
-  | 'node' | 'reservoir' | 'junction' | 'surgeTank' | 'flowBoundary' | 'pump' | 'checkValve' | 'turbine';
+  | 'node' | 'reservoir' | 'junction' | 'surgeTank' | 'flowBoundary' | 'turbine';
 
 interface UnifiedRow {
   id: string;
@@ -56,7 +56,7 @@ interface UnifiedRow {
 const NODE_TYPE_LABEL: Record<string, string> = {
   reservoir: 'Reservoir', node: 'Node', junction: 'Junction',
   surgeTank: 'Surge Tank', flowBoundary: 'Flow BC',
-  pump: 'Pump', checkValve: 'Check Valve', turbine: 'Turbine',
+  pump: 'Legacy element', checkValve: 'Legacy element', turbine: 'Turbine',
   conduit: 'Conduit', dummy: 'Dummy Pipe',
 };
 const TYPE_BADGE: Record<string, string> = {
@@ -65,8 +65,6 @@ const TYPE_BADGE: Record<string, string> = {
   junction:     'bg-red-500 text-white',
   surgeTank:    'bg-orange-500 text-white',
   flowBoundary: 'bg-green-600 text-white',
-  pump:         'bg-orange-600 text-white',
-  checkValve:   'bg-violet-600 text-white',
   turbine:      'bg-teal-600 text-white',
   conduit:      'bg-indigo-600 text-white',
   dummy:        'bg-purple-600 text-white',
@@ -81,8 +79,6 @@ const FILTER_CHIPS: { key: FilterKey; label: string }[] = [
   { key: 'junction',    label: 'Junction'     },
   { key: 'surgeTank',   label: 'Surge Tank'   },
   { key: 'flowBoundary',label: 'Flow BC'      },
-  { key: 'pump',        label: 'Pump'         },
-  { key: 'checkValve',  label: 'Check Valve'  },
   { key: 'turbine',     label: 'Turbine'      },
 ];
 
@@ -106,8 +102,6 @@ const COLS: Record<FilterKey, ColKey[]> = {
                  'celerity','friction','manningsN','pipeE','pipeWT',
                  'hasAddedLoss','cplus','cminus','shapePairs','comment'],
   flowBoundary:['rowNum','unitToggle','label','nodeNum','elevation','schedNum','qSchedPairs','comment'],
-  pump:        ['rowNum','unitToggle','label','nodeNum','elevation','pumpStatus','pumpType','rq','rhead','rspeed','rtorque','wr2','comment'],
-  checkValve:  ['rowNum','unitToggle','label','nodeNum','elevation','valveStatus','valveDiam','comment'],
   turbine:     ['rowNum','unitToggle','label','nodeNum','elevation','turbineType','syncSpeed','turbineDiam','turbWr2','turbFriction','windage','operationMode','vScheduleNum','vSchedulePairs','comment'],
 };
 
@@ -1329,21 +1323,26 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
     return result;
   }, [nodes, edges]);
 
-  const filteredRows = useMemo(() => allRows.filter(r => matchesFilter(r, activeFilter)), [allRows, activeFilter]);
+  const supportedRows = useMemo(
+    () => allRows.filter(r => r.subType !== 'pump' && r.subType !== 'checkValve'),
+    [allRows],
+  );
+  const filteredRows = useMemo(
+    () => supportedRows.filter(r => matchesFilter(r, activeFilter)),
+    [supportedRows, activeFilter],
+  );
 
   const counts = useMemo(() => ({
-    all:          allRows.length,
-    conduit:      allRows.filter(r => r.subType === 'conduit').length,
-    dummy:        allRows.filter(r => r.subType === 'dummy').length,
-    node:         allRows.filter(r => r.kind === 'node').length,
-    reservoir:    allRows.filter(r => r.subType === 'reservoir').length,
-    junction:     allRows.filter(r => r.subType === 'junction').length,
-    surgeTank:    allRows.filter(r => r.subType === 'surgeTank').length,
-    flowBoundary: allRows.filter(r => r.subType === 'flowBoundary').length,
-    pump:         allRows.filter(r => r.subType === 'pump').length,
-    checkValve:   allRows.filter(r => r.subType === 'checkValve').length,
-    turbine:      allRows.filter(r => r.subType === 'turbine').length,
-  }), [allRows]);
+    all:          supportedRows.length,
+    conduit:      supportedRows.filter(r => r.subType === 'conduit').length,
+    dummy:        supportedRows.filter(r => r.subType === 'dummy').length,
+    node:         supportedRows.filter(r => r.subType === 'node').length,
+    reservoir:    supportedRows.filter(r => r.subType === 'reservoir').length,
+    junction:     supportedRows.filter(r => r.subType === 'junction').length,
+    surgeTank:    supportedRows.filter(r => r.subType === 'surgeTank').length,
+    flowBoundary: supportedRows.filter(r => r.subType === 'flowBoundary').length,
+    turbine:      supportedRows.filter(r => r.subType === 'turbine').length,
+  }), [supportedRows]);
 
   const handleChangeEdge = useCallback((id: string, field: string, rawStr: string, currentData: any) => {
     const textFields = new Set(['label', 'comment', 'type']);
@@ -1497,7 +1496,7 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
         }));
         const { projectName } = useNetworkStore.getState();
         await exportAllSheetsToExcel(exportRows, globalUnit, projectName, hSchedules ?? [], qSchedules ?? {});
-        toast({ title: 'Export complete', description: 'All element types exported as a multi-sheet workbook.' });
+        toast({ title: 'Export complete', description: 'All supported element types exported as a multi-sheet workbook.' });
       } else {
         const excelFilter = activeFilter as ExcelFilterKey;
         if (!TAB_COLS[excelFilter]) {
@@ -1796,7 +1795,7 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
               onSetUnit={setElementUnit}
             />
             <p className="text-[10px] text-black flex-none">
-              Showing {filteredRows.length} of {allRows.length} elements ·
+              Showing {filteredRows.length} of {supportedRows.length} supported elements ·
               Click any white cell to edit · Dimmed cells are read-only for that element type ·
               Turbine V Schedule (T/G pairs) editable inline for GENERATE and REJECT modes ·
               SI/FPS toggle applies globally · Per-row Unit column overrides individual elements · Amber border indicates per-element override

@@ -85,8 +85,6 @@ import nodeCircleIcon from "@assets/button_1779523171362.png";
 import yIntersectionIcon from "@assets/y-intersection_(1)_1779523210044.png";
 import waterTankIcon from "@assets/water-tank_(2)_1779523360829.png";
 import windIcon from "@assets/wind_1779523398812.png";
-import waterPumpIcon from "@assets/water-pump_1779523451215.png";
-import pipeIcon from "@assets/pipe_1779523475650.png";
 import turbineImgIcon from "@assets/turbine_1779523517554.png";
 import networkIcon from "@assets/network_1779525899254.png";
 import clickIcon from "@assets/click_1779525969230.png";
@@ -465,8 +463,8 @@ interface HeaderProps {
   onShowDiagram?: () => void;
   onVisualization?: () => void;
   on3DVisualization?: () => void;
-  activeLinkTool?: 'pump' | 'checkValve' | 'turbine' | null;
-  onSetLinkTool?: (tool: 'pump' | 'checkValve' | 'turbine' | null) => void;
+  activeLinkTool?: 'turbine' | null;
+  onSetLinkTool?: (tool: 'turbine' | null) => void;
   onShowFilePreview?: (content: string, fileName: string, type: 'inp' | 'out') => void;
   onLoadProject?: (project: any) => void;
   currentProjectId?: string | null;
@@ -692,6 +690,7 @@ export function Header({
 
     if (selectedGroupType === "nodes") {
       nodes.forEach(node => {
+        if (node.data?.type === "pump" || node.data?.type === "checkValve" || node.type === "pump" || node.type === "checkValve") return;
         const exists = outputRequests.some(r => r.elementId === node.id && r.requestType === "HISTORY" && r.isElement === false);
         if (!exists) {
           addOutputRequest({ elementId: node.id, elementType: "node", requestType: "HISTORY", isElement: false, variables: selectedVars });
@@ -699,7 +698,7 @@ export function Header({
         }
       });
     } else if (selectedGroupType === "elements") {
-      const specialNodes = nodes.filter(n => ["surgeTank","pump","checkValve","turbine"].includes(n.data?.type || n.type || ""));
+      const specialNodes = nodes.filter(n => ["surgeTank","turbine"].includes(n.data?.type || n.type || ""));
       specialNodes.forEach(node => {
         const exists = outputRequests.some(r => r.elementId === node.id && r.requestType === "HISTORY" && r.isElement === true);
         if (!exists) {
@@ -983,22 +982,6 @@ export function Header({
           <InlineRibbonBtn imgSrc={yIntersectionIcon} label="Junction" onClick={() => { if (!isProjectOpen) onActivate?.(); addNode("junction", getViewportCenter()); }} />
           <InlineRibbonBtn imgSrc={waterTankIcon} label="Surge Tank" onClick={() => { if (!isProjectOpen) onActivate?.(); addNode("surgeTank", getViewportCenter()); }} />
           <InlineRibbonBtn imgSrc={windIcon} label="Flow BC" onClick={() => { if (!isProjectOpen) onActivate?.(); addNode("flowBoundary", getViewportCenter()); }} />
-          <SplitInlineRibbonBtn
-            imgSrc={waterPumpIcon}
-            label="Pump"
-            active={activeLinkTool === 'pump'}
-            data-testid="ribbon-btn-pump"
-            onConnectorClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'pump' ? null : 'pump'); }}
-            onElementClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(null); addNode('pump', getViewportCenter()); }}
-          />
-          <SplitInlineRibbonBtn
-            imgSrc={pipeIcon}
-            label="Check Valve"
-            active={activeLinkTool === 'checkValve'}
-            data-testid="ribbon-btn-checkvalve"
-            onConnectorClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(activeLinkTool === 'checkValve' ? null : 'checkValve'); }}
-            onElementClick={() => { if (!isProjectOpen) onActivate?.(); onSetLinkTool?.(null); addNode('checkValve', getViewportCenter()); }}
-          />
           <SplitInlineRibbonBtn
             imgSrc={turbineImgIcon}
             label="Turbine"
@@ -1419,7 +1402,7 @@ export function Header({
                       <SelectContent>
                         <SelectItem value="_" disabled>— Elements —</SelectItem>
                         {nodes
-                          .filter((n) => n.data.type === "surgeTank" || n.data.type === "pump" || n.data.type === "checkValve" || n.data.type === "turbine" || n.type === "surgeTank" || n.type === "pump" || n.type === "checkValve" || n.type === "turbine")
+                          .filter((n) => n.data.type === "surgeTank" || n.data.type === "turbine" || n.type === "surgeTank" || n.type === "turbine")
                           .filter((n) => !outputRequests.some((req) => req.elementId === n.id && req.requestType === requestType && req.isElement))
                           .map((n) => (
                             <SelectItem key={`element-${n.id}`} value={`element:${n.id}`}>{n.data.label}</SelectItem>
@@ -1433,6 +1416,7 @@ export function Header({
                         ))}
                         <SelectItem value="__" disabled>— Nodes —</SelectItem>
                         {nodes
+                          .filter((n) => n.data.type !== "pump" && n.data.type !== "checkValve" && n.type !== "pump" && n.type !== "checkValve")
                           .filter((n) => !outputRequests.some((req) => req.elementId === n.id && req.requestType === requestType && !req.isElement))
                           .map((n) => (
                             <SelectItem key={`node-${n.id}`} value={`node:${n.id}`}>{String(n.data.nodeNumber)}</SelectItem>
@@ -1789,9 +1773,9 @@ export function Header({
                 const EDGE_LABELS: Record<string, string> = {
                   conduit: 'Conduit',
                   dummy: 'Dummy Pipe',
-                  pump: 'Pump',
                   turbine: 'Turbine',
-                  checkValve: 'Check Valve',
+                  pump: 'Legacy element',
+                  checkValve: 'Legacy element',
                 };
                 const nodeRows = Object.entries(inpPreview.nodeTypes).sort((a, b) => b[1] - a[1]);
                 const edgeRows = Object.entries(inpPreview.edgeTypes).sort((a, b) => b[1] - a[1]);
@@ -1844,18 +1828,12 @@ export function Header({
                       </div>
 
                       {/* Hydraulic data & simulation */}
-                      {(inpPreview.pcharCount > 0 || inpPreview.tcharCount > 0 || inpPreview.stageCount > 0) && (
+                      {(inpPreview.tcharCount > 0 || inpPreview.stageCount > 0) && (
                         <div>
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Hydraulic Data</span>
                           </div>
                           <div className="bg-white border border-slate-200 rounded-md divide-y divide-slate-100">
-                            {inpPreview.pcharCount > 0 && (
-                              <div className="flex items-center justify-between px-3 py-1.5">
-                                <span className="text-[11px] text-slate-600">Pump curve types</span>
-                                <span className="text-[11px] font-semibold text-slate-800">{inpPreview.pcharCount}</span>
-                              </div>
-                            )}
                             {inpPreview.tcharCount > 0 && (
                               <div className="flex items-center justify-between px-3 py-1.5">
                                 <span className="text-[11px] text-slate-600">Turbine curve types</span>

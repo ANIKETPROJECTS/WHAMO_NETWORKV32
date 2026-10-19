@@ -107,8 +107,6 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
     { label: 'Junction', icon: GitCommitHorizontal, action: () => addNode('junction', { x: 200, y: 150 }), color: 'text-red-500' },
     { label: 'Surge Tank', icon: PlusCircle, action: () => addNode('surgeTank', { x: 250, y: 100 }), color: 'text-orange-600' },
     { label: 'Flow BC', icon: ArrowRightCircle, action: () => addNode('flowBoundary', { x: 50, y: 150 }), color: 'text-green-600' },
-    { label: 'Pump', icon: PlayCircle, action: () => addNode('pump', { x: 300, y: 150 }), color: 'text-orange-500' },
-    { label: 'Check Valve', icon: ShieldCheck, action: () => addNode('checkValve', { x: 350, y: 150 }), color: 'text-violet-600' },
     { label: 'Turbine', icon: Settings2, action: () => addNode('turbine', { x: 400, y: 150 }), color: 'text-teal-600' },
   ];
 
@@ -194,7 +192,9 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
                         const variables = ["Q", "HEAD", "ELEV", "VEL", "PRESS", "PIEZHEAD"];
                         
                         nodes.forEach(node => {
-                          const isSpecialElem = node.data.type === 'surgeTank' || node.data.type === 'pump' || node.data.type === 'checkValve' || node.type === 'surgeTank' || node.type === 'pump' || node.type === 'checkValve';
+                          const nodeType = node.data?.type || node.type;
+                          if (nodeType === 'pump' || nodeType === 'checkValve') return;
+                          const isSpecialElem = nodeType === 'surgeTank' || nodeType === 'turbine';
                           
                           const existsNode = outputRequests.some(req =>
                             req.elementId === node.id &&
@@ -231,7 +231,9 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
                         
                         // Deduplicate edges by label
                         const uniqueEdges = Array.from(new Map(
-                          edges.map(e => [e.data?.label || e.id, e])
+                          edges
+                            .filter(e => e.data?.type !== 'pump' && e.data?.type !== 'checkValve')
+                            .map(e => [e.data?.label || e.id, e])
                         ).values());
                         
                         uniqueEdges.forEach(edge => {
@@ -281,7 +283,7 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
                       <SelectContent>
                         <SelectItem value="_" disabled>Elements</SelectItem>
                         {nodes
-                          .filter(n => n.data.type === 'surgeTank' || n.data.type === 'pump' || n.data.type === 'checkValve' || n.data.type === 'turbine' || n.type === 'surgeTank' || n.type === 'pump' || n.type === 'checkValve' || n.type === 'turbine')
+                          .filter(n => n.data.type === 'surgeTank' || n.data.type === 'turbine' || n.type === 'surgeTank' || n.type === 'turbine')
                           .filter(n => !outputRequests.some(req => req.elementId === n.id && req.requestType === requestType && req.isElement))
                           .map(n => (
                             <SelectItem key={`element-${n.id}`} value={`element:${n.id}`}>
@@ -429,7 +431,7 @@ export function Toolbar({ onExport, onSave, onLoad }: { onExport: (fileName?: st
                       })
                       .map(req => {
                       const el = nodes.find(n => n.id === req.elementId) || edges.find(e => e.id === req.elementId);
-                      const isSpecialElemType = el?.data?.type === 'surgeTank' || el?.data?.type === 'pump' || el?.data?.type === 'checkValve' || el?.type === 'surgeTank' || el?.type === 'pump' || el?.type === 'checkValve';
+                      const isSpecialElemType = el?.data?.type === 'surgeTank' || el?.data?.type === 'turbine' || el?.type === 'surgeTank' || el?.type === 'turbine';
                       const isNodeElement = req.elementType === 'node' && isSpecialElemType && req.isElement;
                       const displayLabel = isNodeElement 
                         ? el?.data?.label 

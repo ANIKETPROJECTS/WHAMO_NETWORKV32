@@ -92,8 +92,7 @@ export const ConnectionEdge = memo(({
   const isElementEdge = isPump || isCheckValve || isTurbine;
   const isDummy = edgeType === 'dummy';
 
-  const tooltipTitle = isPump ? 'Pump Properties'
-    : isCheckValve ? 'Check Valve Properties'
+  const tooltipTitle = isPump || isCheckValve ? 'Legacy element'
     : isTurbine ? 'Turbine Properties'
     : isDummy ? 'Dummy Pipe Properties'
     : 'Conduit Properties';
@@ -124,8 +123,8 @@ export const ConnectionEdge = memo(({
           <TooltipWrapper content={<DataList data={displayData} title={tooltipTitle} />}>
             {isElementEdge ? (
               <div style={{ cursor: 'default' }}>
-                {isPump && <ElementCircle icon={waterPumpIcon} alt="Pump" label={edgeLabel} />}
-                {isCheckValve && <ElementCircle icon={pipeIcon} alt="Check Valve" label={edgeLabel} />}
+                {isPump && <ElementCircle icon={waterPumpIcon} alt="Legacy element" label={edgeLabel} />}
+                {isCheckValve && <ElementCircle icon={pipeIcon} alt="Legacy element" label={edgeLabel} />}
                 {isTurbine && <ElementCircle icon={turbineImgIcon} alt="Turbine" label={edgeLabel} />}
               </div>
             ) : (

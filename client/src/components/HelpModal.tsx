@@ -5,8 +5,6 @@ import jsPDF from 'jspdf';
 import damIcon from '@assets/dam_1779522984604.png';
 import yIntersectionIcon from '@assets/y-intersection_(1)_1779523210044.png';
 import waterTankIcon from '@assets/water-tank_(2)_1779523360829.png';
-import waterPumpIcon from '@assets/water-pump_1779523451215.png';
-import pipeIcon from '@assets/pipe_1779523475650.png';
 import turbineImgIcon from '@assets/turbine_1779523517554.png';
 import windIcon from '@assets/wind_1779523398812.png';
 
@@ -326,9 +324,9 @@ function downloadPDF() {
 
   const tocItems = [
     ['01', 'Getting Started',      'Creating a project, opening, saving, undo/redo'],
-    ['02', 'Network Elements',     'Reservoir, Node, Junction, Surge Tank, Flow BC, Pump, Check Valve, Turbine, Conduit, Dummy Pipe'],
+    ['02', 'Network Elements',     'Reservoir, Node, Junction, Surge Tank, Flow BC, Turbine, Conduit, Dummy Pipe'],
     ['03', 'All Properties',       'Full property reference for every element — name, unit, description, meaning, how to use'],
-    ['04', 'Connections',          'Drawing conduits, pump/valve/turbine links, connection rules, valid/invalid combinations'],
+    ['04', 'Connections',          'Drawing conduits and turbine links, connection rules, valid/invalid combinations'],
     ['05', 'Flex Table',           'Spreadsheet editor, filters, units, T/H schedules, material'],
     ['06', 'Excel Import/Export',  'Single-tab and multi-sheet workbook workflows'],
     ['07', 'Running Simulations',  'Parameters, output requests, generating .OUT files'],
@@ -459,10 +457,10 @@ function downloadPDF() {
   y = para('A Surge Tank is an open or closed pressure vessel connected to the pipeline to suppress water hammer (hydraulic transients). It absorbs and releases flow to moderate pressure fluctuations and protect the system from extreme pressure events.', y);
   y = miniHeading('Purpose & When to Use', y);
   y = bulletList([
-    'Install on the upstream side of a pump station or downstream of a valve to suppress transient pressures.',
+    'Place near the section where transient pressures need to be reduced.',
     'Use an open tank when the water surface vents to atmosphere.',
     'Use a closed (air vessel) tank to provide a pressurised cushion — configure using E/A (elevation/area) pairs.',
-    'Recommended wherever significant water hammer risk exists (fast valve closure, pump trip, etc.).',
+    'Recommended wherever significant water hammer risk exists, such as rapid changes in flow.',
   ], y);
   y = miniHeading('Properties', y);
   y = propTable([
@@ -481,7 +479,7 @@ function downloadPDF() {
   y = para('A Flow Boundary Condition (Flow BC) injects or extracts a prescribed flow rate at a specific point in the network. It acts as a source or sink of flow, either at a constant rate or following a time-varying schedule.', y);
   y = miniHeading('Purpose & When to Use', y);
   y = bulletList([
-    'Use to model pumped inflow from an external source not represented by a pump element.',
+    'Use to model inflow from an external source not represented by another network boundary.',
     'Use to model controlled extraction (e.g., irrigation offtake) that varies with time.',
     'Ideal for simulating demand fluctuations, operational scenarios, or emergency shut-offs.',
     'Can represent any controlled flow injection or withdrawal point.',
@@ -494,50 +492,6 @@ function downloadPDF() {
     ['Q-Schedule #', 'References a time/flow schedule. Active only when Mode = Schedule.'],
   ], y);
   y = noteBox('Unlike a Reservoir (which prescribes head), a Flow BC prescribes flow. Do not confuse the two — using the wrong boundary type will give incorrect simulation results.', y, true);
-
-  // PUMP
-  y = subHeading('Pump', y);
-  y = para('A Pump is a link element placed on a conduit between two nodes to represent a mechanical pump. The pump adds energy to the flow and is characterised by a pump curve (P-Char) that defines the relationship between flow rate (Q) and head rise (H).', y);
-  y = miniHeading('Purpose & When to Use', y);
-  y = bulletList([
-    'Use to model any centrifugal or axial-flow pump in the system.',
-    'Pumps are link elements — they must be placed ON a conduit, not at a standalone node.',
-    'Critical for simulating pump start-up, shut-down, and trip transients.',
-    'Multiple pumps can be modelled in series or parallel by placing them on separate conduits.',
-  ], y);
-  y = miniHeading('How to Add', y);
-  y = stepList([
-    'Click the Pump button in the INSERT ribbon to activate pump link-drawing mode (button turns blue).',
-    'Click and drag from a source node to a target node to create the pump conduit.',
-    'Click the pump conduit to open its properties and enter the P-Char curve data.',
-    'Click the Pump button again to exit link-drawing mode.',
-  ], y);
-  y = miniHeading('Properties', y);
-  y = propTable([
-    ['Label', 'Unique identifier for the pump (required).'],
-    ['Speed Ratio', 'Ratio of operating speed to rated speed (1.0 = full speed). Useful for variable-speed pumps.'],
-    ['Status (ON/OFF)', 'Initial operating status of the pump at t = 0.'],
-    ['P-Char Data', 'Pump characteristic curve: Q-H pairs defining the pump curve from shut-off head to maximum flow.'],
-  ], y);
-  y = noteBox('The pump curve (P-Char) must cover the expected operating range of Q. Extrapolation beyond the curve ends may cause simulation instability.', y, true);
-
-  // CHECK VALVE
-  y = subHeading('Check Valve', y);
-  y = para('A Check Valve is a link element that permits flow in only one direction (forward). When flow attempts to reverse, the check valve closes instantly, preventing backflow. It is used to protect system components from reverse flow conditions.', y);
-  y = miniHeading('Purpose & When to Use', y);
-  y = bulletList([
-    'Install on pump discharge lines to prevent backflow during pump trip or shutdown.',
-    'Use to prevent siphoning in elevated pipeline sections.',
-    'Protects upstream equipment from reverse-flow damage.',
-    'WHAMO models check valve closure as instantaneous — this can itself induce a pressure transient.',
-  ], y);
-  y = miniHeading('Properties', y);
-  y = propTable([
-    ['Label', 'Unique identifier (required).'],
-    ['Loss Coefficient', 'Minor loss coefficient (K) for the valve when open. Accounts for the pressure drop through the valve body.'],
-  ], y);
-  y = noteBox('Check valves close instantaneously in WHAMO. For systems sensitive to this, consider adding a surge tank near the valve to absorb the resulting pressure wave.', y, true);
-  y = noteBox('Connection rule: Check Valve must be placed on a conduit between two nodes (Node, Junction, or Reservoir). It cannot connect two Reservoirs directly.', y);
 
   // TURBINE
   y = subHeading('Turbine', y);
@@ -642,50 +596,6 @@ function downloadPDF() {
   ], y);
   y = noteBox('Every conduit must have non-zero Length, Diameter, and Celerity before running a simulation. Missing values will cause a validation error.', y, true);
 
-  y = subHeading('Pump Link', y);
-  y = para('A Pump Link is a conduit with a Pump element embedded in it. The pump adds energy to the flow according to its characteristic curve (P-Char). Pump links are used to model all types of centrifugal and axial-flow pumps.', y);
-  y = miniHeading('How to Draw', y);
-  y = stepList([
-    'Click the Pump button in the INSERT ribbon to activate pump link-drawing mode.',
-    'Drag from a source node (e.g., reservoir, sump) to a target node (e.g., downstream pipe junction).',
-    'The connection is created as a conduit with the Pump type set.',
-    'Click the Pump button again to deactivate link-drawing mode.',
-  ], y);
-  y = miniHeading('Connection Rules', y);
-  y = bulletList([
-    'Pump must connect two nodes (Node, Junction, or Reservoir). It cannot connect to a Surge Tank directly.',
-    'Flow direction is from source to target (draw in the direction of pump flow).',
-    'Multiple pumps in series: connect them through intermediate nodes.',
-    'Multiple pumps in parallel: draw separate pump conduits between the same two nodes.',
-  ], y);
-  y = miniHeading('Required Properties', y);
-  y = propTable([
-    ['P-Char Curve', 'Q-H data pairs defining the pump characteristic. Required — simulation fails without it.'],
-    ['Speed Ratio', 'Ratio of operating to rated speed. Default = 1.0 (full speed).'],
-    ['Initial Status', 'ON or OFF at t = 0.'],
-    ['Conduit Properties', 'Length, diameter, celerity still required for the conduit carrying the pump.'],
-  ], y);
-  y = noteBox('The pump curve must cover the full range of expected operating Q. If Q goes outside the curve range during a transient, results may be inaccurate.', y, true);
-
-  y = subHeading('Check Valve Link', y);
-  y = para('A Check Valve Link is a conduit that only allows forward flow. When flow velocity drops to zero or would reverse, the check valve closes instantaneously. This protects pumps and other equipment from backflow.', y);
-  y = miniHeading('How to Draw', y);
-  y = stepList([
-    'Click the Check Valve button in the INSERT ribbon to activate check valve link mode.',
-    'Drag from the source node (upstream) to the target node (downstream).',
-    'The connection is created with the Check Valve type set — forward direction is source to target.',
-    'Click the Check Valve button again to deactivate link mode.',
-  ], y);
-  y = miniHeading('Connection Rules', y);
-  y = bulletList([
-    'Check Valve connects two nodes (Node, Junction). Reservoir-to-Reservoir is not allowed.',
-    'Direction is fixed at draw time: source → target is the allowed flow direction.',
-    'Cannot be placed between a Reservoir and another Reservoir.',
-    'Can be placed immediately downstream of a pump to prevent reverse flow on pump trip.',
-  ], y);
-  y = noteBox('Check valve closure is instantaneous in WHAMO. This can generate a severe pressure wave. Place surge protection (surge tank or air vessel) nearby if needed.', y, true);
-  y = noteBox('Common mistake: drawing the check valve in the wrong direction. Verify source and target carefully — reversing the direction will block all forward flow.', y, true);
-
   y = subHeading('Turbine Link', y);
   y = para('A Turbine Link is a conduit with a Turbine element that extracts energy from the flow. Used in hydroelectric systems to model generator units and their transient behaviour during load rejection or emergency shutdown.', y);
   y = miniHeading('How to Draw', y);
@@ -737,7 +647,7 @@ function downloadPDF() {
   y = para('The Flex Table gives you a spreadsheet-like view of every element in the network. Open it from Tools → Flex Table in the ribbon.', y);
   y += 2;
   y = subHeading('Tab Filters', y);
-  y = para('Use the filter chips at the top to switch between: All, Conduit, Dummy Pipe, Reservoir, Node, Junction, Surge Tank, Flow BC, Pump, Check Valve, and Turbine.', y);
+  y = para('Use the filter chips at the top to switch between supported network element types.', y);
   y = subHeading('Editing Cells', y);
   y = para('Click any white cell to edit it inline. Grey background cells are read-only for that element type. Press Tab or Enter to commit; Escape cancels.', y);
   y = subHeading('Unit System', y);
@@ -893,14 +803,6 @@ function downloadPDF() {
       'Undo/Redo is only available when a project is open. Make sure you have opened or saved a project first.',
     ],
     [
-      'Check Valve causes extreme pressure spike',
-      'Check valve closure is instantaneous in WHAMO. Add a surge tank or air vessel near the check valve to absorb the resulting pressure wave.',
-    ],
-    [
-      'Pump simulation fails on trip transient',
-      'Ensure the P-Char curve spans from Q=0 (shut-off head) to the maximum expected flow. Also verify that a check valve is placed on the pump discharge to prevent reverse flow.',
-    ],
-    [
       'Reservoir connection gives unrealistic results',
       'Check that the Reservoir elevation is set correctly and that the Loss Coefficient is appropriate (0.5 for sharp-edged inlet, 0.0 for fully flush connection).',
     ],
@@ -1004,9 +906,6 @@ function FlowBCSVG() {
   );
 }
 
-function PumpSVG() { return <CanvasCircleIcon icon={waterPumpIcon} label="P1" />; }
-function CheckValveSVG() { return <CanvasCircleIcon icon={pipeIcon} label="VC1" />; }
-
 function TurbineSVG() {
   const size = 120;
   const inner = 84;
@@ -1058,8 +957,6 @@ const ELEMENT_SVG_MAP: Record<string, React.ReactNode> = {
   junction:      <JunctionSVG />,
   'surge-tank':  <SurgeTankSVG />,
   'flow-bc':     <FlowBCSVG />,
-  pump:          <PumpSVG />,
-  'check-valve': <CheckValveSVG />,
   turbine:       <TurbineSVG />,
   conduit:       <ConduitSVG />,
   'dummy-pipe':  <DummyPipeSVG />,
@@ -1153,24 +1050,6 @@ function ConnectionDiagramSVG({ type }: { type: string }) {
       <DiagNode label="N1" />
       <DiagArrow dashed />
       <DiagNode icon={waterTankIcon} label="ST1" />
-    </DiagRow>
-  );
-  if (type === 'pump-link') return (
-    <DiagRow>
-      <DiagNode label="N6" />
-      <DiagArrow />
-      <DiagNode icon={waterPumpIcon} label="P1" />
-      <DiagArrow />
-      <DiagNode label="N16" />
-    </DiagRow>
-  );
-  if (type === 'check-valve-link') return (
-    <DiagRow>
-      <DiagNode label="N26" />
-      <DiagArrow />
-      <DiagNode icon={pipeIcon} label="VC1" />
-      <DiagArrow />
-      <DiagNode label="N25" />
     </DiagRow>
   );
   if (type === 'turbine-link') return (
@@ -1563,8 +1442,6 @@ const ELEMENT_OPTIONS = [
   { value: 'junction', label: 'Junction' },
   { value: 'surge-tank', label: 'Surge Tank' },
   { value: 'flow-bc', label: 'Flow BC' },
-  { value: 'pump', label: 'Pump' },
-  { value: 'check-valve', label: 'Check Valve' },
   { value: 'turbine', label: 'Turbine' },
   { value: 'conduit', label: 'Conduit' },
   { value: 'dummy-pipe', label: 'Dummy Pipe' },
@@ -1688,14 +1565,14 @@ const ELEMENT_DATA = [
     badge: 'bg-purple-600 text-white',
     description: 'Open or closed surge vessel. Models water-hammer suppression chambers.',
     purpose: [
-      'Install on pump stations or upstream of valves to suppress water hammer pressure fluctuations.',
+      'Install near vulnerable pipeline sections to suppress water-hammer pressure fluctuations.',
       'Open tank: water surface vents to atmosphere — models simple standpipes.',
       'Closed tank (air vessel): uses E/A pairs to define a pressurised cushion.',
-      'Use wherever significant water hammer risk exists (pump trips, fast valve closures).',
+      'Use wherever significant water-hammer risk exists, such as rapid flow changes.',
     ],
     howToAdd: [
       'Click the Surge Tank button in the INSERT ribbon.',
-      'Place the Surge Tank near the element it protects (e.g., near a pump or valve).',
+      'Place the Surge Tank near the section it is intended to protect.',
       'Connect it to the main pipeline via a short conduit or Dummy Pipe.',
       'Set Tank Top, Tank Bottom, Initial Water Level, and Riser Diameter in Properties Panel.',
     ],
@@ -1733,7 +1610,7 @@ const ELEMENT_DATA = [
     badge: 'bg-orange-600 text-white',
     description: 'Flow boundary condition. Injects or extracts a prescribed flow rate, optionally time-varying.',
     purpose: [
-      'Model pumped inflow from an external source not represented by a pump element.',
+      'Model inflow from an external source not represented by another boundary element.',
       'Model controlled extraction (irrigation, industrial withdrawal) that varies with time.',
       'Simulate demand fluctuations, operational scenarios, or emergency shut-offs.',
     ],
@@ -1750,7 +1627,7 @@ const ELEMENT_DATA = [
     ] as Array<[string, string]>,
     bestPractices: [
       'Use positive Q for injection (inflow) and negative Q for extraction (withdrawal).',
-      'For systems with a known variable inflow (river pump station), use Schedule mode with measured data.',
+      'For systems with a known variable inflow, use Schedule mode with measured data.',
     ],
     commonMistakes: [
       'Confusing Flow BC (prescribes Q) with Reservoir (prescribes head) — using the wrong type gives incorrect boundary conditions.',
@@ -1763,85 +1640,6 @@ const ELEMENT_DATA = [
       'Flow Rate must be a valid number (positive or negative).',
       'Q-Schedule # must reference a defined schedule when Mode = Schedule.',
       'Must have at least one conduit connection.',
-    ],
-  },
-  {
-    id: 'pump',
-    name: 'Pump',
-    badge: 'bg-pink-600 text-white',
-    description: 'Link element placed on a conduit to represent a pump with a characteristic curve (P-Char).',
-    purpose: [
-      'Model any centrifugal or axial-flow pump in the system.',
-      'Simulate pump start-up, shut-down, and trip (loss-of-power) transient events.',
-      'Multiple pumps in series or parallel via separate conduit links.',
-    ],
-    howToAdd: [
-      'Click the Pump button in the INSERT ribbon to activate pump link-drawing mode (button turns blue).',
-      'Drag from the source node (suction) to the target node (discharge).',
-      'Select the pump conduit and enter P-Char curve data in the Flex Table or Properties Panel.',
-      'Click the Pump button again to exit link-drawing mode.',
-    ],
-    properties: [
-      ['Label', 'Unique identifier (required).'],
-      ['Speed Ratio', 'Operating to rated speed ratio (1.0 = full speed). For variable-speed pumps.'],
-      ['Status (ON/OFF)', 'Initial pump status at t = 0.'],
-      ['P-Char Data', 'Pump characteristic curve: Q-H pairs from shut-off head to maximum flow.'],
-    ] as Array<[string, string]>,
-    bestPractices: [
-      'Define the P-Char curve from Q=0 (shut-off head) to beyond the expected maximum operating flow.',
-      'Always place a Check Valve on the pump discharge to prevent reverse flow during trip transients.',
-      'For pump-trip simulations, ensure a surge tank or air vessel is located near the pump station.',
-    ],
-    commonMistakes: [
-      'Omitting the P-Char curve — simulation will abort without a valid pump curve.',
-      'Drawing the pump in the wrong direction (discharge to suction) — pump adds energy in draw direction.',
-      'Not placing a check valve on the discharge side.',
-    ],
-    warnings: [
-      'The P-Char curve must cover the full range of Q encountered during the simulation. Extrapolation beyond curve endpoints may cause instability.',
-    ],
-    validationRules: [
-      'P-Char data must contain at least two Q-H pairs.',
-      'Must connect two nodes (not Reservoir-to-Reservoir).',
-      'Conduit carrying the pump must have valid Length, Diameter, and Celerity.',
-    ],
-  },
-  {
-    id: 'check-valve',
-    name: 'Check Valve',
-    badge: 'bg-red-700 text-white',
-    description: 'Link element that only allows forward flow. Closes instantly when flow reverses.',
-    purpose: [
-      'Protect pump discharge lines from backflow during trip or shutdown events.',
-      'Prevent siphoning in elevated pipeline sections.',
-      'Protect upstream equipment from reverse-flow damage.',
-    ],
-    howToAdd: [
-      'Click the Check Valve button in the INSERT ribbon to activate check valve link mode.',
-      'Drag from the source (upstream) node to the target (downstream) node.',
-      'The connection is created with forward flow direction = source to target.',
-      'Click the Check Valve button again to deactivate link mode.',
-    ],
-    properties: [
-      ['Label', 'Unique identifier (required).'],
-      ['Loss Coefficient', 'Minor loss coefficient (K) when valve is open. Accounts for pressure drop through valve body.'],
-    ] as Array<[string, string]>,
-    bestPractices: [
-      'Always draw the check valve in the intended direction of flow (source → target = forward direction).',
-      'Use a surge tank or air vessel near the check valve to absorb the pressure wave generated by instantaneous closure.',
-    ],
-    commonMistakes: [
-      'Drawing the check valve in reverse (will block all flow from the start).',
-      'Not providing surge protection — instantaneous closure can generate extreme pressure spikes.',
-    ],
-    warnings: [
-      'Check valve closure is instantaneous in WHAMO. This will generate a pressure wave. Install surge protection (surge tank, air vessel, or pressure relief valve) nearby.',
-      'Cannot directly connect two Reservoirs via a check valve — place a Node between them.',
-    ],
-    validationRules: [
-      'Must connect two nodes (Node, Junction, or Reservoir on at most one end).',
-      'Loss coefficient must be ≥ 0.',
-      'Conduit must have valid Length, Diameter, and Celerity.',
     ],
   },
   {
@@ -1995,8 +1793,6 @@ const CONNECTION_OPTIONS = [
   { value: 'all', label: 'All Connections' },
   { value: 'conduit', label: 'Standard Conduit' },
   { value: 'dummy-pipe', label: 'Dummy Pipe' },
-  { value: 'pump-link', label: 'Pump Link' },
-  { value: 'check-valve-link', label: 'Check Valve Link' },
   { value: 'turbine-link', label: 'Turbine Link' },
   { value: 'reservoir-conn', label: 'Reservoir Connections' },
   { value: 'surge-tank-conn', label: 'Surge Tank Connections' },
@@ -2076,77 +1872,6 @@ const CONNECTION_DATA = [
     troubleshooting: [
       'Simulation crash at Dummy Pipe: check that Length is a small positive number, not zero.',
       'Unexpected pressure drop through dummy pipe: ensure friction factor is set to 0 or very small.',
-    ],
-  },
-  {
-    id: 'pump-link',
-    name: 'Pump Link',
-    description: 'Conduit with an embedded Pump element. Adds energy to flow per the pump characteristic curve.',
-    howToDraw: [
-      'Click the Pump button in the INSERT ribbon (turns blue to indicate active mode).',
-      'Drag from the suction-side node to the discharge-side node.',
-      'The pump conduit is created. Select it and enter P-Char data in the Properties Panel.',
-      'Click Pump button again to deactivate link-drawing mode.',
-    ],
-    validConnections: [
-      'Node → Node (most common)',
-      'Junction → Node',
-      'Reservoir → Node (pump draws from reservoir sump)',
-      'Node → Junction',
-    ],
-    invalidConnections: [
-      'Reservoir → Reservoir via pump',
-      'Surge Tank → any element as source',
-      'Self-loop pump',
-    ],
-    properties: [
-      ['P-Char Curve', 'Q-H pairs from shut-off head to maximum flow. Required.'],
-      ['Speed Ratio', 'Operating / rated speed ratio. Default = 1.0.'],
-      ['Initial Status', 'ON or OFF at simulation start.'],
-      ['Length / Diameter / Celerity', 'Required conduit properties for the pump conduit itself.'],
-    ] as Array<[string, string]>,
-    warnings: [
-      'The P-Char curve must cover the full Q range expected during the simulation. Extrapolation beyond the curve causes inaccurate or unstable results.',
-      'Always place a Check Valve on the pump discharge to prevent reverse flow during pump trip transients.',
-    ],
-    troubleshooting: [
-      'Simulation fails with "pump curve undefined": open the pump conduit in the Flex Table and enter at least 2 Q-H pairs.',
-      'Pump produces negative head rise: verify that flow direction is drawn suction-to-discharge (not reversed).',
-      'Reverse flow through pump after trip: add a Check Valve on the discharge side.',
-    ],
-  },
-  {
-    id: 'check-valve-link',
-    name: 'Check Valve Link',
-    description: 'Conduit that permits forward flow only. Closes instantaneously when flow attempts to reverse.',
-    howToDraw: [
-      'Click the Check Valve button in the INSERT ribbon (turns blue).',
-      'Drag from the upstream node to the downstream node (direction = forward flow direction).',
-      'The check valve conduit is created.',
-      'Click Check Valve button again to deactivate mode.',
-    ],
-    validConnections: [
-      'Node → Node',
-      'Node → Junction',
-      'Junction → Node',
-      'Reservoir → Node (single-direction flow from reservoir)',
-    ],
-    invalidConnections: [
-      'Reservoir → Reservoir (two boundaries cannot be connected directly)',
-      'Any connection where direction is ambiguous',
-    ],
-    properties: [
-      ['Loss Coefficient', 'Minor loss (K) when valve is fully open. Typically 0.1–2.0.'],
-      ['Length / Diameter / Celerity', 'Required conduit properties for the check valve conduit.'],
-    ] as Array<[string, string]>,
-    warnings: [
-      'Check valve closure is instantaneous in WHAMO. This always generates a pressure wave. Install surge protection (surge tank, air vessel) near the valve.',
-      'Drawing the check valve in the wrong direction will block all flow from t=0. Verify source and target carefully.',
-    ],
-    troubleshooting: [
-      'No flow in system: check valve drawn backwards — delete and redraw with correct direction.',
-      'Extreme pressure spike after pump trip: add surge tank near check valve location.',
-      'Check valve never opens: verify that pump is generating sufficient head to overcome downstream pressure.',
     ],
   },
   {
@@ -2310,7 +2035,7 @@ function FlexTableSection() {
       <SectionLead>The Flex Table gives you a spreadsheet-like view of every element in the network. Open it from Tools → Flex Table in the ribbon.</SectionLead>
 
       <SubHeading>Tab Filters</SubHeading>
-      <Para>Use the filter chips at the top to switch between element types: All, Conduit, Dummy Pipe, Reservoir, Node, Junction, Surge Tank, Flow BC, Pump, Check Valve, and Turbine.</Para>
+      <Para>Use the filter chips at the top to switch between supported element types.</Para>
 
       <SubHeading>Editing Cells</SubHeading>
       <Para>Click any white cell to edit it inline. Cells with a grey background are read-only for that element type. Press <kbd className="px-1 py-0.5 text-[11px] font-mono bg-slate-100 border border-slate-300 rounded shadow-sm">Tab</kbd> or <kbd className="px-1 py-0.5 text-[11px] font-mono bg-slate-100 border border-slate-300 rounded shadow-sm">Enter</kbd> to commit a change.</Para>
@@ -2486,8 +2211,6 @@ function TroubleshootingSection() {
         { q: 'Canvas elements overlap after Auto-Arrange', a: 'Auto-Arrange uses a tree layout and works best on networks with a clear flow direction. For complex looped networks, manually position elements after arranging.' },
         { q: 'Surge Tank celerity is very high or infinite', a: 'Surge tanks are modelled as infinite-celerity elements in WHAMO. This is expected — do not adjust the celerity for surge tank connections.' },
         { q: 'Undo/Redo is not available', a: 'Undo/Redo is only available when a project is open. Make sure you have opened or saved a project first.' },
-        { q: 'Check Valve causes extreme pressure spike', a: 'Check valve closure is instantaneous in WHAMO. Add a surge tank or air vessel near the check valve to absorb the resulting pressure wave.' },
-        { q: 'Pump simulation fails on trip transient', a: 'Ensure the P-Char curve spans from Q=0 (shut-off head) to the maximum expected flow. Also verify that a check valve is placed on the pump discharge to prevent reverse flow.' },
         { q: 'Reservoir connection gives unrealistic results', a: 'Check that the Reservoir elevation is set correctly and that the Loss Coefficient is appropriate (0.5 for sharp-edged inlet, 0.0 for fully flush connection).' },
         { q: 'Turbine simulation aborts immediately', a: 'Check the mode-specific requirements: GENERATE and REJECT need a V-Schedule; GOVERN needs governor and load settings.' },
         { q: 'Flow BC not affecting simulation', a: 'Check that Mode is set correctly (Fixed or Schedule) and that Q-Schedule # references a valid defined schedule. Verify Q sign: positive for inflow, negative for extraction.' },
@@ -2558,7 +2281,7 @@ const ALL_ELEMENT_PROPS: ElementProps[] = [
     badgeColor: 'bg-green-600',
     properties: [
       { name: 'Label / ID', description: 'Unique alphanumeric identifier.', meaning: 'Identifies the junction in the INP file and on the canvas.', howToUse: 'Use a short label such as "J1" or "JCT_3WAY".' },
-      { name: 'Comment', description: 'Free-text internal comment.', meaning: 'Not used in simulation. Acts as engineer note.', howToUse: 'Describe the junction role, e.g. "3-way tee at pump station".' },
+      { name: 'Comment', description: 'Free-text internal comment.', meaning: 'Not used in simulation. Acts as engineer note.', howToUse: 'Describe the junction role, e.g. "3-way tee at a pipeline branch".' },
       { name: 'Node Number', description: 'Auto-assigned integer.', meaning: 'WHAMO engine node index used in the INP file.', howToUse: 'Leave as assigned.' },
       { name: 'Elevation', unit: 'ft / m', description: 'Pipe centreline elevation at this junction.', meaning: 'Sets the datum for head calculations through the junction.', howToUse: 'Enter the elevation at the pipe centreline for all pipes meeting at this junction.' },
       { name: 'Demand', unit: 'm³/s or ft³/s', description: 'Steady-state lateral demand (withdrawal or injection) at this node.', meaning: 'Represents a consumer load or lateral inflow at the junction. Positive = withdrawal from network; negative = injection into network.', howToUse: 'Enter the design demand flow rate. Use 0 for a simple pass-through junction. Verify units match the global unit toggle.' },
@@ -2592,39 +2315,8 @@ const ALL_ELEMENT_PROPS: ElementProps[] = [
       { name: 'Comment', description: 'Free-text internal comment.', meaning: 'Not used in simulation.', howToUse: 'Describe the flow boundary source or purpose.' },
       { name: 'Node Number', description: 'Auto-assigned integer.', meaning: 'WHAMO engine node index.', howToUse: 'Leave as assigned.' },
       { name: 'Flow Rate (Q)', unit: 'm³/s or ft³/s', description: 'Prescribed constant flow rate injected or extracted at this node.', meaning: 'Positive Q injects flow into the network; negative Q extracts flow. Used for steady-state and fixed-flow transient scenarios.', howToUse: 'Enter the design flow rate in the active unit system. Use positive for supply, negative for demand.' },
-      { name: 'Mode', description: 'Boundary condition type: Fixed Q or Q Schedule.', meaning: '"Fixed Q" holds the flow constant. "Q Schedule" varies the flow over time using a schedule table.', howToUse: 'Use Fixed Q for constant injection/extraction; use Q Schedule for pump start/stop or valve operation scenarios.' },
+      { name: 'Mode', description: 'Boundary condition type: Fixed Q or Q Schedule.', meaning: '"Fixed Q" holds the flow constant. "Q Schedule" varies the flow over time using a schedule table.', howToUse: 'Use Fixed Q for constant injection/extraction; use Q Schedule for time-varying flow scenarios.' },
       { name: 'Q-Schedule #', description: 'Index of the flow-time schedule when Mode = Q Schedule.', meaning: 'References a schedule table in the Flex Table that specifies flow at each time step.', howToUse: 'Create the schedule in the Flex Table (Schedule tab) first, then enter its number here.' },
-    ],
-  },
-  {
-    id: 'pump',
-    element: 'Pump',
-    badge: 'Pump',
-    badgeColor: 'bg-cyan-600',
-    properties: [
-      { name: 'Label / ID', description: 'Unique alphanumeric identifier for the pump link.', meaning: 'Identifies the pump conduit in the INP file.', howToUse: 'Use a short label such as "PMP1".' },
-      { name: 'Comment', description: 'Free-text internal comment.', meaning: 'Not used in simulation.', howToUse: 'Describe the pump type, model, or duty point.' },
-      { name: 'Length', unit: 'ft / m', description: 'Equivalent pipe length of the pump element.', meaning: 'Defines the hydraulic reach assigned to the pump conduit. Usually set to a small value representing the physical pump casing length.', howToUse: 'Set to the actual pump body length or a representative value (e.g. 1–5 m).' },
-      { name: 'Diameter', unit: 'ft / m', description: 'Internal diameter of the pump discharge pipe.', meaning: 'Used for velocity and head-loss calculations within the pump conduit reach.', howToUse: 'Match to the discharge pipe inside diameter.' },
-      { name: 'P-Char Curve (Q-H pairs)', description: 'Pump characteristic curve: at least 2 flow (Q) vs head (H) data points.', meaning: 'Defines the pump operating envelope. WHAMO interpolates between points to find the operating head at any flow rate.', howToUse: 'Enter pairs in the Flex Table (Pump tab) from shut-off head (Q=0) to maximum flow. At least 2 points required; 4–6 points recommended for accuracy.' },
-      { name: 'Rated Speed', unit: 'RPM', description: 'Synchronous speed of the pump motor.', meaning: 'Used in pump trip and speed transient calculations. Required for affinity-law scaling during rundown.', howToUse: 'Enter the nameplate synchronous speed, e.g. 1450 or 1750 RPM.' },
-      { name: 'Moment of Inertia (WR²)', unit: 'lb·ft² or kg·m²', description: 'Combined rotational inertia of pump and motor.', meaning: 'Governs the rate of speed rundown after a pump trip. Higher WR² = slower deceleration = smaller pressure transients.', howToUse: 'Obtain from the manufacturer datasheet. For preliminary analysis, estimate using the pump power as a guide.' },
-      { name: 'Rated Flow (Q rated)', unit: 'm³/s or ft³/s', description: 'Design flow at the best-efficiency point.', meaning: 'Reference point for affinity-law scaling.', howToUse: 'Enter the BEP flow from the pump curve.' },
-      { name: 'Rated Head (H rated)', unit: 'ft / m', description: 'Design head at the best-efficiency point.', meaning: 'Reference point for affinity-law scaling.', howToUse: 'Enter the BEP head from the pump curve.' },
-    ],
-  },
-  {
-    id: 'check-valve',
-    element: 'Check Valve',
-    badge: 'Check Valve',
-    badgeColor: 'bg-red-500',
-    properties: [
-      { name: 'Label / ID', description: 'Unique alphanumeric identifier for the check valve link.', meaning: 'Identifies the element in the INP file.', howToUse: 'Use a short label such as "CV1".' },
-      { name: 'Comment', description: 'Free-text internal comment.', meaning: 'Not used in simulation.', howToUse: 'Describe the valve type, size, or location.' },
-      { name: 'Length', unit: 'ft / m', description: 'Equivalent pipe length of the check valve element.', meaning: 'The hydraulic reach assigned to this conduit. Typically small.', howToUse: 'Set to the physical valve body length.' },
-      { name: 'Diameter', unit: 'ft / m', description: 'Internal diameter of the valve bore.', meaning: 'Determines velocity and head loss through the valve reach.', howToUse: 'Match to the valve nominal bore internal diameter.' },
-      { name: 'Cracking Pressure', unit: 'ft / m (head)', description: 'Minimum differential head required to open the valve.', meaning: 'The valve stays closed if the differential head across it is below this threshold.', howToUse: 'Use 0 for an ideal check valve. Set a small positive value (e.g. 0.1 m) for a spring-loaded check valve.' },
-      { name: 'Loss Coefficient (K)', description: 'Head-loss coefficient for flow through the open valve.', meaning: 'hL = K × V²/2g. Models the local resistance of the valve body when open.', howToUse: 'Obtain from the manufacturer (K typically 1–5 for swing check, 2–10 for lift check). Use 0 if loss is negligible.' },
     ],
   },
   {
@@ -2681,8 +2373,6 @@ const PROP_FILTER_OPTIONS = [
   { value: 'junction',    label: 'Junction' },
   { value: 'surge-tank',  label: 'Surge Tank' },
   { value: 'flow-bc',     label: 'Flow BC' },
-  { value: 'pump',        label: 'Pump' },
-  { value: 'check-valve', label: 'Check Valve' },
   { value: 'turbine',     label: 'Turbine' },
   { value: 'conduit',     label: 'Conduit' },
   { value: 'dummy-pipe',  label: 'Dummy Pipe' },
@@ -2767,8 +2457,6 @@ const VIDEO_FILTER_OPTIONS = [
   { value: 'junction',          label: 'Junction' },
   { value: 'surge-tank',        label: 'Surge Tank' },
   { value: 'flow-bc',           label: 'Flow BC' },
-  { value: 'pump',              label: 'Pump' },
-  { value: 'check-valve',       label: 'Check Valve' },
   { value: 'turbine',           label: 'Turbine' },
   { value: 'conduit',           label: 'Conduit' },
   { value: 'flex-table',        label: 'Flex Table' },
@@ -2794,10 +2482,8 @@ const VIDEO_DATA: VideoEntry[] = [
   { id: 'v-reservoir', title: 'Adding & Connecting a Reservoir', description: 'Click the Reservoir tool, place the element on canvas, connect to a downstream Node, and configure head elevation and loss coefficient.', category: 'reservoir', categoryLabel: 'Reservoir', categoryColor: 'bg-blue-600', duration: '~3 min', src: null },
   { id: 'v-node', title: 'Placing Nodes and Routing Pipes', description: 'Add Node elements as junction points along a pipeline, connect them with conduits, and set elevations for pressure profiling.', category: 'node', categoryLabel: 'Node', categoryColor: 'bg-slate-600', duration: '~2 min', src: null },
   { id: 'v-junction', title: 'Creating a Demand Junction', description: 'Place a Junction element at a lateral off-take point, connect it to the main line, and set a steady-state demand flow value.', category: 'junction', categoryLabel: 'Junction', categoryColor: 'bg-emerald-600', duration: '~3 min', src: null },
-  { id: 'v-surge-tank', title: 'Installing a Surge Tank', description: 'Place a Surge Tank near pump discharge, connect via a short Dummy Pipe riser, and configure tank top, bottom, and initial water level.', category: 'surge-tank', categoryLabel: 'Surge Tank', categoryColor: 'bg-purple-600', duration: '~4 min', src: null },
+  { id: 'v-surge-tank', title: 'Installing a Surge Tank', description: 'Place a Surge Tank beside the pipeline, connect via a short Dummy Pipe riser, and configure tank top, bottom, and initial water level.', category: 'surge-tank', categoryLabel: 'Surge Tank', categoryColor: 'bg-purple-600', duration: '~4 min', src: null },
   { id: 'v-flow-bc', title: 'Setting Up a Flow Boundary Condition', description: 'Add a Flow BC element, connect it to the network, choose Fixed or Schedule mode, and configure the flow rate or Q-Schedule.', category: 'flow-bc', categoryLabel: 'Flow BC', categoryColor: 'bg-orange-600', duration: '~3 min', src: null },
-  { id: 'v-pump', title: 'Adding a Pump and Entering P-Char Curve', description: 'Activate Pump link mode, drag from suction to discharge node, and enter the pump characteristic Q-H curve data in the Flex Table.', category: 'pump', categoryLabel: 'Pump', categoryColor: 'bg-pink-600', duration: '~5 min', src: null },
-  { id: 'v-check-valve', title: 'Drawing a Check Valve Link', description: 'Activate Check Valve mode, draw from upstream to downstream node, verify direction, and set the loss coefficient.', category: 'check-valve', categoryLabel: 'Check Valve', categoryColor: 'bg-red-700', duration: '~3 min', src: null },
   { id: 'v-turbine', title: 'Connecting a Turbine Element', description: 'Activate Turbine link mode, draw from penstock node to tailrace node, choose a supported WHAMO mode, and fill in its required settings.', category: 'turbine', categoryLabel: 'Turbine', categoryColor: 'bg-cyan-700', duration: '~5 min', src: null },
   { id: 'v-conduit', title: 'Configuring Conduit Properties', description: 'Select a conduit in the Flex Table, set Length, Diameter, Celerity and Friction, use the Pipe Material selector to auto-calculate wave speed.', category: 'conduit', categoryLabel: 'Conduit', categoryColor: 'bg-slate-500', duration: '~4 min', src: null },
   // Feature tutorials
@@ -2968,7 +2654,6 @@ function buildFrames(id: string): AnimFrame[] {
         {row(<>
           <ToolBtn icon="🌊" label="Node" />
           <ToolBtn icon="🏔" label="Reservoir" active />
-          <ToolBtn icon="⚙" label="Pump" />
           <ToolBtn icon="🪣" label="Tank" />
         </>, 6)}
         <Chip text="Click to activate Reservoir tool" color="#1a73e8" />
@@ -3072,7 +2757,7 @@ function buildFrames(id: string): AnimFrame[] {
 
     // ── v-surge-tank ──────────────────────────────────────────────────────
     case 'v-surge-tank': return [
-      { ms: 1800, title: 'Place a Surge Tank near pump discharge', content: col(<>
+      { ms: 1800, title: 'Place a Surge Tank beside the pipeline', content: col(<>
         <VN icon={waterTankIcon} label="ST1" size={52} glow />
         <Chip text="Surge Tank suppresses transient surges" color="#7c3aed" />
       </>) },
@@ -3084,10 +2769,10 @@ function buildFrames(id: string): AnimFrame[] {
         {row(<><VN label="N1" size={34} /><VArrow w={28} /><VN label="N2" size={34} pulse /></>)}
         <Chip text="Dummy Pipe: short riser connection" color="#7c3aed" />
       </>) },
-      { ms: 2200, title: 'Full topology: pump + surge tank protection', content: col(<>
+      { ms: 2200, title: 'Connect the Surge Tank to the pipeline', content: col(<>
         <VN icon={waterTankIcon} label="ST1" size={40} />
         <div style={{ width: 2, height: 16, background: '#94a3b8' }} />
-        {row(<><VN label="N1" size={32} /><VArrow w={22} /><VN icon={waterPumpIcon} label="P1" size={36} pulse /><VArrow w={22} /><VN label="N2" size={32} /><VArrow w={22} /><VN label="N3" size={32} /></>)}
+        {row(<><VN label="N1" size={32} /><VArrow w={22} /><VN label="N2" size={32} pulse /><VArrow w={22} /><VN label="N3" size={32} /></>)}
       </>) },
       { ms: 2200, title: 'Configure tank top, bottom, and initial level', content: col(<>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 180 }}>
@@ -3144,109 +2829,11 @@ function buildFrames(id: string): AnimFrame[] {
       </>) },
     ];
 
-    // ── v-pump ────────────────────────────────────────────────────────────
-    case 'v-pump': return [
-      { ms: 1800, title: 'Activate the Pump link tool', content: col(<>
-        {row(<>
-          <ToolBtn icon="🌊" label="Node" />
-          <ToolBtn icon="⚙" label="Pump" active />
-          <ToolBtn icon="🔧" label="Valve" />
-        </>, 8)}
-        <Chip text="Pump link draws between two nodes" />
-      </>) },
-      { ms: 2000, title: 'Drag from suction node N6 to start link', content: col(<>
-        {row(<>
-          <VN label="N6" size={40} glow />
-          <div style={{ width: 40, height: 2, background: '#cbd5e1', borderRadius: 2, animation: 'vp-line 0.7s ease-out infinite alternate' }} />
-          <div style={{ width: 12, height: 12, borderRadius: '50%', border: '2px dashed #94a3b8', background: '#f8fafc' }} />
-        </>)}
-        <Chip text="Drag from suction node →" />
-      </>) },
-      { ms: 2200, title: 'Release on discharge node N16 to complete', content: col(<>
-        {row(<>
-          <VN label="N6" size={36} />
-          <VArrow w={28} />
-          <VN icon={waterPumpIcon} label="P1" size={44} pulse />
-          <VArrow w={28} />
-          <VN label="N16" size={36} />
-        </>)}
-        <Chip text="Pump P1 created N6 → N16" color="#db2777" />
-      </>) },
-      { ms: 2400, title: 'Enter pump P-Characteristic (Q-H) curve data', content: col(<>
-        <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 6, padding: '6px 8px' }}>
-          <div style={{ fontSize: 8, fontWeight: 700, color: '#64748b', marginBottom: 4 }}>P-CHAR CURVE (Flex Table)</div>
-          <svg width={130} height={54}>
-            <line x1={12} y1={2} x2={12} y2={48} stroke="#e2e8f0" strokeWidth={1} />
-            <line x1={12} y1={48} x2={128} y2={48} stroke="#e2e8f0" strokeWidth={1} />
-            {[[0,44,0.00,'•'],[1,38,40,'•'],[2,28,80,'•'],[3,14,120,'•'],[4,4,160,'•']].map(([i,y,qv]) => <>
-              <circle key={`c${i}`} cx={12 + Number(i) * 28} cy={Number(y)} r={3} fill="#1a73e8" />
-            </>)}
-            <path d="M12,44 Q54,36 84,26 Q108,18 128,4" stroke="#1a73e8" strokeWidth={2} fill="none"
-              style={{ strokeDasharray: 200, animation: 'vp-chart 1.5s ease-out infinite alternate' }} />
-            <text x={70} y={52} fontSize={7} fill="#94a3b8" textAnchor="middle">Q (m³/s) →</text>
-            <text x={4} y={26} fontSize={7} fill="#94a3b8" textAnchor="middle" transform="rotate(-90,4,26)">H</text>
-          </svg>
-        </div>
-        <Chip text="Enter Q-H pairs in Flex Table → P-Char" color="#db2777" />
-      </>) },
-    ];
-
-    // ── v-check-valve ─────────────────────────────────────────────────────
-    case 'v-check-valve': return [
-      { ms: 1800, title: 'Activate Check Valve link mode', content: col(<>
-        {row(<>
-          <ToolBtn icon="⚙" label="Pump" />
-          <ToolBtn icon="🚪" label="Check V." active />
-          <ToolBtn icon="💎" label="Turbine" />
-        </>, 8)}
-        <Chip text="Check Valve allows flow in one direction only" />
-      </>) },
-      { ms: 2000, title: 'Draw from upstream N26 to downstream N25', content: col(<>
-        {row(<>
-          <VN label="N26" size={38} />
-          <VArrow w={32} animated />
-          <VN icon={pipeIcon} label="VC1" size={44} pulse />
-          <VArrow w={32} />
-          <VN label="N25" size={38} />
-        </>)}
-        <Chip text="VC1: N26 → N25" />
-      </>) },
-      { ms: 2000, title: 'Forward flow: freely allowed', content: col(<>
-        {row(<>
-          <VN label="N26" size={36} />
-          {[0,1,2].map(i => (
-            <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#16a34a', animation: `vp-dot 0.9s ${i * 300}ms infinite` }} />
-          ))}
-          <VN icon={pipeIcon} label="VC1" size={40} />
-          {[0,1,2].map(i => (
-            <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: '#16a34a', animation: `vp-dot 0.9s ${i * 300}ms infinite` }} />
-          ))}
-          <VN label="N25" size={36} />
-        </>)}
-        <Chip text="→ Forward flow allowed ✓" color="#16a34a" />
-      </>) },
-      { ms: 2000, title: 'Reverse flow: automatically blocked', content: col(<>
-        {row(<>
-          <VN label="N26" size={36} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontSize: 16, color: '#ef4444' }}>✕</span>
-            <div style={{ width: 22, height: 2, background: '#ef4444', borderRadius: 2 }} />
-          </div>
-          <VN icon={pipeIcon} label="VC1" size={40} />
-          <div style={{ width: 2, height: 28, background: '#ef4444', borderRadius: 2 }} />
-          <VN label="N25" size={36} />
-        </>)}
-        <Chip text="← Backflow automatically blocked" color="#ef4444" />
-      </>) },
-    ];
-
     // ── v-turbine ─────────────────────────────────────────────────────────
     case 'v-turbine': return [
       { ms: 1800, title: 'Activate Turbine link mode', content: col(<>
         {row(<>
-          <ToolBtn icon="⚙" label="Pump" />
           <ToolBtn icon="💎" label="Turbine" active />
-          <ToolBtn icon="🚪" label="Valve" />
         </>, 8)}
         <Chip text="Turbine: diamond-shaped link element" color="#0891b2" />
       </>) },
@@ -3332,7 +2919,7 @@ function buildFrames(id: string): AnimFrame[] {
       </>) },
       { ms: 2000, title: 'Filter by element type', content: col(<>
         {row(<>
-          {['All','Nodes','Conduits','Pumps'].map((t, i) => (
+          {['All','Nodes','Conduits'].map((t, i) => (
             <div key={t} style={{ padding: '4px 8px', borderRadius: 14, border: `1.5px solid ${i === 2 ? '#1a73e8' : '#e2e8f0'}`, background: i === 2 ? '#dbeafe' : 'white', fontSize: 9, fontWeight: i === 2 ? 700 : 400, color: i === 2 ? '#1a73e8' : '#64748b' }}>{t}</div>
           ))}
         </>, 5)}
@@ -3407,7 +2994,7 @@ function buildFrames(id: string): AnimFrame[] {
       { ms: 2000, title: 'Multi-sheet workbook generated', content: col(<>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', width: 185 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#16a34a', marginBottom: 5 }}>network.xlsx</div>
-          {['Reservoirs','Nodes','Junctions','Conduits','Pumps','…'].map((s,i) => (
+          {['Reservoirs','Nodes','Junctions','Conduits','…'].map((s,i) => (
             <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2, opacity: i > 3 ? 0.5 : 1 }}>
               <span style={{ fontSize: 9 }}>📄</span>
               <span style={{ fontSize: 9, color: '#475569', fontFamily: 'monospace' }}>{s}</span>
@@ -3558,7 +3145,7 @@ function buildFrames(id: string): AnimFrame[] {
       </>) },
       { ms: 2200, title: 'INP file downloads — inspect the output', content: col(<>
         <div style={{ background: '#1e293b', borderRadius: 8, padding: '7px 10px', width: 200, fontFamily: 'monospace', fontSize: 8 }}>
-          {[['RESERVOIRS','#f59e0b'],['  RESRV ID R1 HW 120.0 FINISH','#86efac'],['CONDUITS','#f59e0b'],['  PIPE ID C1 FROM R1 TO N1 L 250','#86efac'],['PUMPS','#f59e0b'],['  PUMP ID P1 ...','#86efac']].map(([t,c], i) => (
+          {[['RESERVOIRS','#f59e0b'],['  RESRV ID R1 HW 120.0 FINISH','#86efac'],['CONDUITS','#f59e0b'],['  PIPE ID C1 FROM R1 TO N1 L 250','#86efac']].map(([t,c], i) => (
             <div key={i} style={{ color: c, overflow: 'hidden', whiteSpace: 'nowrap' }}>{t}</div>
           ))}
           <span style={{ color: '#fff', animation: 'vp-blink 0.8s step-end infinite' }}>█</span>
@@ -3621,7 +3208,6 @@ function buildFrames(id: string): AnimFrame[] {
           <VArrow w={22} />
           <VN label="N1" size={30} />
           <VArrow w={22} />
-          <VN icon={waterPumpIcon} label="P1" size={34} pulse />
           <VArrow w={22} />
           <VN label="N2" size={30} />
         </>)}
@@ -3789,7 +3375,7 @@ function _ObsoleteAnimatedScene({ id }: { id: string }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, animation: 'va-pop 0.5s 1.3s both' }}>
             <AN label="N1" size={34} />
             <AArrow w={22} />
-            <AN icon={waterPumpIcon} label="P1" size={34} />
+            <AN label="N2" size={34} />
             <AArrow w={22} />
             <AN label="N2" size={34} />
           </div>
@@ -3821,50 +3407,6 @@ function _ObsoleteAnimatedScene({ id }: { id: string }) {
           <div style={{ display: 'flex', gap: 6, animation: 'va-slide-u 0.5s 2s both' }}>
             <ALabel text="Mode: Q-Schedule" delay="2s" />
             <ALabel text="Q = 0.2 m³/s" color="#f59e0b" delay="2.3s" />
-          </div>
-        </div>
-      </div>
-    );
-
-    // ── Pump ───────────────────────────────────────────────────────────────
-    case 'v-pump': return (
-      <div style={sceneStyle}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <AN label="N6" size={34} style={{ animation: 'va-pop 0.5s 0s both' }} />
-            <AArrow w={22} />
-            <AN icon={waterPumpIcon} label="P1" size={42} style={{ animation: 'va-pop 0.6s 0.7s both, va-pulse 1.5s 1.3s infinite' }} />
-            <AArrow w={22} />
-            <AN label="N16" size={34} style={{ animation: 'va-pop 0.5s 1.4s both' }} />
-          </div>
-          {/* Mini P-Char curve */}
-          <div style={{ animation: 'va-pop 0.5s 2s both', background: 'white', borderRadius: 6, border: '1px solid #e2e8f0', padding: '4px 8px' }}>
-            <div style={{ fontSize: 8, fontWeight: 700, color: '#64748b', marginBottom: 3 }}>P-CHAR CURVE</div>
-            <svg width={90} height={36}>
-              <path d="M5,30 Q25,8 45,12 Q65,16 85,28" stroke="#1a73e8" strokeWidth={2} fill="none"
-                style={{ animation: 'va-chart 1s 2.4s both', strokeDasharray: 200, strokeDashoffset: 200 }} />
-              <text x={2} y={36} fontSize={7} fill="#94a3b8">Q →</text>
-              <text x={0} y={10} fontSize={7} fill="#94a3b8">H↑</text>
-            </svg>
-          </div>
-        </div>
-      </div>
-    );
-
-    // ── Check Valve ────────────────────────────────────────────────────────
-    case 'v-check-valve': return (
-      <div style={sceneStyle}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <AN label="N26" size={34} style={{ animation: 'va-pop 0.5s 0s both' }} />
-            <AArrow w={22} />
-            <AN icon={pipeIcon} label="VC1" size={42} style={{ animation: 'va-pop 0.6s 0.8s both' }} />
-            <AArrow w={22} />
-            <AN label="N25" size={34} style={{ animation: 'va-pop 0.5s 1.6s both' }} />
-          </div>
-          <div style={{ display: 'flex', gap: 8, animation: 'va-slide-u 0.5s 2.2s both' }}>
-            <ALabel text="→ Flow allowed" color="#16a34a" delay="2.2s" />
-            <ALabel text="← Backflow blocked" color="#ef4444" delay="2.5s" />
           </div>
         </div>
       </div>
@@ -4059,8 +3601,6 @@ function _ObsoleteAnimatedScene({ id }: { id: string }) {
             { text: '  RESRV ID R1 HW 120.0 FINISH', color: '#86efac', delay: '0.9s' },
             { text: 'CONDUITS', color: '#f59e0b', delay: '1.5s' },
             { text: '  PIPE ID C1 FROM R1 TO N1 L 250 ...', color: '#86efac', delay: '2.1s' },
-            { text: 'PUMPS', color: '#f59e0b', delay: '2.7s' },
-            { text: '  PUMP ID P1 ...', color: '#86efac', delay: '3.3s' },
           ].map(({ text, color, delay }) => (
             <div key={text} style={{ color, animation: `va-slide-l 0.4s ${delay} both`, overflow: 'hidden', whiteSpace: 'nowrap' }}>
               {text}

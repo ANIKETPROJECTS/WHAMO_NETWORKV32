@@ -942,12 +942,13 @@ export function PropertiesPanel() {
       surgeTank: 'Surge Tank',
       flowBoundary: 'Flow Boundary',
       conduit: 'Conduit',
-      pump: 'Pump',
-      checkValve: 'Check Valve',
+      pump: 'Legacy element',
+      checkValve: 'Legacy element',
       turbine: 'Turbine',
     };
     return map[t] || t.charAt(0).toUpperCase() + t.slice(1);
   })();
+  const isLegacyElement = element.data?.type === 'pump' || element.data?.type === 'checkValve';
 
   return (
     <div className="h-full flex flex-col bg-white border-l border-slate-200" style={{ fontFamily: 'Poppins, sans-serif' }}>
@@ -1157,55 +1158,11 @@ export function PropertiesPanel() {
               />
             </PropRow>
           </PropSection>
-        ) : (element.data?.type === 'pump') ? (
-          /* HAMMER-style General block for pump */
-          <PropSection title="General">
-            <PropRow label="Label / ID">
-              <Input
-                id="label"
-                data-testid="input-label"
-                value={formData.label ?? ''}
-                onChange={(e) => handleChange('label', e.target.value)}
-                className="h-7 text-[12px] font-medium text-black border-slate-300"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              />
-              <DuplicateLabelWarning label={formData.label as string} nodes={nodes} edges={edges} selectedId={selectedElementId} elementTypes={['pump']} />
-            </PropRow>
-            <PropRow label="Comment" noBorder>
-              <Input
-                id="comment"
-                placeholder="Internal comment (c/C style)"
-                value={formData.comment ?? ''}
-                onChange={(e) => handleChange('comment', e.target.value)}
-                className="h-7 text-[12px] font-medium text-black border-slate-300"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              />
-            </PropRow>
-          </PropSection>
-        ) : (element.data?.type === 'checkValve') ? (
-          /* HAMMER-style General block for check valve */
-          <PropSection title="General">
-            <PropRow label="Label / ID">
-              <Input
-                id="label"
-                data-testid="input-label"
-                value={formData.label ?? ''}
-                onChange={(e) => handleChange('label', e.target.value)}
-                className="h-7 text-[12px] font-medium text-black border-slate-300"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              />
-              <DuplicateLabelWarning label={formData.label as string} nodes={nodes} edges={edges} selectedId={selectedElementId} elementTypes={['checkValve']} />
-            </PropRow>
-            <PropRow label="Comment" noBorder>
-              <Input
-                id="comment"
-                placeholder="Internal comment (c/C style)"
-                value={formData.comment ?? ''}
-                onChange={(e) => handleChange('comment', e.target.value)}
-                className="h-7 text-[12px] font-medium text-black border-slate-300"
-                style={{ fontFamily: 'Poppins, sans-serif' }}
-              />
-            </PropRow>
+        ) : isLegacyElement ? (
+          <PropSection title="Legacy element">
+            <p className="px-3 py-2 text-xs text-slate-600">
+              This imported element is retained for file compatibility and is read-only.
+            </p>
           </PropSection>
         ) : (element.data?.type === 'turbine') ? (
           /* HAMMER-style General block for turbine */
@@ -1730,7 +1687,7 @@ export function PropertiesPanel() {
             </>
           )}
 
-          {element.data?.type === 'pump' && (() => {
+          {element.data?.type === 'pump' && !isLegacyElement && (() => {
             const pType = Number(formData.pumpType ?? 1);
             const pc: PcharType | undefined = pcharData[pType];
             const defaultPchar: PcharType = {
@@ -2142,7 +2099,7 @@ export function PropertiesPanel() {
             );
           })()}
 
-          {element.data?.type === 'checkValve' && (
+          {element.data?.type === 'checkValve' && !isLegacyElement && (
             <>
               {/* ── CHECK VALVE: Configuration ── */}
               <PropSection title="Configuration">
