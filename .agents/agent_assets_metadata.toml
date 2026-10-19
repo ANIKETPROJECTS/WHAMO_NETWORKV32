@@ -112,3 +112,73 @@ mtime_ms = 1792392467576
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/028431ee-5d4c-422b-a937-1ab1a749f772/1f31762c-9953-47a9-a1c9-1fea31290cd0"
 storage_version_token = "1792392511248103"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "VgTH0-lPrAsmfcEYWBJi3"
+uri = "file://turbine-manual-mode-tests.zip"
+type = "unspecified"
+title = "Manual-listed turbine mode test pack"
+description = "Four .INP test files for REJECT, GOVERN, STARTUP, and OFF."
+logical_id = "f5ec005a-5f8e-4eab-994b-fafde6a2f486"
+content_hash = "sha256:e8199af8f2460a08c38749bf28aca231dcd1b70f43e6e52cf769de42708379cc"
+size = 3587
+mtime_ms = 1792395246868
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/f5ec005a-5f8e-4eab-994b-fafde6a2f486/3ec933f2-93d9-414f-bbfe-84cf6c856186"
+storage_version_token = "1792395273524942"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "tbBrPwYdi2t4bd2I9BmS0"
+uri = "file://turbine-mode-tests/Turbinev1inp_manual_REJECT.INP"
+type = "unspecified"
+title = "REJECT mode test input"
+description = "Based on your working network; T1 uses REJECT with its existing wicket-gate schedule."
+logical_id = "5cf4c33b-00c1-4cff-87ea-6c4ab0229274"
+content_hash = "sha256:d7d0c5f635b61f9c2b165e2148618eab182ec393e1732aa4ad99f0091c985259"
+size = 2251
+mtime_ms = 1792395246732
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/5cf4c33b-00c1-4cff-87ea-6c4ab0229274/da78163c-3d9e-45fc-b66a-4323495e5be4"
+storage_version_token = "1792395274833736"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "4-b7W3aYs0f34tkQKSzz_"
+uri = "file://turbine-mode-tests/Turbinev1inp_manual_GOVERN.INP"
+type = "unspecified"
+title = "GOVERN mode test input"
+description = "Includes a mechanical governor, load schedule, and initial estimate required for this mode."
+logical_id = "a7ac61c2-9cd8-4575-a4fb-1abbb124f494"
+content_hash = "sha256:817319010a3ae62436149de3075a958d714c0e96278685c4a59d1454ac159bd5"
+size = 2292
+mtime_ms = 1792395246737
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/a7ac61c2-9cd8-4575-a4fb-1abbb124f494/80fa82a5-9399-4cf4-898c-fa44af999069"
+storage_version_token = "1792395276110707"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "Mx5lEK1sW_7xIwFDYgsv8"
+uri = "file://turbine-mode-tests/Turbinev1inp_manual_STARTUP.INP"
+type = "unspecified"
+title = "STARTUP mode test input"
+description = "T1 uses STARTUP with the existing wicket-gate schedule."
+logical_id = "d7d6b9de-6c55-4e84-8f81-02df59b22755"
+content_hash = "sha256:9ff25bd1d2ac1421e9558b55fdbcaac84c7361202728aede2875653f1f15b3f6"
+size = 2242
+mtime_ms = 1792395246733
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/d7d6b9de-6c55-4e84-8f81-02df59b22755/200673ea-d4e4-4281-8552-3d9ce5844188"
+storage_version_token = "1792395277630170"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "BysM9L5s-ZvwRdHKeroX1"
+uri = "file://turbine-mode-tests/Turbinev1inp_manual_OFF.INP"
+type = "unspecified"
+title = "OFF mode test input"
+description = "T1 is set to OFF; T2 remains in GENERATE as a control."
+logical_id = "aba6a998-db66-449a-a9ef-4c0885c67c14"
+content_hash = "sha256:8110d96f24fe8446f34a836a6c90bf68ab3a045e43c4a7d078e52708704c779f"
+size = 2225
+mtime_ms = 1792395246736
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/aba6a998-db66-449a-a9ef-4c0885c67c14/79a55b0c-c6a8-4408-bba4-adb92793abf9"
+storage_version_token = "1792395279109637"
+content_type = "application/octet-stream"
