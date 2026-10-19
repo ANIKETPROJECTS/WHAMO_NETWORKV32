@@ -29,7 +29,14 @@ interface ParsedElements {
   }>;
   flowBCs: Map<string, { scheduleNumber: number }>;
   oppumps: Map<string, { mode: string; toff?: number }>;
-  opturbs: Map<string, { mode: string; vScheduleNumber?: number }>;
+  opturbs: Map<string, {
+    mode: string;
+    vScheduleNumber?: number;
+    turbineToff?: number;
+    loadScheduleNumber?: number;
+    governorTW?: number;
+    governorLoadHP?: number;
+  }>;
   pchar: Map<number, PcharType>;
   tchar: Map<number, TcharType>;
   vSchedules: Map<number, { t: number; g: number }[]>;
@@ -131,7 +138,16 @@ function parseElementProperties(lines: string[]): ParsedElements {
   const surgeTanks = new Map<string, any>();
   const flowBCs = new Map<string, { scheduleNumber: number }>();
   const oppumps = new Map<string, { mode: string; toff?: number }>();
-  const opturbs = new Map<string, { mode: string; vScheduleNumber?: number }>();
+  const opturbs = new Map<string, {
+    mode: string;
+    vScheduleNumber?: number;
+    turbineToff?: number;
+    loadScheduleNumber?: number;
+    governorTW?: number;
+    governorLoadHP?: number;
+  }>();
+  const governors = new Map<string, { tw?: number }>();
+  const lSchedules = new Map<number, number>();
   const pchar = new Map<number, PcharType>();
   const tchar = new Map<number, TcharType>();
   const vSchedules = new Map<number, { t: number; g: number }[]>();
@@ -336,12 +352,36 @@ function parseElementProperties(lines: string[]): ParsedElements {
       const combined = block.join(' ');
       const idM = combined.match(/\bID\s+(\S+)/i);
       if (idM) {
-        const modeM = combined.match(/\b(GENERATE|TURBGOV|EMERGENCY|TURBINE)\b/i);
-        const mode = modeM ? modeM[1].toUpperCase() : 'TURBINE';
+        const modeM = combined.match(/\b(GENERATE|GOVERN|OFF|REJECT|TURBGOV|EMERGENCY|TURBINE)\b/i);
+        const rawMode = modeM ? modeM[1].toUpperCase() : 'OFF';
+        const mode = rawMode === 'TURBGOV' ? 'GOVERN' : rawMode === 'EMERGENCY' ? 'REJECT' : rawMode === 'TURBINE' ? 'OFF' : rawMode;
         const vSchedM = combined.match(/\bVSCHEDULE\s+(\d+)/i);
         const vSchedNum = vSchedM ? parseInt(vSchedM[1]) : undefined;
-        opturbs.set(idM[1], { mode, vScheduleNumber: vSchedNum });
+        const toffM = combined.match(/\bTOFF\s+([\d.+-]+)/i);
+        const lSchedM = combined.match(/\bLSCHEDULE\s+(\d+)/i);
+        opturbs.set(idM[1], {
+          mode,
+          vScheduleNumber: vSchedNum,
+          turbineToff: toffM ? parseFloat(toffM[1]) : undefined,
+          loadScheduleNumber: lSchedM ? parseInt(lSchedM[1]) : undefined,
+        });
       }
+      continue;
+    }
+
+    if (/^GOVERNOR\b/i.test(upper)) {
+      const block = [trimmed];
+      for (let j = i + 1; j < lines.length; j++) {
+        const ln = lines[j].trim();
+        if (!ln) continue;
+        if (/^FINISH\b/i.test(ln)) { i = j; break; }
+        if (/^GOVERNOR\b|^OPTURB\b|^OPPUMP\b|^SCHEDULE\b|^TURBINE\b/i.test(ln)) { i = j - 1; break; }
+        block.push(ln);
+      }
+      const combined = block.join(' ');
+      const idM = combined.match(/\bID\s+(\S+)/i);
+      const twM = combined.match(/\bTW\s+([\d.+-]+)/i);
+      if (idM) governors.set(idM[1], { tw: twM ? parseFloat(twM[1]) : undefined });
       continue;
     }
 
@@ -370,6 +410,10 @@ function parseElementProperties(lines: string[]): ParsedElements {
           }
           vSchedules.set(schedNum, pts);
         }
+      } else if (/\bLSCHEDULE\b/i.test(blockText)) {
+        const numM = blockText.match(/\bLSCHEDULE\s+(\d+)/i);
+        const loadM = blockText.match(/\bLOAD\s+([\d.+-]+)/i);
+        if (numM && loadM) lSchedules.set(parseInt(numM[1]), parseFloat(loadM[1]));
       }
       continue;
     }
@@ -639,6 +683,15 @@ function parseElementProperties(lines: string[]): ParsedElements {
     flushTchar();
   }
 
+  opturbs.forEach((op, id) => {
+    if (op.mode === 'GOVERN' && op.loadScheduleNumber !== undefined) {
+      const load = lSchedules.get(op.loadScheduleNumber);
+      if (load !== undefined) op.governorLoadHP = load;
+    }
+    const governor = governors.get(id);
+    if (governor?.tw !== undefined) op.governorTW = governor.tw;
+  });
+
   return { reservoirs, conduits, pumps, turbines, oneway, surgeTanks, flowBCs, oppumps, opturbs, pchar, tchar, vSchedules };
 }
 
@@ -902,7 +955,9 @@ function buildReactFlowGraph(
         data: { label: atElemId, type: 'turbine', nodeNumber: nodeNum, elevation: elev,
           turbineType: t.turbineType, syncSpeed: t.syncSpeed, wr2: t.wr2,
           turbFriction: t.turbFriction, windage: t.windage, turbineDiameter: t.turbineDiameter,
-          operationMode: opInfo?.mode || 'TURBINE', vScheduleNumber: opInfo?.vScheduleNumber ?? 1,
+          operationMode: opInfo?.mode || 'OFF', vScheduleNumber: opInfo?.vScheduleNumber ?? 1,
+          turbineToff: opInfo?.turbineToff ?? 2, governorTW: opInfo?.governorTW,
+          governorLoadHP: opInfo?.governorLoadHP, loadScheduleNumber: opInfo?.loadScheduleNumber ?? 1,
           comment: elementComments.get(atElemId) }
       });
     } else if (atElemId && pumps.has(atElemId)) {
@@ -1063,8 +1118,12 @@ function buildReactFlowGraph(
         turbFriction: t.turbFriction,
         windage: t.windage,
         turbineDiameter: t.turbineDiameter,
-        operationMode: opInfo?.mode || 'TURBINE',
+        operationMode: opInfo?.mode || 'OFF',
         vScheduleNumber: opInfo?.vScheduleNumber ?? 1,
+        turbineToff: opInfo?.turbineToff ?? 2,
+        governorTW: opInfo?.governorTW,
+        governorLoadHP: opInfo?.governorLoadHP,
+        loadScheduleNumber: opInfo?.loadScheduleNumber ?? 1,
         comment: elementComments.get(elemId),
       }
     });
@@ -1185,8 +1244,12 @@ function buildReactFlowGraph(
           turbFriction: t.turbFriction,
           windage: t.windage,
           turbineDiameter: t.turbineDiameter,
-          operationMode: opInfo?.mode || 'TURBINE',
+          operationMode: opInfo?.mode || 'OFF',
           vScheduleNumber: opInfo?.vScheduleNumber ?? 1,
+          turbineToff: opInfo?.turbineToff ?? 2,
+          governorTW: opInfo?.governorTW,
+          governorLoadHP: opInfo?.governorLoadHP,
+          loadScheduleNumber: opInfo?.loadScheduleNumber ?? 1,
           comment: elementComments.get(elemId),
         }
       });

@@ -108,7 +108,13 @@ function ComputationalParametersSection({
   onUpdate: (params: Partial<ComputationalParameters>) => void;
 }) {
   return (
-    <PropSection title="Computational Parameters">
+    <section className="rounded-lg border border-violet-200 bg-white shadow-sm overflow-hidden">
+      <div className="px-3 py-2.5 bg-violet-50 border-b border-violet-200">
+        <h3 className="text-[12px] font-bold text-violet-950 uppercase tracking-wide" style={{ fontFamily: "Poppins, sans-serif" }}>
+          Computational Parameters
+        </h3>
+        <p className="mt-0.5 text-[10px] text-violet-700">Simulation duration and accuracy settings</p>
+      </div>
       <div className="p-2 space-y-2">
         <PropSection
           title="Time Stages"
@@ -223,7 +229,7 @@ function ComputationalParametersSection({
           </PropRow>
         </PropSection>
       </div>
-    </PropSection>
+    </section>
   );
 }
 
@@ -644,7 +650,7 @@ export function Header({
   const [selectedElementId, setSelectedElementId] = useState<string>("");
   const [selectedGroupType, setSelectedGroupType] = useState<"" | "nodes" | "elements" | "conduits" | "dummy">("");
   const [selectedVars, setSelectedVars] = useState<string[]>([]);
-  const [requestType, setRequestType] = useState<"HISTORY" | "SNAPSHOT">("HISTORY");
+  const [requestType] = useState<"HISTORY" | "SNAPSHOT">("HISTORY");
   const [snapshotTimeInput, setSnapshotTimeInput] = useState("0");
 
   useEffect(() => {
@@ -1363,6 +1369,14 @@ export function Header({
                 onUpdate={updateComputationalParams}
               />
 
+              <section className="rounded-lg border border-blue-200 bg-white shadow-sm overflow-hidden">
+                <div className="px-3 py-2.5 bg-blue-50 border-b border-blue-200">
+                  <h3 className="text-[12px] font-bold text-blue-950 uppercase tracking-wide" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    Output Configuration
+                  </h3>
+                  <p className="mt-0.5 text-[10px] text-blue-700">Choose the elements and variables to include in the output file</p>
+                </div>
+                <div className="p-2 space-y-3">
               {/* ── Request Configuration ── */}
               <PropSection title="Request Configuration">
 
@@ -1444,19 +1458,11 @@ export function Header({
                   </PropRow>
                 )}
 
-                {/* Request Type */}
-                <PropRow label="Request Type" noBorder={requestType === "SNAPSHOT"}>
-                  <Select value={requestType} onValueChange={(v: any) => setRequestType(v)}>
-                    <SelectTrigger
-                      className="h-7 text-[12px] font-medium text-black border-slate-300"
-                      style={{ fontFamily: 'Poppins, sans-serif' }}
-                    >
-                      <SelectValue placeholder="Select type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="HISTORY">HISTORY</SelectItem>
-                    </SelectContent>
-                  </Select>
+                {/* Request type is fixed because HISTORY is the only supported request type. */}
+                <PropRow label="Request Type" noBorder>
+                  <span className="inline-flex h-7 items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 text-[12px] font-semibold text-slate-700" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                    HISTORY
+                  </span>
                 </PropRow>
 
                 {/* SNAPSHOT inputs */}
@@ -1664,6 +1670,8 @@ export function Header({
                 </div>
               </PropSection>
 
+                </div>
+              </section>
             </div>
 
             {/* ── Generate footer (only when triggered from INP/OUT flow) ── */}

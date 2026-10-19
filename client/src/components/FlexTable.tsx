@@ -1153,12 +1153,13 @@ function RowCells({
         onChange={v => change('windage', v)} testId={`cell-windage-${row.id}`} />
     );
     case 'operationMode': return (
-      <SelectCell key={col} value={d.operationMode || 'TURBINE'}
-        options={[{label:'TURBINE',value:'TURBINE'},{label:'GENERATE',value:'GENERATE'},{label:'TURBGOV',value:'TURBGOV'},{label:'EMERGENCY',value:'EMERGENCY'}]}
+      <SelectCell key={col} value={d.operationMode === 'TURBGOV' ? 'GOVERN' : d.operationMode === 'EMERGENCY' ? 'REJECT' : d.operationMode === 'TURBINE' ? 'OFF' : d.operationMode || 'OFF'}
+        options={[{label:'GENERATE',value:'GENERATE'},{label:'GOVERN',value:'GOVERN'},{label:'OFF',value:'OFF'},{label:'REJECT',value:'REJECT'}]}
         dimmed={!isTurbine} onChange={isTurbine ? v => change('operationMode', v) : undefined} testId={`cell-opmode-${row.id}`} />
     );
     case 'vScheduleNum': {
-      const needsVSched = d.operationMode === 'GENERATE' || d.operationMode === 'TURBGOV' || d.operationMode === 'EMERGENCY';
+      const normalizedMode = d.operationMode === 'TURBGOV' ? 'GOVERN' : d.operationMode === 'EMERGENCY' ? 'REJECT' : d.operationMode === 'TURBINE' ? 'OFF' : d.operationMode;
+      const needsVSched = normalizedMode === 'GENERATE' || normalizedMode === 'REJECT';
       return (
         <EditableCell key={col} value={isTurbine ? String(d.vScheduleNumber ?? 1) : ''} type="text" inputMode="decimal"
           readOnly={!isTurbine || !needsVSched}
@@ -1167,8 +1168,9 @@ function RowCells({
       );
     }
     case 'vSchedulePairs': {
-      const opMode = d.operationMode as string;
-      const hasVSched = isTurbine && (opMode === 'GENERATE' || opMode === 'TURBGOV' || opMode === 'EMERGENCY');
+      const storedMode = d.operationMode as string;
+      const opMode = storedMode === 'TURBGOV' ? 'GOVERN' : storedMode === 'EMERGENCY' ? 'REJECT' : storedMode === 'TURBINE' ? 'OFF' : storedMode;
+      const hasVSched = isTurbine && (opMode === 'GENERATE' || opMode === 'REJECT');
       if (!hasVSched) return <NACell key={col} minW="min-w-[150px]" />;
       const schedNum = Number(d.vScheduleNumber ?? 1);
       const pts: { t: number; g: number }[] = vSchedules[schedNum] || [];
@@ -1796,7 +1798,7 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
             <p className="text-[10px] text-black flex-none">
               Showing {filteredRows.length} of {allRows.length} elements ·
               Click any white cell to edit · Dimmed cells are read-only for that element type ·
-              Turbine V Schedule (T/G pairs) editable inline when mode is TURBGOV or EMERGENCY ·
+              Turbine V Schedule (T/G pairs) editable inline for GENERATE and REJECT modes ·
               SI/FPS toggle applies globally · Per-row Unit column overrides individual elements · Amber border indicates per-element override
             </p>
           </div>

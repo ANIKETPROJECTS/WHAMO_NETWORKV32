@@ -72,6 +72,12 @@ interface NodeData extends Record<string, unknown> {
   wr2?: number | string;
   pumpOpMode?: string;   // 'PUMP' | 'SHUTOFF' | 'MOTORSTARTUP' | 'NORMALSTOP'
   pumpToff?: number;     // TOFF value when pumpOpMode === 'SHUTOFF'
+  operationMode?: string;
+  vScheduleNumber?: number;
+  turbineToff?: number | string;
+  governorTW?: number | string;
+  governorLoadHP?: number | string;
+  loadScheduleNumber?: number;
 }
 
 interface EdgeData extends Record<string, unknown> {
@@ -118,6 +124,10 @@ interface EdgeData extends Record<string, unknown> {
   turbineDiameter?: number | string;
   operationMode?: string;
   vScheduleNumber?: number;
+  turbineToff?: number | string;
+  governorTW?: number | string;
+  governorLoadHP?: number | string;
+  loadScheduleNumber?: number;
   designHead?: number | string;
 }
 
@@ -851,8 +861,10 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
           wr2: 0,
           turbFriction: 0,
           windage: 0,
-          operationMode: 'TURBINE',
+          operationMode: 'OFF',
           vScheduleNumber: 1,
+          turbineToff: 2,
+          loadScheduleNumber: 1,
         };
         if (!get().tcharData[newTcharType]) {
           const defaultTchar: TcharType = { gate: [], head: [], qMatrix: [], effMatrix: [] };
@@ -929,8 +941,10 @@ export const useNetworkStore = create<NetworkState>((set, get) => ({
         wr2: 0,
         turbFriction: 0,
         windage: 0,
-        operationMode: 'TURBINE',
+        operationMode: 'OFF',
         vScheduleNumber: 1,
+        turbineToff: 2,
+        loadScheduleNumber: 1,
       };
       if (!state.tcharData[newTcharType]) {
         const defaultTchar: TcharType = { gate: [], head: [], qMatrix: [], effMatrix: [] };

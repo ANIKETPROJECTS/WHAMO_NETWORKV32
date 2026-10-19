@@ -1889,7 +1889,11 @@ export function PropertiesPanel() {
             const activeTc: TcharType = tcharData[tType] || { gate: [], head: [], qMatrix: [], effMatrix: [] };
             const tcharTypeOptions = Object.keys(tcharData).map(Number).sort((a, b) => a - b)
               .map(t => ({ label: `TYPE ${t}`, value: String(t) }));
-            const opMode = (formData.operationMode as string) || 'TURBINE';
+            const storedMode = String(formData.operationMode || 'OFF').toUpperCase();
+            const opMode = storedMode === 'TURBGOV' ? 'GOVERN'
+              : storedMode === 'EMERGENCY' ? 'REJECT'
+              : storedMode === 'TURBINE' ? 'OFF'
+              : storedMode;
             return (
               <>
                 {/* ── TURBINE: TCHAR Configuration ── */}
@@ -1996,17 +2000,59 @@ export function PropertiesPanel() {
                         <SelectValue placeholder="Mode" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="TURBINE">TURBINE</SelectItem>
                         <SelectItem value="GENERATE">GENERATE</SelectItem>
-                        <SelectItem value="TURBGOV">TURBGOV</SelectItem>
-                        <SelectItem value="EMERGENCY">EMERGENCY</SelectItem>
+                        <SelectItem value="GOVERN">GOVERN</SelectItem>
+                        <SelectItem value="OFF">OFF</SelectItem>
+                        <SelectItem value="REJECT">REJECT</SelectItem>
                       </SelectContent>
                     </Select>
                   </PropRow>
                 </PropSection>
 
-                {/* ── TURBINE: VSCHEDULE (only for GENERATE / TURBGOV / EMERGENCY) ── */}
-                {(opMode === 'GENERATE' || opMode === 'TURBGOV' || opMode === 'EMERGENCY') && (
+                {opMode === 'REJECT' && (
+                  <PropSection title="Load Rejection">
+                    <PropRow label="Rejection time TOFF (s)">
+                      <NumericInput id="turbine-toff" data-testid="input-turbine-toff"
+                        value={formData.turbineToff ?? 2}
+                        onValueChange={v => handleLocalChange('turbineToff', v)}
+                        className="h-7 text-[12px] font-medium text-black border-slate-300"
+                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
+                      />
+                    </PropRow>
+                  </PropSection>
+                )}
+
+                {opMode === 'GOVERN' && (
+                  <PropSection title="Governor & Load Schedule">
+                    <PropRow label="Water starting time TW (s)">
+                      <NumericInput id="governor-tw" data-testid="input-governor-tw"
+                        value={formData.governorTW}
+                        onValueChange={v => handleLocalChange('governorTW', v)}
+                        className="h-7 text-[12px] font-medium text-black border-slate-300"
+                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
+                      />
+                    </PropRow>
+                    <PropRow label="Load schedule number">
+                      <NumericInput id="load-schedule-number" data-testid="input-load-schedule-number"
+                        value={formData.loadScheduleNumber ?? 1}
+                        onValueChange={v => handleLocalChange('loadScheduleNumber', v)}
+                        className="h-7 text-[12px] font-medium text-black border-slate-300"
+                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
+                      />
+                    </PropRow>
+                    <PropRow label="Generator load (HP)" noBorder>
+                      <NumericInput id="governor-load-hp" data-testid="input-governor-load-hp"
+                        value={formData.governorLoadHP}
+                        onValueChange={v => handleLocalChange('governorLoadHP', v)}
+                        className="h-7 text-[12px] font-medium text-black border-slate-300"
+                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
+                      />
+                    </PropRow>
+                  </PropSection>
+                )}
+
+                {/* ── TURBINE: VSCHEDULE (GENERATE / REJECT) ── */}
+                {(opMode === 'GENERATE' || opMode === 'REJECT') && (
                   <PropSection title="VSCHEDULE">
                     <PropRow label="Schedule Number">
                       <NumericInput id="vScheduleNumber" data-testid="input-vschednum"

@@ -541,23 +541,26 @@ function downloadPDF() {
 
   // TURBINE
   y = subHeading('Turbine', y);
-  y = para('A Turbine is a link element that represents a hydraulic turbine (e.g., Francis, Pelton, Kaplan). Flow passes through the turbine and energy is extracted. WHAMO supports turbine governor (TURBGOV) and emergency closure modes for transient analysis.', y);
+  y = para('A Turbine is a link element that represents a hydraulic turbine (e.g., Francis, Pelton, Kaplan). Flow passes through the turbine and energy is extracted. WHAMO Designer offers the manual operation modes GENERATE, GOVERN, OFF, and REJECT.', y);
   y = miniHeading('Purpose & When to Use', y);
   y = bulletList([
     'Use to model hydroelectric turbines and their load-rejection or emergency shutdown transients.',
-    'TURBGOV mode: the turbine governor controls gate position to maintain speed/load.',
-    'EMERGENCY mode: simulates emergency closure (e.g., full gate closure on load rejection).',
+    'GENERATE: operates at synchronous speed using a gate schedule.',
+    'GOVERN: uses governor control and a generator-load schedule.',
+    'OFF: leaves the turbine unoperated.',
+    'REJECT: simulates load rejection at the entered TOFF time using a gate schedule.',
     'Use with surge tanks and pressure relief valves in hydroelectric system transient studies.',
   ], y);
   y = miniHeading('Properties', y);
   y = propTable([
     ['Label', 'Unique identifier (required).'],
-    ['Mode', 'TURBGOV (governor-controlled) or EMERGENCY (scheduled gate closure).'],
-    ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs defining how the turbine gate closes or opens over time.'],
+    ['Mode', 'GENERATE, GOVERN, OFF, or REJECT, matching the WHAMO OPTURB operations.'],
+    ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE and REJECT.'],
+    ['Governor & Load Schedule', 'GOVERN requires a water starting time (TW) and a generator load (HP).'],
     ['Speed', 'Rated rotational speed of the turbine (rpm).'],
     ['Inertia', 'Combined moment of inertia of turbine and generator (kg·m²). Affects speed transient response.'],
   ], y);
-  y = noteBox('Turbines require a complete gate schedule for EMERGENCY mode. Incomplete or missing schedule data will cause the simulation to abort.', y, true);
+  y = noteBox('REJECT requires a gate schedule. GOVERN requires valid governor and load settings. Enter the mode-specific values before generating the input file.', y, true);
 
   // CONDUIT & DUMMY PIPE
   y = subHeading('Conduit (Pipe)', y);
@@ -696,7 +699,7 @@ function downloadPDF() {
   y = bulletList([
     'Turbine must connect two nodes. Upstream node typically connects to a penstock conduit from a Reservoir.',
     'Downstream node connects to the tailrace (often another Reservoir or Node at low elevation).',
-    'Gate schedule (V-Schedule) must be defined for EMERGENCY mode simulations.',
+    'A gate schedule (V-Schedule) is used by GENERATE and REJECT modes.',
   ], y);
   y = noteBox('For hydroelectric systems, always include a surge tank on the penstock near the turbine. Without it, load rejection transients can produce extreme over-pressures.', y, true);
 
@@ -903,7 +906,7 @@ function downloadPDF() {
     ],
     [
       'Turbine simulation aborts immediately',
-      'In EMERGENCY mode, a Gate Schedule (V-Schedule) must be defined. Open the turbine properties in the Flex Table and add at least two time/gate-position pairs.',
+      'In REJECT mode, define at least two gate schedule (V-Schedule) pairs. GENERATE also needs a gate schedule.',
     ],
   ];
   for (const [q, a] of issues) {
@@ -1845,11 +1848,13 @@ const ELEMENT_DATA = [
     id: 'turbine',
     name: 'Turbine',
     badge: 'bg-cyan-700 text-white',
-    description: 'Link element representing a hydraulic turbine. Supports TURBGOV and EMERGENCY closure modes.',
+    description: 'Link element representing a hydraulic turbine with GENERATE, GOVERN, OFF, and REJECT operation modes.',
     purpose: [
       'Model hydroelectric turbines and load-rejection or emergency shutdown transients.',
-      'TURBGOV mode: governor-controlled gate position maintains speed/load.',
-      'EMERGENCY mode: simulates emergency gate closure on load rejection.',
+      'GENERATE mode: synchronous-speed operation using a gate schedule.',
+      'GOVERN mode: governor control using a generator-load schedule.',
+      'OFF mode: turbine is not operated.',
+      'REJECT mode: load rejection at TOFF using a gate schedule.',
     ],
     howToAdd: [
       'Click the Turbine button in the INSERT ribbon to activate turbine link mode.',
@@ -1859,8 +1864,9 @@ const ELEMENT_DATA = [
     ],
     properties: [
       ['Label', 'Unique identifier (required).'],
-      ['Mode', 'TURBGOV (governor-controlled) or EMERGENCY (scheduled gate closure).'],
-      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs defining gate closure/opening.'],
+      ['Mode', 'GENERATE, GOVERN, OFF, or REJECT.'],
+      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE and REJECT.'],
+      ['Governor & Load Schedule', 'GOVERN needs a water starting time (TW) and generator load in HP.'],
       ['Speed', 'Rated rotational speed of the turbine (rpm).'],
       ['Inertia', 'Combined moment of inertia of turbine + generator (kg·m²).'],
     ] as Array<[string, string]>,
@@ -1870,15 +1876,15 @@ const ELEMENT_DATA = [
       'Validate inertia values against the turbine manufacturer data sheet.',
     ],
     commonMistakes: [
-      'Not providing a Gate Schedule in EMERGENCY mode — simulation aborts.',
+      'Not providing a Gate Schedule in REJECT or GENERATE mode.',
       'Setting very fast gate closure (< 1 s) without surge protection — generates extreme over-pressures.',
     ],
     warnings: [
       'For hydroelectric systems: always include a surge tank on the penstock near the turbine inlet. Without it, load-rejection transients can produce dangerously high pressures.',
-      'Turbine simulation in EMERGENCY mode requires a complete V-Schedule. Missing or incomplete schedule data will cause the simulation to abort.',
+      'REJECT and GENERATE require a complete V-Schedule. GOVERN requires governor and load settings.',
     ],
     validationRules: [
-      'Gate Schedule must contain at least two pairs for EMERGENCY mode.',
+      'Gate Schedule must contain at least two pairs for GENERATE or REJECT mode.',
       'Speed and Inertia must be positive values.',
       'Must connect two nodes; upstream at high head, downstream at low head.',
     ],
@@ -2150,7 +2156,7 @@ const CONNECTION_DATA = [
     howToDraw: [
       'Click the Turbine button in the INSERT ribbon (turns blue).',
       'Drag from the upstream (penstock) node to the downstream (tailrace) node.',
-      'Set Mode (TURBGOV or EMERGENCY), Gate Schedule, Speed, and Inertia in the Flex Table.',
+      'Set Mode (GENERATE, GOVERN, OFF, or REJECT), then fill in its required schedules or governor settings.',
       'Click Turbine button again to deactivate mode.',
     ],
     validConnections: [
@@ -2164,17 +2170,18 @@ const CONNECTION_DATA = [
       'Reverse direction (tailrace to penstock)',
     ],
     properties: [
-      ['Mode', 'TURBGOV (governor controlled) or EMERGENCY (gate schedule).'],
-      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs. Required for EMERGENCY mode.'],
+      ['Mode', 'GENERATE, GOVERN, OFF, or REJECT.'],
+      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs required for GENERATE and REJECT.'],
+      ['Governor & Load', 'GOVERN requires water starting time TW and generator load (HP).'],
       ['Speed (rpm)', 'Rated turbine speed.'],
       ['Inertia (kg·m²)', 'Combined inertia of turbine and generator shaft.'],
     ] as Array<[string, string]>,
     warnings: [
       'Always include a surge tank on the penstock near the turbine. Without it, load-rejection transients generate dangerous over-pressures.',
-      'EMERGENCY mode requires a complete V-Schedule. Missing schedule data causes immediate simulation abort.',
+      'REJECT and GENERATE require a complete V-Schedule. GOVERN requires valid governor and load settings.',
     ],
     troubleshooting: [
-      'Simulation aborts: check that a Gate Schedule is defined in the Flex Table for EMERGENCY mode.',
+      'Simulation fails: check that the selected turbine operation has its required schedule and settings.',
       'Unrealistically high pressures on load rejection: add a surge tank on the penstock side.',
       'Speed goes to zero immediately: verify Inertia value — too-small inertia causes instantaneous deceleration.',
     ],
@@ -2482,7 +2489,7 @@ function TroubleshootingSection() {
         { q: 'Check Valve causes extreme pressure spike', a: 'Check valve closure is instantaneous in WHAMO. Add a surge tank or air vessel near the check valve to absorb the resulting pressure wave.' },
         { q: 'Pump simulation fails on trip transient', a: 'Ensure the P-Char curve spans from Q=0 (shut-off head) to the maximum expected flow. Also verify that a check valve is placed on the pump discharge to prevent reverse flow.' },
         { q: 'Reservoir connection gives unrealistic results', a: 'Check that the Reservoir elevation is set correctly and that the Loss Coefficient is appropriate (0.5 for sharp-edged inlet, 0.0 for fully flush connection).' },
-        { q: 'Turbine simulation aborts immediately', a: 'In EMERGENCY mode, a Gate Schedule (V-Schedule) must be defined. Open the turbine properties in the Flex Table and add at least two time/gate-position pairs.' },
+        { q: 'Turbine simulation aborts immediately', a: 'Check the mode-specific requirements: GENERATE and REJECT need a V-Schedule; GOVERN needs governor and load settings.' },
         { q: 'Flow BC not affecting simulation', a: 'Check that Mode is set correctly (Fixed or Schedule) and that Q-Schedule # references a valid defined schedule. Verify Q sign: positive for inflow, negative for extraction.' },
         { q: 'Junction demand not appearing in results', a: 'Demand at a Junction is a steady-state extraction. Verify the demand value in the Flex Table and ensure the output request includes the junction node.' },
       ].map(({ q, a }) => (
@@ -2632,8 +2639,8 @@ const ALL_ELEMENT_PROPS: ElementProps[] = [
       { name: 'Sync Speed (SYNCSPD)', unit: 'RPM', description: 'Synchronous speed of the turbine-generator set.', meaning: 'The rated operating speed. Used in runaway and load-rejection transient calculations.', howToUse: 'Enter the nameplate synchronous speed from the generator datasheet.' },
       { name: 'WR² — Moment of Inertia', unit: 'lb·ft² or kg·m²', description: 'Combined rotational inertia of turbine, shaft, and generator.', meaning: 'Controls the rate of speed rise during load rejection. Higher WR² = slower overspeed = smaller pressure transients.', howToUse: 'Obtain from the manufacturer. For Francis turbines, a typical range is 500–5000 lb·ft².' },
       { name: 'Diameter', unit: 'ft / m', description: 'Runner diameter of the turbine.', meaning: 'Used in dimensionless specific speed calculations for the turbine characteristic curves.', howToUse: 'Enter the runner diameter from the turbine datasheet.' },
-      { name: 'Mode', description: 'Operational mode: TURBGOV (governor control) or EMERGENCY (gate schedule).', meaning: 'TURBGOV simulates normal governor action during a transient. EMERGENCY uses a prescribed gate-closure schedule for shutdown scenarios.', howToUse: 'Use TURBGOV for normal load rejection with governor response. Use EMERGENCY for rapid emergency shutdown sequences.' },
-      { name: 'Gate Schedule (V-Schedule)', description: 'Time vs gate-opening fraction pairs for EMERGENCY mode.', meaning: 'Prescribes the exact gate position at each time step during an emergency closure.', howToUse: 'Define in the Flex Table (Schedule tab) as (time, gate fraction) pairs starting from 1.0 (fully open) to 0.0 (fully closed). At least 2 pairs required.' },
+      { name: 'Mode', description: 'Supported WHAMO operations: GENERATE, GOVERN, OFF, and REJECT.', meaning: 'GENERATE uses synchronous-speed gate control; GOVERN uses governor control and a load schedule; OFF leaves the turbine unoperated; REJECT applies load rejection at TOFF.', howToUse: 'Choose a mode and complete its required schedule or governor values before generating the INP file.' },
+      { name: 'Gate Schedule (V-Schedule)', description: 'Time vs gate-opening fraction pairs for GENERATE and REJECT.', meaning: 'Prescribes the gate position over time.', howToUse: 'Define at least two time/gate pairs in the Flex Table schedule editor.' },
     ],
   },
   {
@@ -2791,7 +2798,7 @@ const VIDEO_DATA: VideoEntry[] = [
   { id: 'v-flow-bc', title: 'Setting Up a Flow Boundary Condition', description: 'Add a Flow BC element, connect it to the network, choose Fixed or Schedule mode, and configure the flow rate or Q-Schedule.', category: 'flow-bc', categoryLabel: 'Flow BC', categoryColor: 'bg-orange-600', duration: '~3 min', src: null },
   { id: 'v-pump', title: 'Adding a Pump and Entering P-Char Curve', description: 'Activate Pump link mode, drag from suction to discharge node, and enter the pump characteristic Q-H curve data in the Flex Table.', category: 'pump', categoryLabel: 'Pump', categoryColor: 'bg-pink-600', duration: '~5 min', src: null },
   { id: 'v-check-valve', title: 'Drawing a Check Valve Link', description: 'Activate Check Valve mode, draw from upstream to downstream node, verify direction, and set the loss coefficient.', category: 'check-valve', categoryLabel: 'Check Valve', categoryColor: 'bg-red-700', duration: '~3 min', src: null },
-  { id: 'v-turbine', title: 'Connecting a Turbine Element', description: 'Activate Turbine link mode, draw from penstock node to tailrace node, set TURBGOV or EMERGENCY mode, and define gate schedule.', category: 'turbine', categoryLabel: 'Turbine', categoryColor: 'bg-cyan-700', duration: '~5 min', src: null },
+  { id: 'v-turbine', title: 'Connecting a Turbine Element', description: 'Activate Turbine link mode, draw from penstock node to tailrace node, choose a supported WHAMO mode, and fill in its required settings.', category: 'turbine', categoryLabel: 'Turbine', categoryColor: 'bg-cyan-700', duration: '~5 min', src: null },
   { id: 'v-conduit', title: 'Configuring Conduit Properties', description: 'Select a conduit in the Flex Table, set Length, Diameter, Celerity and Friction, use the Pipe Material selector to auto-calculate wave speed.', category: 'conduit', categoryLabel: 'Conduit', categoryColor: 'bg-slate-500', duration: '~4 min', src: null },
   // Feature tutorials
   { id: 'v-flex-table', title: 'Using the Flex Table', description: 'Open the Flex Table, filter by element type, edit cells inline, toggle SI/FPS units, and use the material selector to bulk-update conduit properties.', category: 'flex-table', categoryLabel: 'Flex Table', categoryColor: 'bg-indigo-600', duration: '~6 min', src: null },
@@ -3261,10 +3268,10 @@ function buildFrames(id: string): AnimFrame[] {
         </>)}
         <Chip text="T1 penstock → tailrace R2 complete" color="#0891b2" />
       </>) },
-      { ms: 2200, title: 'Set mode (TURBGOV / EMERGENCY) and gate schedule', content: col(<>
+      { ms: 2200, title: 'Set mode (GOVERN / REJECT) and required settings', content: col(<>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 185 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>T1 Properties</div>
-          {[['Mode','TURBGOV'],['Initial gate','1.0'],['T-close (s)','5.0'],['⚡ Power (MW)','250']].map(([k, v]) => (
+          {[['Mode','GOVERN'],['TW (s)','6.0'],['Load (HP)','703.1'],['⚡ Power (MW)','250']].map(([k, v]) => (
             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
               <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
               <span style={{ fontSize: 9, fontWeight: 700, color: '#0891b2', fontFamily: 'monospace' }}>{v}</span>
@@ -3876,7 +3883,7 @@ function _ObsoleteAnimatedScene({ id }: { id: string }) {
           </div>
           {/* Power output indicator */}
           <div style={{ animation: 'va-slide-u 0.5s 2.2s both', display: 'flex', gap: 6 }}>
-            <ALabel text="Mode: TURBGOV" delay="2.2s" color="#0891b2" />
+            <ALabel text="Mode: GOVERN" delay="2.2s" color="#0891b2" />
             <ALabel text="⚡ Generating" delay="2.5s" color="#16a34a" />
           </div>
         </div>

@@ -579,32 +579,100 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     ...nodes.filter(n => n.type === 'turbine'),
     ...edges.filter(e => e.data?.type === 'turbine'),
   ];
+  const getTurbineMode = (data: Record<string, unknown> | undefined): string => {
+    const storedMode = String(data?.operationMode || 'OFF').toUpperCase();
+    if (storedMode === 'TURBGOV') return 'GOVERN';
+    if (storedMode === 'EMERGENCY') return 'REJECT';
+    if (storedMode === 'TURBINE') return 'OFF';
+    return storedMode;
+  };
+  const vSchedules = state.vSchedules || {};
+  const governedTurbines = allTurbines.filter(el => getTurbineMode(el.data) === 'GOVERN');
+  const loadScheduleOwners = new Map<number, number>();
+  allTurbines.forEach(el => {
+    const data = el.data as any;
+    const mode = getTurbineMode(el.data);
+    const label = String(data?.label || el.id);
+    if (mode === 'GENERATE' || mode === 'REJECT') {
+      const scheduleNumber = Number(data?.vScheduleNumber ?? 1);
+      if (!Number.isInteger(scheduleNumber) || scheduleNumber < 1) {
+        throw new Error(`Turbine ${label}: enter a positive whole-number gate schedule number.`);
+      }
+      if ((vSchedules[scheduleNumber] || []).length < 2) {
+        throw new Error(`Turbine ${label}: add at least two T/G pairs to VSCHEDULE ${scheduleNumber}.`);
+      }
+    }
+  });
+  governedTurbines.forEach(el => {
+    const data = el.data as any;
+    const label = String(data?.label || el.id);
+    const tw = Number(data?.governorTW);
+    const load = Number(data?.governorLoadHP);
+    const scheduleNumber = Number(data?.loadScheduleNumber ?? 1);
+    if (!Number.isFinite(tw) || tw <= 0) {
+      throw new Error(`Turbine ${label}: enter a positive water starting time TW for GOVERN mode.`);
+    }
+    if (data?.governorLoadHP === undefined || data?.governorLoadHP === null || data?.governorLoadHP === '' || !Number.isFinite(load) || load < 0) {
+      throw new Error(`Turbine ${label}: enter a generator load in HP for GOVERN mode.`);
+    }
+    if (!Number.isInteger(scheduleNumber) || scheduleNumber < 1) {
+      throw new Error(`Turbine ${label}: enter a positive whole-number load schedule number.`);
+    }
+    const existingLoad = loadScheduleOwners.get(scheduleNumber);
+    if (existingLoad !== undefined && existingLoad !== load) {
+      throw new Error(`Load schedule ${scheduleNumber} is assigned different loads. Give each different load its own schedule number.`);
+    }
+    loadScheduleOwners.set(scheduleNumber, load);
+  });
+
+  // Governor definitions must accompany GOVERN-mode turbines.
+  governedTurbines.forEach(el => {
+    const d = el.data as any;
+    addL('GOVERNOR');
+    addL(` ID ${d.label}`);
+    addL(` TW ${Number(d.governorTW)}`);
+    addL(' MECH');
+    addL('FINISH');
+    addL('');
+  });
+
   allTurbines.forEach(el => {
     const d = el.data;
     if (!d) return;
     const label = d.label as string;
     if (!label || seenOpturb.has(label)) return;
     seenOpturb.add(label);
-    const mode = (d.operationMode as string) || 'TURBINE';
+    const mode = getTurbineMode(d);
+    const scheduleNumber = Number((d as any).vScheduleNumber ?? 1);
     addL('OPTURB');
     addL(` ID ${label}`);
-    if (mode === 'GENERATE' || mode === 'TURBGOV' || mode === 'EMERGENCY') {
-      addL(` ${mode}`);
-      const schedNum = (d.vScheduleNumber as number) ?? 1;
-      addL(` VSCHEDULE ${schedNum}`);
+    if (mode === 'GENERATE') {
+      addL(' GENERATE');
+      addL(` VSCHEDULE ${scheduleNumber}`);
+    } else if (mode === 'REJECT') {
+      const toff = Number((d as any).turbineToff ?? 2);
+      if (!Number.isFinite(toff) || toff <= 0) {
+        throw new Error(`Turbine ${label}: enter a positive rejection time TOFF. A value of zero can cause severe simulation warnings.`);
+      }
+      addL(` REJECT TOFF ${toff}`);
+      addL(` VSCHEDULE ${scheduleNumber}`);
+    } else if (mode === 'GOVERN') {
+      addL(' GOVERN');
+      addL(` LSCHEDULE ${Number((d as any).loadScheduleNumber ?? 1)}`);
+    } else if (mode === 'OFF') {
+      addL(' OFF');
     } else {
-      addL(' TURBINE');
+      throw new Error(`Turbine ${label}: unsupported operation mode "${mode}". Choose GENERATE, GOVERN, OFF, or REJECT.`);
     }
     addL('FINISH');
     addL('');
   });
 
-  // VSCHEDULE blocks for turbines with GENERATE/TURBGOV/EMERGENCY modes
-  const vSchedules = state.vSchedules || {};
+  // VSCHEDULE blocks for turbines with GENERATE/REJECT modes.
   const usedVScheduleNums = new Set<number>();
   allTurbines.forEach(el => {
-    const mode = (el.data?.operationMode as string) || 'TURBINE';
-    if (mode === 'GENERATE' || mode === 'TURBGOV' || mode === 'EMERGENCY') {
+    const mode = getTurbineMode(el.data);
+    if (mode === 'GENERATE' || mode === 'REJECT') {
       const num = Number((el.data as any)?.vScheduleNumber ?? 1);
       if (!isNaN(num)) usedVScheduleNums.add(num);
     }
@@ -619,6 +687,18 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
       addL('');
     }
   });
+
+  if (loadScheduleOwners.size > 0) {
+    const simulationEndTime = Math.max(...state.computationalParams.stages.map(stage => Number(stage.tmax) || 0));
+    loadScheduleOwners.forEach((loadHP, scheduleNumber) => {
+      addL('SCHEDULE');
+      addL(` LSCHEDULE ${scheduleNumber}`);
+      addL(`   T 0 LOAD ${loadHP}`);
+      addL(`   T ${simulationEndTime} LOAD ${loadHP}`);
+      addL('FINISH');
+      addL('');
+    });
+  }
 
   addL('');
   addL('');
