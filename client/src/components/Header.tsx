@@ -48,7 +48,7 @@ import { FlexTable } from "@/components/FlexTable";
 import { HelpModal } from "@/components/HelpModal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useNetworkStore } from "@/lib/store";
+import { useNetworkStore, type ComputationalParameters } from "@/lib/store";
 import { getViewportCenter } from "@/lib/viewport";
 import {
   Dialog,
@@ -92,8 +92,6 @@ import networkIcon from "@assets/network_1779525899254.png";
 import clickIcon from "@assets/click_1779525969230.png";
 import tabletIcon from "@assets/tablet_1779526000997.png";
 import chartIcon from "@assets/chart_1779526062244.png";
-import equalizerIcon from "@assets/equalizer_(1)_1779526283421.png";
-import settingsWrenchIcon from "@assets/settings_1779526312036.png";
 import inputIcon from "@assets/input_1779526391855.png";
 import outputIcon from "@assets/output_1779526416694.png";
 import gridIcon from "@assets/grid_1779526458342.png";
@@ -101,6 +99,133 @@ import fullscreenIcon from "@assets/fullscreen_1779526488758.png";
 import eyeOpenIcon from "@assets/view_(2)_1779527800443.png";
 import eyeHiddenIcon from "@assets/hidden_1779529637135.png";
 import arrangeIcon from "@assets/arrange_icon_1779686978241.png";
+
+function ComputationalParametersSection({
+  params,
+  onUpdate,
+}: {
+  params: ComputationalParameters;
+  onUpdate: (params: Partial<ComputationalParameters>) => void;
+}) {
+  return (
+    <PropSection title="Computational Parameters">
+      <div className="p-2 space-y-2">
+        <PropSection
+          title="Time Stages"
+          headerExtra={
+            <Button
+              size="sm"
+              className="h-6 text-[11px] px-3 rounded-full bg-[#1a73e8] hover:bg-[#1557b0] text-white border-0"
+              style={{ fontFamily: "Poppins, sans-serif" }}
+              onClick={() =>
+                onUpdate({
+                  stages: [...params.stages, { dtcomp: 0.01, dtout: 0.1, tmax: 100 }],
+                })
+              }
+            >
+              Add Stage
+            </Button>
+          }
+        >
+          <div className="px-2 py-2 space-y-2">
+            <div className="grid grid-cols-12 gap-2 px-0.5">
+              <div className="col-span-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">DTCOMP</div>
+              <div className="col-span-3 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">DTOUT</div>
+              <div className="col-span-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">TMAX</div>
+              <div className="col-span-2" />
+            </div>
+            {params.stages.map((stage, index) => (
+              <div key={index} className="grid grid-cols-12 gap-2 items-center p-2 border border-slate-200 rounded-md bg-white">
+                {(["dtcomp", "dtout", "tmax"] as const).map((field) => (
+                  <div key={field} className={field === "tmax" ? "col-span-4" : "col-span-3"}>
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      aria-label={`${field.toUpperCase()} for stage ${index + 1}`}
+                      className="h-7 text-[12px] font-medium text-black border-slate-300"
+                      style={{ fontFamily: "Poppins, sans-serif" }}
+                      value={stage[field]}
+                      onChange={(e) => {
+                        const stages = [...params.stages];
+                        stages[index] = { ...stage, [field]: parseFloat(e.target.value) || 0 };
+                        onUpdate({ stages });
+                      }}
+                      data-testid={`input-${field}-${index}`}
+                    />
+                  </div>
+                ))}
+                <div className="col-span-2 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    aria-label={`Remove stage ${index + 1}`}
+                    disabled={params.stages.length === 1}
+                    onClick={() => onUpdate({ stages: params.stages.filter((_, i) => i !== index) })}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {params.stages.length === 0 && (
+              <p className="text-[11px] text-slate-400 italic text-center py-3">
+                No stages. Click “Add Stage” to begin.
+              </p>
+            )}
+            <div className="grid grid-cols-12 gap-2 px-0.5 text-[9px] text-slate-400">
+              <span className="col-span-3">Computation step</span>
+              <span className="col-span-3">Output interval</span>
+              <span className="col-span-4">Simulation end time</span>
+            </div>
+          </div>
+        </PropSection>
+
+        <PropSection title="Accuracy Check (ACCUTEST)">
+          <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-100">
+            <Checkbox
+              id="include-accutest-generation"
+              checked={params.includeAccutest !== false}
+              onCheckedChange={(checked) => onUpdate({ includeAccutest: !!checked })}
+              data-testid="checkbox-include-accutest"
+            />
+            <div>
+              <Label
+                htmlFor="include-accutest-generation"
+                className="text-[13px] font-semibold text-black leading-tight cursor-pointer"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                Include ACCUTEST in .INP
+              </Label>
+              <p className="text-[10px] text-slate-400 mt-0.5">
+                Adds accuracy-checking block to exported file
+              </p>
+            </div>
+          </div>
+          <PropRow label="ACCUTEST Mode" noBorder>
+            <Select
+              disabled={params.includeAccutest === false}
+              value={params.accutest || "NONE"}
+              onValueChange={(value: "FULL" | "PARTIAL" | "NONE") => onUpdate({ accutest: value })}
+            >
+              <SelectTrigger
+                className={`h-7 text-[12px] font-medium text-black border-slate-300 ${params.includeAccutest === false ? "opacity-40" : ""}`}
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
+                <SelectValue placeholder="Select accuracy mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="FULL">FULL — High Accuracy</SelectItem>
+                <SelectItem value="PARTIAL">PARTIAL — Moderate</SelectItem>
+                <SelectItem value="NONE">NONE — No Checking</SelectItem>
+              </SelectContent>
+            </Select>
+          </PropRow>
+        </PropSection>
+      </div>
+    </PropSection>
+  );
+}
 
 // ─── Title bar compact button ─────────────────────────────────────────────────
 function TitleBarBtn({
@@ -905,19 +1030,6 @@ export function Header({
           />
         </RibbonGroup>
 
-        <RibbonGroup label="Analysis" flex={2} disabled={!isProjectOpen}>
-          <InlineRibbonBtn
-            imgSrc={settingsWrenchIcon}
-            label="Parameters"
-            onClick={() => setShowCompParams(true)}
-          />
-          <InlineRibbonBtn
-            imgSrc={equalizerIcon}
-            label="Configure"
-            onClick={() => { setGenerateDialogMode(null); setShowOutputDialog(true); }}
-          />
-        </RibbonGroup>
-
         <RibbonGroup label="Generate" flex={2} disabled={!isProjectOpen}>
           <InlineRibbonBtn
             imgSrc={inputIcon}
@@ -1245,6 +1357,11 @@ export function Header({
 
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+
+              <ComputationalParametersSection
+                params={computationalParams}
+                onUpdate={updateComputationalParams}
+              />
 
               {/* ── Request Configuration ── */}
               <PropSection title="Request Configuration">

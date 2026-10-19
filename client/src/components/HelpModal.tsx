@@ -781,10 +781,10 @@ function downloadPDF() {
   y = para('WHAMO Network Designer can run the WHAMO hydraulic transient engine directly. Configure parameters, specify output requests, then generate your results.', y);
   y += 2;
   y = subHeading('Computational Parameters', y);
-  y = para('Click Analysis → Parameters to open the sidebar. Configure Time Stages by setting DTCOMP (computation step), DTOUT (output interval), and TMAX (maximum simulation time) for each stage.', y);
+  y = para('Click Generate → .INP or .OUT to open the generation panel. Computational Parameters appear at the top; set DTCOMP (computation step), DTOUT (output interval), and TMAX (maximum simulation time) for each stage.', y);
   y = subHeading('Output Requests', y);
   y = stepList([
-    'Click Analysis → Configure to open the Output Requests panel.',
+    'Click Generate → .INP or .OUT to open the generation panel and configure output requests below the parameters.',
     'Select a node or element, or choose a group type (Nodes, Conduits, Elements).',
     'Tick the variables you want: Q, HEAD, ELEV, VEL, PRESS, PIEZHEAD (or Q, HEAD, SPEED, POWER for turbines).',
     'Choose HISTORY, select an element and variables, then click Add Request. Requests are only created when you add them manually.',
@@ -809,7 +809,7 @@ function downloadPDF() {
   y = stepList([
     'Click Generate → .INP in the ribbon.',
     'The network is validated first. Resolve any errors shown.',
-    "After validation, confirm the output requests in the Configure panel, then click Generate .INP.",
+    "After validation, review Computational Parameters and output requests in the generation panel, then continue to generate the .INP.",
     'The file is downloaded to your computer.',
   ], y);
   y = subHeading('.OUT File', y);
@@ -2366,11 +2366,11 @@ function SimulationSection() {
       <SectionLead>WHAMO Network Designer can run the WHAMO hydraulic transient engine directly. Configure parameters, specify output requests, then generate your results.</SectionLead>
 
       <SubHeading>Computational Parameters</SubHeading>
-      <Para>Click <strong>Analysis → Parameters</strong> in the ribbon to open the Computational Parameters sidebar. Set DTCOMP (computation step), DTOUT (output interval), and TMAX (maximum time) for each simulation stage.</Para>
+      <Para>Click <strong>Generate → .INP or .OUT</strong> to open the generation panel. Computational Parameters appear at the top; set DTCOMP (computation step), DTOUT (output interval), and TMAX (maximum time) for each simulation stage.</Para>
 
       <SubHeading>Output Requests</SubHeading>
       <StepList steps={[
-        'Click Analysis → Configure to open the Output Requests panel.',
+        'Click Generate → .INP or .OUT to open the generation panel and configure output requests below the parameters.',
         'Select a node or element, or choose a group type (Nodes, Conduits, Elements).',
         'Tick the variables: Q, HEAD, ELEV, VEL, PRESS, PIEZHEAD (or Q, HEAD, SPEED, POWER for turbines).',
         'Choose HISTORY, select an element and variables, then click Add Request. Requests are only created when you add them manually.',
@@ -2797,9 +2797,9 @@ const VIDEO_DATA: VideoEntry[] = [
   { id: 'v-flex-table', title: 'Using the Flex Table', description: 'Open the Flex Table, filter by element type, edit cells inline, toggle SI/FPS units, and use the material selector to bulk-update conduit properties.', category: 'flex-table', categoryLabel: 'Flex Table', categoryColor: 'bg-indigo-600', duration: '~6 min', src: null },
   { id: 'v-excel-import', title: 'Importing Data from Excel', description: 'Export a workbook, edit values in Excel, then import back — rows are matched by Label. Covers single-element and multi-sheet workflows.', category: 'flex-table', categoryLabel: 'Flex Table', categoryColor: 'bg-indigo-600', duration: '~4 min', src: null },
   { id: 'v-excel-export', title: 'Exporting to Excel', description: 'Export a single element type or a full multi-sheet workbook from the Flex Table. Includes data-validation dropdowns for material and mode fields.', category: 'flex-table', categoryLabel: 'Flex Table', categoryColor: 'bg-indigo-600', duration: '~3 min', src: null },
-  { id: 'v-parameters', title: 'Configuring Simulation Parameters', description: 'Open Analysis → Parameters, set DTCOMP, DTOUT, and TMAX for each simulation time stage, and verify the Courant condition is satisfied.', category: 'out-generation', categoryLabel: 'OUT Generation', categoryColor: 'bg-green-700', duration: '~4 min', src: null },
+  { id: 'v-parameters', title: 'Configuring Simulation Parameters', description: 'Open Generate → .INP or .OUT, set DTCOMP, DTOUT, and TMAX for each simulation time stage, and verify the Courant condition is satisfied.', category: 'out-generation', categoryLabel: 'OUT Generation', categoryColor: 'bg-green-700', duration: '~4 min', src: null },
   { id: 'v-visualization', title: 'Viewing Results in Visualization', description: 'Open Tools → Visualization, load a .OUT file, switch between Profile Graph (animated HGL) and History Graph (time-series) views.', category: 'visualization', categoryLabel: 'Visualization', categoryColor: 'bg-teal-600', duration: '~5 min', src: null },
-  { id: 'v-inp', title: 'Generating the INP File', description: 'Run network validation, configure output requests in the Configure panel, then click Generate → .INP to download the WHAMO input file.', category: 'inp-generation', categoryLabel: 'INP Generation', categoryColor: 'bg-amber-600', duration: '~4 min', src: null },
+  { id: 'v-inp', title: 'Generating the INP File', description: 'Run network validation, review Computational Parameters and output requests in the generation panel, then generate the WHAMO input file.', category: 'inp-generation', categoryLabel: 'INP Generation', categoryColor: 'bg-amber-600', duration: '~4 min', src: null },
   { id: 'v-out', title: 'Running Simulation & Generating OUT File', description: 'Configure parameters, add output requests, click Generate → .OUT. The WHAMO engine validates, runs, and returns the .OUT results file.', category: 'out-generation', categoryLabel: 'OUT Generation', categoryColor: 'bg-green-700', duration: '~5 min', src: null },
   // Complete workflow
   { id: 'v-workflow', title: 'Complete Workflow: Start to Simulation Results', description: 'Full walkthrough: create a project, add elements, draw connections, edit properties in the Flex Table, import/export Excel, configure parameters, generate INP, run simulation, and review results in Visualization.', category: 'complete-workflow', categoryLabel: 'Complete Workflow', categoryColor: 'bg-rose-600', duration: '~20 min', src: null },
@@ -3422,7 +3422,7 @@ function buildFrames(id: string): AnimFrame[] {
 
     // ── v-parameters ──────────────────────────────────────────────────────
     case 'v-parameters': return [
-      { ms: 1800, title: 'Open Analysis → Parameters panel', content: col(<>
+      { ms: 1800, title: 'Open Generate → .INP/.OUT panel', content: col(<>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 185 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Simulation Parameters</div>
           {[['DTCOMP (s)','—'],['DTOUT (s)','—'],['TMAX (s)','—']].map(([k,v]) => (
@@ -3432,7 +3432,7 @@ function buildFrames(id: string): AnimFrame[] {
             </div>
           ))}
         </div>
-        <Chip text="Parameters panel opened" />
+        <Chip text="Computational Parameters available in generation panel" />
       </>) },
       { ms: 2000, title: 'Set DTCOMP — computational time step', content: col(<>
         <div style={{ width: 185 }}>
