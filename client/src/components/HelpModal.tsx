@@ -495,12 +495,11 @@ function downloadPDF() {
 
   // TURBINE
   y = subHeading('Turbine', y);
-  y = para('A Turbine is a link element that represents a hydraulic turbine (e.g., Francis, Pelton, Kaplan). Flow passes through the turbine and energy is extracted. WHAMO Designer offers the operation modes GENERATE, GOVERN, OFF, REJECT, and STARTUP.', y);
+  y = para('A Turbine is a link element that represents a hydraulic turbine (e.g., Francis, Pelton, Kaplan). Flow passes through the turbine and energy is extracted. WHAMO Designer offers the operation modes GENERATE, OFF, REJECT, and STARTUP.', y);
   y = miniHeading('Purpose & When to Use', y);
   y = bulletList([
     'Use to model hydroelectric turbines and their load-rejection or emergency shutdown transients.',
     'GENERATE: operates at synchronous speed using a gate schedule.',
-    'GOVERN: uses governor control and a generator-load schedule.',
     'OFF: leaves the turbine unoperated.',
     'REJECT: simulates load rejection at the entered TOFF time using a gate schedule.',
     'STARTUP: starts from zero rpm under non-governor wicket-gate control; speed varies without transitioning to synchronized operation. Pump-mode startup is not simulated.',
@@ -509,13 +508,12 @@ function downloadPDF() {
   y = miniHeading('Properties', y);
   y = propTable([
     ['Label', 'Unique identifier (required).'],
-    ['Mode', 'GENERATE, GOVERN, OFF, REJECT, or STARTUP, matching the WHAMO OPTURB operations.'],
+    ['Mode', 'GENERATE, OFF, REJECT, or STARTUP, matching the WHAMO OPTURB operations.'],
     ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE, REJECT, and STARTUP.'],
-    ['Governor & Load Schedule', 'GOVERN requires a water starting time (TW) and a generator load (HP).'],
     ['Speed', 'Rated rotational speed of the turbine (rpm).'],
     ['Inertia', 'Combined moment of inertia of turbine and generator (kg·m²). Affects speed transient response.'],
   ], y);
-  y = noteBox('REJECT requires a gate schedule. GOVERN requires valid governor and load settings. Enter the mode-specific values before generating the input file.', y, true);
+  y = noteBox('GENERATE, REJECT, and STARTUP require a gate schedule. Enter the mode-specific values before generating the input file.', y, true);
 
   // CONDUIT & DUMMY PIPE
   y = subHeading('Conduit (Pipe)', y);
@@ -1647,11 +1645,10 @@ const ELEMENT_DATA = [
     id: 'turbine',
     name: 'Turbine',
     badge: 'bg-cyan-700 text-white',
-    description: 'Link element representing a hydraulic turbine with GENERATE, GOVERN, OFF, REJECT, and STARTUP operation modes.',
+    description: 'Link element representing a hydraulic turbine with GENERATE, OFF, REJECT, and STARTUP operation modes.',
     purpose: [
       'Model hydroelectric turbines and load-rejection or emergency shutdown transients.',
       'GENERATE mode: synchronous-speed operation using a gate schedule.',
-      'GOVERN mode: governor control using a generator-load schedule.',
       'OFF mode: turbine is not operated.',
       'REJECT mode: load rejection at TOFF using a gate schedule.',
       'STARTUP mode: starts from zero rpm under non-governor wicket-gate control; speed varies without transitioning to synchronized operation.',
@@ -1664,9 +1661,8 @@ const ELEMENT_DATA = [
     ],
     properties: [
       ['Label', 'Unique identifier (required).'],
-      ['Mode', 'GENERATE, GOVERN, OFF, REJECT, or STARTUP.'],
+      ['Mode', 'GENERATE, OFF, REJECT, or STARTUP.'],
       ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE, REJECT, and STARTUP.'],
-      ['Governor & Load Schedule', 'GOVERN needs a water starting time (TW) and generator load in HP.'],
       ['Speed', 'Rated rotational speed of the turbine (rpm).'],
       ['Inertia', 'Combined moment of inertia of turbine + generator (kg·m²).'],
     ] as Array<[string, string]>,
@@ -1681,7 +1677,7 @@ const ELEMENT_DATA = [
     ],
     warnings: [
       'For hydroelectric systems: always include a surge tank on the penstock near the turbine inlet. Without it, load-rejection transients can produce dangerously high pressures.',
-      'REJECT, GENERATE, and STARTUP require a complete V-Schedule. GOVERN requires governor and load settings.',
+      'GENERATE, REJECT, and STARTUP require a complete V-Schedule.',
     ],
     validationRules: [
       'Gate Schedule must contain at least two pairs for GENERATE, REJECT, or STARTUP mode.',
@@ -1883,7 +1879,7 @@ const CONNECTION_DATA = [
     howToDraw: [
       'Click the Turbine button in the INSERT ribbon (turns blue).',
       'Drag from the upstream (penstock) node to the downstream (tailrace) node.',
-      'Set Mode (GENERATE, GOVERN, OFF, REJECT, or STARTUP), then fill in its required schedules or governor settings.',
+      'Set Mode (GENERATE, OFF, REJECT, or STARTUP), then fill in its required schedule settings.',
       'Click Turbine button again to deactivate mode.',
     ],
     validConnections: [
@@ -1897,15 +1893,14 @@ const CONNECTION_DATA = [
       'Reverse direction (tailrace to penstock)',
     ],
     properties: [
-      ['Mode', 'GENERATE, GOVERN, OFF, REJECT, or STARTUP.'],
+      ['Mode', 'GENERATE, OFF, REJECT, or STARTUP.'],
       ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs required for GENERATE, REJECT, and STARTUP.'],
-      ['Governor & Load', 'GOVERN requires water starting time TW and generator load (HP).'],
       ['Speed (rpm)', 'Rated turbine speed.'],
       ['Inertia (kg·m²)', 'Combined inertia of turbine and generator shaft.'],
     ] as Array<[string, string]>,
     warnings: [
       'Always include a surge tank on the penstock near the turbine. Without it, load-rejection transients generate dangerous over-pressures.',
-      'REJECT, GENERATE, and STARTUP require a complete V-Schedule. GOVERN requires valid governor and load settings.',
+      'REJECT, GENERATE, and STARTUP require a complete V-Schedule.',
     ],
     troubleshooting: [
       'Simulation fails: check that the selected turbine operation has its required schedule and settings.',
@@ -2214,7 +2209,7 @@ function TroubleshootingSection() {
         { q: 'Surge Tank celerity is very high or infinite', a: 'Surge tanks are modelled as infinite-celerity elements in WHAMO. This is expected — do not adjust the celerity for surge tank connections.' },
         { q: 'Undo/Redo is not available', a: 'Undo/Redo is only available when a project is open. Make sure you have opened or saved a project first.' },
         { q: 'Reservoir connection gives unrealistic results', a: 'Check that the Reservoir elevation is set correctly and that the Loss Coefficient is appropriate (0.5 for sharp-edged inlet, 0.0 for fully flush connection).' },
-        { q: 'Turbine simulation aborts immediately', a: 'Check the mode-specific requirements: GENERATE, REJECT, and STARTUP need a V-Schedule; GOVERN needs governor and load settings.' },
+        { q: 'Turbine simulation aborts immediately', a: 'Check that the selected turbine mode has its required V-Schedule and that its time/gate values are valid.' },
         { q: 'Flow BC not affecting simulation', a: 'Check that Mode is set correctly (Fixed or Schedule) and that Q-Schedule # references a valid defined schedule. Verify Q sign: positive for inflow, negative for extraction.' },
         { q: 'Junction demand not appearing in results', a: 'Demand at a Junction is a steady-state extraction. Verify the demand value in the Flex Table and ensure the output request includes the junction node.' },
       ].map(({ q, a }) => (
@@ -2333,7 +2328,7 @@ const ALL_ELEMENT_PROPS: ElementProps[] = [
       { name: 'Sync Speed (SYNCSPD)', unit: 'RPM', description: 'Synchronous speed of the turbine-generator set.', meaning: 'The rated operating speed. Used in runaway and load-rejection transient calculations.', howToUse: 'Enter the nameplate synchronous speed from the generator datasheet.' },
       { name: 'WR² — Moment of Inertia', unit: 'lb·ft² or kg·m²', description: 'Combined rotational inertia of turbine, shaft, and generator.', meaning: 'Controls the rate of speed rise during load rejection. Higher WR² = slower overspeed = smaller pressure transients.', howToUse: 'Obtain from the manufacturer. For Francis turbines, a typical range is 500–5000 lb·ft².' },
       { name: 'Diameter', unit: 'ft / m', description: 'Runner diameter of the turbine.', meaning: 'Used in dimensionless specific speed calculations for the turbine characteristic curves.', howToUse: 'Enter the runner diameter from the turbine datasheet.' },
-      { name: 'Mode', description: 'Supported WHAMO operations: GENERATE, GOVERN, OFF, REJECT, and STARTUP.', meaning: 'GENERATE uses synchronous-speed gate control; GOVERN uses governor control and a load schedule; OFF leaves the turbine unoperated; REJECT applies load rejection at TOFF; STARTUP starts from zero rpm under non-governor gate control without synchronizing.', howToUse: 'Choose a mode and complete its required schedule or governor values before generating the INP file.' },
+      { name: 'Mode', description: 'Supported WHAMO operations: GENERATE, OFF, REJECT, and STARTUP.', meaning: 'GENERATE uses synchronous-speed gate control; OFF leaves the turbine unoperated; REJECT applies load rejection at TOFF; STARTUP starts from zero rpm under non-governor gate control without synchronizing.', howToUse: 'Choose a mode and complete its required schedule values before generating the INP file.' },
       { name: 'Gate Schedule (V-Schedule)', description: 'Time vs wicket-gate opening percentage pairs for GENERATE, REJECT, and STARTUP.', meaning: 'Prescribes gate position as percent of fully open over time.', howToUse: 'Enter at least two time/gate pairs in the Flex Table schedule editor; time begins at 0 and gate position is entered as a percent.' },
     ],
   },
@@ -2857,17 +2852,17 @@ function buildFrames(id: string): AnimFrame[] {
         </>)}
         <Chip text="T1 penstock → tailrace R2 complete" color="#0891b2" />
       </>) },
-      { ms: 2200, title: 'Set mode (GOVERN / REJECT) and required settings', content: col(<>
+      { ms: 2200, title: 'Set mode (STARTUP / REJECT) and required settings', content: col(<>
         <div style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 14px', width: 185 }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>T1 Properties</div>
-          {[['Mode','GOVERN'],['TW (s)','6.0'],['Load (HP)','703.1'],['⚡ Power (MW)','250']].map(([k, v]) => (
+          {[['Mode','STARTUP'],['V-Schedule #','1'],['Gate Schedule','T/G pairs'],['Speed (RPM)','Variable']].map(([k, v]) => (
             <div key={k} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
               <span style={{ fontSize: 9, color: '#64748b' }}>{k}</span>
               <span style={{ fontSize: 9, fontWeight: 700, color: '#0891b2', fontFamily: 'monospace' }}>{v}</span>
             </div>
           ))}
         </div>
-        <Chip text="Turbine generating ⚡" color="#16a34a" />
+        <Chip text="Turbine starting up" color="#0891b2" />
       </>) },
     ];
 
@@ -3427,8 +3422,8 @@ function _ObsoleteAnimatedScene({ id }: { id: string }) {
           </div>
           {/* Power output indicator */}
           <div style={{ animation: 'va-slide-u 0.5s 2.2s both', display: 'flex', gap: 6 }}>
-            <ALabel text="Mode: GOVERN" delay="2.2s" color="#0891b2" />
-            <ALabel text="⚡ Generating" delay="2.5s" color="#16a34a" />
+            <ALabel text="Mode: STARTUP" delay="2.2s" color="#0891b2" />
+            <ALabel text="Starting up" delay="2.5s" color="#0891b2" />
           </div>
         </div>
       </div>

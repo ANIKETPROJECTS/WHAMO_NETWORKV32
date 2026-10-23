@@ -9,3 +9,4 @@
 - [Conduit and surge-tank shape equivalents](conduit-variable-shapes.md) — export named diameter profiles as circular equivalents while keeping surge-tank SHAPE pairs independent.
 - [Imported app verification](imported-app-verification.md) — independently verify Designer login/database and standalone viewer assets; one healthy app does not validate the other.
 - [Legacy element compatibility](legacy-element-compat.md) — hide retired element types in the UI while preserving imported data and INP round-trips.
+- [Turbine mode retirement](turbine-mode-retirement.md) — keep retired turbine modes out of new choices while preserving imported legacy mode data and INP round-trips.

@@ -1146,11 +1146,21 @@ function RowCells({
         readOnly={!isTurbine} dimmed={!isTurbine}
         onChange={v => change('windage', v)} testId={`cell-windage-${row.id}`} />
     );
-    case 'operationMode': return (
-      <SelectCell key={col} value={d.operationMode === 'TURBGOV' ? 'GOVERN' : d.operationMode === 'EMERGENCY' ? 'REJECT' : d.operationMode === 'TURBINE' ? 'OFF' : d.operationMode || 'OFF'}
-        options={[{label:'GENERATE',value:'GENERATE'},{label:'GOVERN',value:'GOVERN'},{label:'OFF',value:'OFF'},{label:'REJECT',value:'REJECT'},{label:'STARTUP',value:'STARTUP'}]}
-        dimmed={!isTurbine} onChange={isTurbine ? v => change('operationMode', v) : undefined} testId={`cell-opmode-${row.id}`} />
-    );
+    case 'operationMode': {
+      const mode = d.operationMode === 'TURBGOV' ? 'GOVERN' : d.operationMode === 'EMERGENCY' ? 'REJECT' : d.operationMode === 'TURBINE' ? 'OFF' : d.operationMode || 'OFF';
+      if (isTurbine && mode === 'GOVERN') {
+        return (
+          <td key={col} className="border-r border-slate-200 bg-slate-50 px-2 py-[7px] text-[12px] italic text-slate-500" title="Legacy value preserved from the imported file">
+            Legacy mode (imported)
+          </td>
+        );
+      }
+      return (
+        <SelectCell key={col} value={mode}
+          options={[{label:'GENERATE',value:'GENERATE'},{label:'OFF',value:'OFF'},{label:'REJECT',value:'REJECT'},{label:'STARTUP',value:'STARTUP'}]}
+          dimmed={!isTurbine} onChange={isTurbine ? v => change('operationMode', v) : undefined} testId={`cell-opmode-${row.id}`} />
+      );
+    }
     case 'vScheduleNum': {
       const normalizedMode = d.operationMode === 'TURBGOV' ? 'GOVERN' : d.operationMode === 'EMERGENCY' ? 'REJECT' : d.operationMode === 'TURBINE' ? 'OFF' : d.operationMode;
       const needsVSched = normalizedMode === 'GENERATE' || normalizedMode === 'REJECT' || normalizedMode === 'STARTUP';

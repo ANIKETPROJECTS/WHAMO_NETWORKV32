@@ -610,10 +610,10 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     const load = Number(data?.governorLoadHP);
     const scheduleNumber = Number(data?.loadScheduleNumber ?? 1);
     if (!Number.isFinite(tw) || tw <= 0) {
-      throw new Error(`Turbine ${label}: enter a positive water starting time TW for GOVERN mode.`);
+      throw new Error(`Turbine ${label}: the imported legacy mode requires a positive water starting time TW.`);
     }
     if (data?.governorLoadHP === undefined || data?.governorLoadHP === null || data?.governorLoadHP === '' || !Number.isFinite(load) || load < 0) {
-      throw new Error(`Turbine ${label}: enter a generator load in HP for GOVERN mode.`);
+      throw new Error(`Turbine ${label}: the imported legacy mode requires a valid generator load in HP.`);
     }
     if (!Number.isInteger(scheduleNumber) || scheduleNumber < 1) {
       throw new Error(`Turbine ${label}: enter a positive whole-number load schedule number.`);
@@ -665,7 +665,7 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     } else if (mode === 'OFF') {
       addL(' OFF');
     } else {
-      throw new Error(`Turbine ${label}: unsupported operation mode "${mode}". Choose GENERATE, GOVERN, OFF, REJECT, or STARTUP.`);
+      throw new Error(`Turbine ${label}: unsupported operation mode "${mode}". Choose GENERATE, OFF, REJECT, or STARTUP.`);
     }
     addL('FINISH');
     addL('');

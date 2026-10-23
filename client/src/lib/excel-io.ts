@@ -37,7 +37,7 @@ const BC_MODE_OPTIONS = ['Fixed Elevation', 'H Schedule'];
 const SURGE_TANK_TYPE_OPTIONS = ['SIMPLE', 'DIFFERENTIAL', 'AIRTANK'];
 const PUMP_STATUS_OPTIONS = ['ACTIVE', 'INACTIVE'];
 const VALVE_STATUS_OPTIONS = ['OPEN', 'CLOSED'];
-const TURBINE_MODE_OPTIONS = ['GENERATE', 'GOVERN', 'OFF', 'REJECT', 'STARTUP'];
+const TURBINE_MODE_OPTIONS = ['GENERATE', 'OFF', 'REJECT', 'STARTUP'];
 const BOOL_OPTIONS = ['true', 'false'];
 
 export const PIPE_MATERIAL_OPTIONS = PIPE_MATERIALS.map(material => material.label);
@@ -300,7 +300,7 @@ function getRowValue(
     : storedTurbineMode === 'EMERGENCY' ? 'REJECT'
     : storedTurbineMode === 'TURBINE' ? 'OFF'
     : storedTurbineMode;
-  if (col.key === 'operationMode' && isTurbineSub) return turbineMode;
+  if (col.key === 'operationMode' && isTurbineSub) return turbineMode === 'GOVERN' ? 'Legacy mode (imported)' : turbineMode;
 
   // ── NA: pipe-specific columns that don't apply to node rows ("all" tab) ────
   // Pipe Type — only meaningful for edges
@@ -617,6 +617,10 @@ async function _addWorksheetToWb(
 
       // Dropdown: long list → reference sheet range; short list → inline formula
       if (isDropdown && colDef.options) {
+        const dropdownOptions =
+          colDef.key === 'operationMode' && /^(GOVERN|TURBGOV)$/i.test(String(row.data.operationMode || ''))
+            ? [...colDef.options, 'Legacy mode (imported)']
+            : colDef.options;
         if (colDef.isLongList && listRanges[colDef.key]) {
           cell.dataValidation = {
             type: 'list',
@@ -627,7 +631,7 @@ async function _addWorksheetToWb(
             showErrorMessage: true,
           };
         } else {
-          const formulaList = '"' + colDef.options.join(',') + '"';
+          const formulaList = '"' + dropdownOptions.join(',') + '"';
           cell.dataValidation = {
             type: 'list',
             allowBlank: true,
@@ -1024,6 +1028,14 @@ function _parseExcelDataRow(
 
     if (col.key === 'mode') {
       update.mode = displayToMode(strVal);
+      return;
+    }
+
+    if (col.key === 'operationMode' && existingRow.subType === 'turbine') {
+      const normalizedMode = strVal.toUpperCase();
+      update.operationMode = normalizedMode === 'LEGACY MODE (IMPORTED)' || normalizedMode === 'TURBGOV'
+        ? 'GOVERN'
+        : normalizedMode;
       return;
     }
 

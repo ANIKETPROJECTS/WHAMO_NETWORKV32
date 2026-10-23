@@ -1952,13 +1952,12 @@ export function PropertiesPanel() {
                 {/* ── TURBINE: Operation Mode ── */}
                 <PropSection title="Operation Mode">
                   <PropRow label="Mode (OPTURB)" noBorder>
-                    <Select value={opMode} onValueChange={v => handleLocalChange('operationMode', v)}>
+                    <Select value={opMode === 'GOVERN' ? '' : opMode} onValueChange={v => handleLocalChange('operationMode', v)}>
                       <SelectTrigger id="operationMode" className="h-7 text-[12px] font-medium text-black border-slate-300" style={{ fontFamily: 'Poppins, sans-serif' }}>
-                        <SelectValue placeholder="Mode" />
+                        <SelectValue placeholder={opMode === 'GOVERN' ? 'Legacy mode (imported)' : 'Mode'} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="GENERATE">GENERATE</SelectItem>
-                        <SelectItem value="GOVERN">GOVERN</SelectItem>
                         <SelectItem value="OFF">OFF</SelectItem>
                         <SelectItem value="REJECT">REJECT</SelectItem>
                         <SelectItem value="STARTUP">STARTUP</SelectItem>
@@ -1967,41 +1966,18 @@ export function PropertiesPanel() {
                   </PropRow>
                 </PropSection>
 
+                {opMode === 'GOVERN' && (
+                  <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] leading-relaxed text-slate-600">
+                    This imported turbine uses a legacy mode. Its original input data is preserved. Choose a current mode above to replace it.
+                  </div>
+                )}
+
                 {opMode === 'REJECT' && (
                   <PropSection title="Load Rejection">
                     <PropRow label="Rejection time TOFF (s)">
                       <NumericInput id="turbine-toff" data-testid="input-turbine-toff"
                         value={formData.turbineToff ?? 2}
                         onValueChange={v => handleLocalChange('turbineToff', v)}
-                        className="h-7 text-[12px] font-medium text-black border-slate-300"
-                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                      />
-                    </PropRow>
-                  </PropSection>
-                )}
-
-                {opMode === 'GOVERN' && (
-                  <PropSection title="Governor & Load Schedule">
-                    <PropRow label="Water starting time TW (s)">
-                      <NumericInput id="governor-tw" data-testid="input-governor-tw"
-                        value={formData.governorTW}
-                        onValueChange={v => handleLocalChange('governorTW', v)}
-                        className="h-7 text-[12px] font-medium text-black border-slate-300"
-                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                      />
-                    </PropRow>
-                    <PropRow label="Load schedule number">
-                      <NumericInput id="load-schedule-number" data-testid="input-load-schedule-number"
-                        value={formData.loadScheduleNumber ?? 1}
-                        onValueChange={v => handleLocalChange('loadScheduleNumber', v)}
-                        className="h-7 text-[12px] font-medium text-black border-slate-300"
-                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                      />
-                    </PropRow>
-                    <PropRow label="Generator load (HP)" noBorder>
-                      <NumericInput id="governor-load-hp" data-testid="input-governor-load-hp"
-                        value={formData.governorLoadHP}
-                        onValueChange={v => handleLocalChange('governorLoadHP', v)}
                         className="h-7 text-[12px] font-medium text-black border-slate-300"
                         style={{ fontFamily: 'Poppins, sans-serif' } as any}
                       />
