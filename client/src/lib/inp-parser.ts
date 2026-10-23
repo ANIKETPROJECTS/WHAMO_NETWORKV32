@@ -352,7 +352,7 @@ function parseElementProperties(lines: string[]): ParsedElements {
       const combined = block.join(' ');
       const idM = combined.match(/\bID\s+(\S+)/i);
       if (idM) {
-        const modeM = combined.match(/\b(GENERATE|GOVERN|OFF|REJECT|TURBGOV|EMERGENCY|TURBINE)\b/i);
+        const modeM = combined.match(/\b(GENERATE|GOVERN|OFF|REJECT|STARTUP|TURBGOV|EMERGENCY|TURBINE)\b/i);
         const rawMode = modeM ? modeM[1].toUpperCase() : 'OFF';
         const mode = rawMode === 'TURBGOV' ? 'GOVERN' : rawMode === 'EMERGENCY' ? 'REJECT' : rawMode === 'TURBINE' ? 'OFF' : rawMode;
         const vSchedM = combined.match(/\bVSCHEDULE\s+(\d+)/i);

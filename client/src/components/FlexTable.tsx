@@ -1148,12 +1148,12 @@ function RowCells({
     );
     case 'operationMode': return (
       <SelectCell key={col} value={d.operationMode === 'TURBGOV' ? 'GOVERN' : d.operationMode === 'EMERGENCY' ? 'REJECT' : d.operationMode === 'TURBINE' ? 'OFF' : d.operationMode || 'OFF'}
-        options={[{label:'GENERATE',value:'GENERATE'},{label:'GOVERN',value:'GOVERN'},{label:'OFF',value:'OFF'},{label:'REJECT',value:'REJECT'}]}
+        options={[{label:'GENERATE',value:'GENERATE'},{label:'GOVERN',value:'GOVERN'},{label:'OFF',value:'OFF'},{label:'REJECT',value:'REJECT'},{label:'STARTUP',value:'STARTUP'}]}
         dimmed={!isTurbine} onChange={isTurbine ? v => change('operationMode', v) : undefined} testId={`cell-opmode-${row.id}`} />
     );
     case 'vScheduleNum': {
       const normalizedMode = d.operationMode === 'TURBGOV' ? 'GOVERN' : d.operationMode === 'EMERGENCY' ? 'REJECT' : d.operationMode === 'TURBINE' ? 'OFF' : d.operationMode;
-      const needsVSched = normalizedMode === 'GENERATE' || normalizedMode === 'REJECT';
+      const needsVSched = normalizedMode === 'GENERATE' || normalizedMode === 'REJECT' || normalizedMode === 'STARTUP';
       return (
         <EditableCell key={col} value={isTurbine ? String(d.vScheduleNumber ?? 1) : ''} type="text" inputMode="decimal"
           readOnly={!isTurbine || !needsVSched}
@@ -1164,7 +1164,7 @@ function RowCells({
     case 'vSchedulePairs': {
       const storedMode = d.operationMode as string;
       const opMode = storedMode === 'TURBGOV' ? 'GOVERN' : storedMode === 'EMERGENCY' ? 'REJECT' : storedMode === 'TURBINE' ? 'OFF' : storedMode;
-      const hasVSched = isTurbine && (opMode === 'GENERATE' || opMode === 'REJECT');
+      const hasVSched = isTurbine && (opMode === 'GENERATE' || opMode === 'REJECT' || opMode === 'STARTUP');
       if (!hasVSched) return <NACell key={col} minW="min-w-[150px]" />;
       const schedNum = Number(d.vScheduleNumber ?? 1);
       const pts: { t: number; g: number }[] = vSchedules[schedNum] || [];
@@ -1592,7 +1592,7 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
     : pairsEditor?.pairsType === 'shapePairs'
     ? 'Edit Shape (E, A) Pairs'
     : pairsEditor?.pairsType === 'vSchedule'
-    ? `Edit VSCHEDULE ${pairsEditor.scheduleNumber ?? 1} — Gate Time Pairs`
+    ? `Edit VSCHEDULE ${pairsEditor.scheduleNumber ?? 1} — Gate Time Pairs (G %)`
     : 'Edit T/H Pairs';
   const editorTimeLabel = pairsEditor?.pairsType === 'shapePairs'
     ? `E (${editorUnit === 'FPS' ? 'ft' : 'm'})`
@@ -1797,7 +1797,7 @@ export function FlexTable({ open, onClose }: FlexTableProps) {
             <p className="text-[10px] text-black flex-none">
               Showing {filteredRows.length} of {supportedRows.length} supported elements ·
               Click any white cell to edit · Dimmed cells are read-only for that element type ·
-              Turbine V Schedule (T/G pairs) editable inline for GENERATE and REJECT modes ·
+              Turbine V Schedule (T/G pairs) editable inline for GENERATE, REJECT, and STARTUP modes ·
               SI/FPS toggle applies globally · Per-row Unit column overrides individual elements · Amber border indicates per-element override
             </p>
           </div>

@@ -12,7 +12,7 @@ Three related items appear in a turbine input file:
 2. **TCHAR data** describes the turbine's characteristic curves. A turbine refers to one numbered TCHAR type.
 3. **The Operation Mode (`OPTURB`)** tells WHAMO how that turbine operates during the simulation.
 
-The word `TURBINE` can therefore mean the network element/input block, not an operation mode. The current Operation Mode dropdown contains **GENERATE, GOVERN, OFF, and REJECT**.
+The word `TURBINE` can therefore mean the network element/input block, not an operation mode. The current Operation Mode dropdown contains **GENERATE, GOVERN, OFF, REJECT, and STARTUP**.
 
 ## 2. Add and edit a turbine
 
@@ -49,7 +49,7 @@ The curve editor contains:
 
 | Curve data | Meaning | Why it is present |
 | --- | --- | --- |
-| **GATE** | Gate-opening fractions, normally from 0 (closed) to 1 (fully open). | Identifies the gate positions at which the curve data is defined. |
+| **GATE** | Wicket-gate positions in percent of full opening (0 = closed; 100 = fully open). | Identifies the gate positions at which the characteristic data is defined. |
 | **HEAD** | Head values for the characteristic data. | Provides the head points across which the turbine behavior is represented. |
 | **Q** | Flow matrix, with one row per gate value and values across the head points. | Represents turbine flow for the gate/head combinations. |
 | **EFFICIENCY** | Efficiency matrix in the same row/column arrangement as Q. | Represents efficiency for the corresponding gate/head combinations. |
@@ -77,6 +77,7 @@ Choose the mode that represents the operating event you want to simulate. The mo
 | Mode | What it means in the software | Mode-specific settings | Why the option is kept |
 | --- | --- | --- | --- |
 | **GENERATE** | Turbine operates at synchronous speed using a gate schedule. | A positive whole-number **VSCHEDULE number** and at least two **T/G pairs**. | Represents generating operation where gate position is prescribed over time. |
+| **STARTUP** | Starts the turbine from zero RPM using non-governor wicket-gate control. Turbine speed varies, with no transition to synchronized operation. | A positive whole-number **VSCHEDULE number** and at least two **T/G pairs**. | Models a turbine startup transient. It does not model startup in pumping mode. |
 | **GOVERN** | Turbine uses governor control with a generator-load schedule. | Positive **TW**, a positive whole-number **Load schedule number**, and a **Generator load (HP)** value. | Represents a governed turbine responding under the specified load/control setup, instead of using the gate schedule used by GENERATE or REJECT. |
 | **OFF** | Turbine is not operated by an active operating schedule. | No mode-specific gate or load schedule is generated. | Lets the network include a turbine definition without activating one of the other operating cases. |
 | **REJECT** | Simulates load rejection at the specified **TOFF** time, using a gate schedule. | Positive **TOFF (s)**, a positive whole-number **VSCHEDULE number**, and at least two **T/G pairs**. | Represents a load-rejection transient and the turbine gate response associated with that event. |
@@ -86,6 +87,14 @@ Choose the mode that represents the operating event you want to simulate. The mo
 The `.INP` contains an `OPTURB` entry with `GENERATE` and the selected `VSCHEDULE` number. The schedule describes gate position over simulation time.
 
 Use this when the intended case is synchronous-speed generation controlled by a prescribed gate schedule. Do not choose it when the case requires the governor/load controls represented by **GOVERN**.
+
+### STARTUP
+
+The WHAMO manual defines STARTUP as turbine startup from **0 RPM** under **non-governor wicket-gate control**. Turbine speed is allowed to vary; STARTUP does **not** transition the turbine into synchronized operation. The manual also states that startup in pumping mode is not simulated.
+
+The `.INP` contains an `OPTURB` entry with `STARTUP` and a `VSCHEDULE` number. The selected gate schedule describes wicket-gate opening over time. In the app, STARTUP uses the same schedule editor and minimum-pair validation as GENERATE and REJECT. It does not use TOFF or the GOVERN mode's governor/load controls.
+
+Use STARTUP only when this non-governor, variable-speed startup condition matches the case being modeled. If the study requires synchronization or a pump-mode startup, this mode does not represent that behavior.
 
 ### GOVERN
 
@@ -107,12 +116,12 @@ The interface defaults TOFF to **2 seconds**. A positive value is required by th
 
 ## 5. Gate schedules (`VSCHEDULE`)
 
-GENERATE and REJECT use a numbered gate schedule. Each row is a **T/G pair**:
+GENERATE, REJECT, and STARTUP use a numbered gate schedule. Each row is a **T/G pair**:
 
 - **T** — simulation time, in seconds.
-- **G** — gate-opening fraction; normally 0 means closed and 1 means fully open.
+- **G** — wicket-gate opening position as a percentage of fully open: normally 0 means closed and 100 means fully open.
 
-In the Properties panel, select the schedule number, then add, edit, or delete pairs. A schedule number must be a positive whole number, and the selected schedule must contain **at least two pairs** before the app will generate the turbine operation.
+The WHAMO manual requires the first time to be **0 seconds**, with subsequent times in increasing order. In the Properties panel, select the schedule number, then add, edit, or delete pairs. A schedule number must be a positive whole number, and the selected schedule must contain **at least two pairs** before the app will generate the turbine operation. The app currently checks the schedule number and pair count; it does not check that time starts at zero, times increase, or gate positions match the intended event. Review those values before generating the file.
 
 The same schedule number can be referenced by more than one turbine. If they need different gate histories, give them different schedule numbers. Review the time points, gate fractions, and overall closure/opening shape against the actual operating event; the app's minimum-pair check is not an engineering review of the schedule.
 
@@ -138,7 +147,17 @@ OPTURB
 FINISH
 ```
 
-The operation-specific part differs by mode:
+For STARTUP, the operation block is:
+
+```text
+OPTURB
+ ID T1
+ STARTUP
+ VSCHEDULE 1
+FINISH
+```
+
+The other operation-specific blocks are:
 
 ```text
 OPTURB
@@ -167,10 +186,10 @@ The app also writes the referenced TCHAR data and the required VSCHEDULE or LSCH
 
 ## 7. Import and compatibility notes
 
-- The current dropdown options are **GENERATE, GOVERN, OFF, and REJECT**.
+- The current dropdown options are **GENERATE, GOVERN, OFF, REJECT, and STARTUP**.
 - Older imported values are normalized by the app: `TURBGOV` becomes **GOVERN**, `EMERGENCY` becomes **REJECT**, and `TURBINE` becomes **OFF**. These are compatibility mappings; they are not additional current dropdown choices.
 - `TURBINE` is also the name of the turbine definition block in the `.INP`; it should not be confused with an operation mode.
-- **STARTUP** is not available in the current Operation Mode dropdown and is not emitted by the current turbine generator.
+- STARTUP applies to turbine startup from zero RPM under non-governor wicket-gate control; it does not model pump-mode startup or transition to synchronized speed.
 - An imported `.INP` may contain data beyond what is editable in this panel. After importing, review the displayed mode, schedules, and characteristic data before generating a new file.
 
 ## 8. Recommended setup and review checklist
@@ -181,7 +200,7 @@ Before generating an `.INP`:
 2. Select the correct TCHAR type and confirm its GATE, HEAD, Q, and EFFICIENCY data are complete and aligned.
 3. Enter the turbine parameters from a reliable source and confirm their units, especially WR², friction, and windage.
 4. Choose the operation mode that matches the modeled event.
-5. For GENERATE or REJECT, verify the schedule number and at least two T/G pairs.
+5. For GENERATE, REJECT, or STARTUP, verify the schedule number and at least two T/G pairs.
 6. For REJECT, set a positive TOFF that matches the event time; do not rely on the 2-second default without checking.
 7. For GOVERN, verify TW, load, and schedule number. Remember the current app emits a constant load schedule, not a varying load curve.
 8. Generate the `.INP`, inspect the turbine blocks and schedules, then run it through the target WHAMO executable.

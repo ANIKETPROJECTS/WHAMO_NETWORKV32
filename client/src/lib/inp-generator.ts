@@ -593,7 +593,7 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     const data = el.data as any;
     const mode = getTurbineMode(el.data);
     const label = String(data?.label || el.id);
-    if (mode === 'GENERATE' || mode === 'REJECT') {
+    if (mode === 'GENERATE' || mode === 'REJECT' || mode === 'STARTUP') {
       const scheduleNumber = Number(data?.vScheduleNumber ?? 1);
       if (!Number.isInteger(scheduleNumber) || scheduleNumber < 1) {
         throw new Error(`Turbine ${label}: enter a positive whole-number gate schedule number.`);
@@ -649,6 +649,9 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     if (mode === 'GENERATE') {
       addL(' GENERATE');
       addL(` VSCHEDULE ${scheduleNumber}`);
+    } else if (mode === 'STARTUP') {
+      addL(' STARTUP');
+      addL(` VSCHEDULE ${scheduleNumber}`);
     } else if (mode === 'REJECT') {
       const toff = Number((d as any).turbineToff ?? 2);
       if (!Number.isFinite(toff) || toff <= 0) {
@@ -662,17 +665,17 @@ export function generateInpFile(nodes: WhamoNode[], edges: WhamoEdge[], autoDown
     } else if (mode === 'OFF') {
       addL(' OFF');
     } else {
-      throw new Error(`Turbine ${label}: unsupported operation mode "${mode}". Choose GENERATE, GOVERN, OFF, or REJECT.`);
+      throw new Error(`Turbine ${label}: unsupported operation mode "${mode}". Choose GENERATE, GOVERN, OFF, REJECT, or STARTUP.`);
     }
     addL('FINISH');
     addL('');
   });
 
-  // VSCHEDULE blocks for turbines with GENERATE/REJECT modes.
+  // VSCHEDULE blocks for turbines with GENERATE/REJECT/STARTUP modes.
   const usedVScheduleNums = new Set<number>();
   allTurbines.forEach(el => {
     const mode = getTurbineMode(el.data);
-    if (mode === 'GENERATE' || mode === 'REJECT') {
+    if (mode === 'GENERATE' || mode === 'REJECT' || mode === 'STARTUP') {
       const num = Number((el.data as any)?.vScheduleNumber ?? 1);
       if (!isNaN(num)) usedVScheduleNums.add(num);
     }

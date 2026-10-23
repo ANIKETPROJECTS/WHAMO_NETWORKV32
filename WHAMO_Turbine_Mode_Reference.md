@@ -1,17 +1,18 @@
 # Turbine operation labels in WHAMO Designer
 
-The turbine choices in WHAMO Designer refer to operating situations described in the WHAMO 3.0 User’s Manual. The interface labels are not all literal `OPTURB` keywords, so they should not be presented as an exact transcription of the manual.
+The current turbine Operation Mode choices in WHAMO Designer use the documented `OPTURB` keywords in the WHAMO 3.0 User’s Manual. The app also normalizes several legacy values when importing older project data.
 
 ## Reference mapping
 
-| Designer label | WHAMO 3.0 manual reference |
+| Current Designer label | WHAMO 3.0 manual reference |
 | --- | --- |
-| `GENERATE` | Exact `OPTURB` keyword. The manual defines it as synchronous-speed turbine operation. |
-| `TURBGOV` | Refers to governor-controlled operation. The manual’s exact keyword is `GOVERN`, for governor-controlled turbine operation serving an isolated load. |
-| `EMERGENCY` | Intended as an emergency/load-rejection closure scenario. The manual’s documented operation is `REJECT`, with a load-rejection time (`TOFF`) and a wicket-gate schedule. `EMERGENCY` is not listed as an `OPTURB` keyword in the manual. |
-| `TURBINE` | General/default turbine label in the interface. The manual uses `TURBINE` to define the turbine element; it is not listed as an `OPTURB` operation keyword. Confirm this label against the installed WHAMO executable. |
+| `GENERATE` | Exact `OPTURB` keyword for synchronous-speed turbine operation using a wicket-gate schedule. |
+| `GOVERN` | Exact `OPTURB` keyword for governor-controlled turbine operation serving an isolated load; turbine speed is allowed to vary. It uses governor data and a generator-load schedule. |
+| `OFF` | Exact `OPTURB` keyword; the turbine is not operated and its wicket gates are closed. |
+| `REJECT` | Exact `OPTURB` keyword for synchronous-speed operation until load rejection at `TOFF`; it uses a wicket-gate schedule. |
+| `STARTUP` | Exact `OPTURB` keyword for starting from zero RPM under non-governor wicket-gate control. Speed varies without transition to synchronized operation. Pump-mode startup is not simulated. |
 
-The manual also documents `STARTUP` and `OFF`, which are not choices in the current Designer dropdown.
+The current dropdown contains **GENERATE, GOVERN, OFF, REJECT, and STARTUP**. Legacy imported values are normalized as follows: `TURBGOV` → `GOVERN`, `EMERGENCY` → `REJECT`, and `TURBINE` → `OFF`. `TURBINE` remains the name of the turbine definition block, not an `OPTURB` operation.
 
 ## Manual-compatible `OPTURB` examples
 
@@ -31,20 +32,17 @@ The referenced schedule numbers must exist in the input. `GENERATE`, `REJECT`, a
 
 Start from an input file that already runs successfully. Make a separate copy for each test, change only the turbine’s `OPTURB` line, and keep the existing turbine ID and schedule data. Run each copy with the same WHAMO check/run procedure you normally use. Record the first diagnostic and whether the run proceeds.
 
-These are the forms currently emitted by Designer:
+The current Designer emits these operation forms:
 
 ```text
-OPTURB ID T1 TURBINE FINISH
 OPTURB ID T1 GENERATE VSCHEDULE 1 FINISH
-OPTURB ID T1 TURBGOV VSCHEDULE 1 FINISH
-OPTURB ID T1 EMERGENCY VSCHEDULE 1 FINISH
+OPTURB ID T1 GOVERN LSCHEDULE 1 FINISH
+OPTURB ID T1 OFF FINISH
+OPTURB ID T1 REJECT TOFF 2.0 VSCHEDULE 1 FINISH
+OPTURB ID T1 STARTUP VSCHEDULE 1 FINISH
 ```
 
-For a comparison, test the documented equivalents separately:
-
-- Compare `TURBGOV VSCHEDULE 1` with `GOVERN LSCHEDULE 1` in an input that has a valid governor and load schedule.
-- Compare `EMERGENCY VSCHEDULE 1` with `REJECT TOFF 2.0 VSCHEDULE 1` in an input that has a valid wicket-gate schedule.
-- Test `TURBINE` exactly as Designer emits it; the manual does not identify it as an `OPTURB` mode.
+The Designer currently requires at least two gate-schedule pairs for GENERATE, REJECT, and STARTUP. Test each generated mode separately in a copy of a known-working input file, with valid schedules and mode-specific data.
 
 Do not change multiple modes in the same test. A mode is confirmed for the installed executable only if WHAMO accepts the input and proceeds past input checking; a successful parse alone does not validate the hydraulic results.
 

@@ -268,7 +268,7 @@ function TcharEditor({ tType, activeTc, updateTcharData }: {
             TCHAR TYPE {tType} data is global — shared across all turbines of this type.
           </p>
           <div className="grid gap-1">
-            <Label className="text-[10px] font-medium">GATE (gate opening fractions, space-separated)</Label>
+            <Label className="text-[10px] font-medium">GATE (wicket-gate position, percent of full opening, space-separated)</Label>
             <textarea data-testid="textarea-gate"
               className="w-full border rounded text-[10px] font-mono p-1.5 resize-none h-10 focus:outline-none focus:ring-1 focus:ring-teal-400"
               value={gateText}
@@ -1961,6 +1961,7 @@ export function PropertiesPanel() {
                         <SelectItem value="GOVERN">GOVERN</SelectItem>
                         <SelectItem value="OFF">OFF</SelectItem>
                         <SelectItem value="REJECT">REJECT</SelectItem>
+                        <SelectItem value="STARTUP">STARTUP</SelectItem>
                       </SelectContent>
                     </Select>
                   </PropRow>
@@ -2008,8 +2009,8 @@ export function PropertiesPanel() {
                   </PropSection>
                 )}
 
-                {/* ── TURBINE: VSCHEDULE (GENERATE / REJECT) ── */}
-                {(opMode === 'GENERATE' || opMode === 'REJECT') && (
+                {/* ── TURBINE: VSCHEDULE (GENERATE / REJECT / STARTUP) ── */}
+                {(opMode === 'GENERATE' || opMode === 'REJECT' || opMode === 'STARTUP') && (
                   <PropSection title="VSCHEDULE">
                     <PropRow label="Schedule Number">
                       <NumericInput id="vScheduleNumber" data-testid="input-vschednum"
@@ -2046,7 +2047,7 @@ export function PropertiesPanel() {
                           {pts.length > 0 && (
                             <div className="flex items-center gap-2 px-3 pt-1">
                               <span className="flex-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Time (T)</span>
-                              <span className="flex-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Gate (G)</span>
+                              <span className="flex-1 text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Gate G (%)</span>
                               <span className="w-5" />
                             </div>
                           )}

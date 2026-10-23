@@ -37,7 +37,7 @@ const BC_MODE_OPTIONS = ['Fixed Elevation', 'H Schedule'];
 const SURGE_TANK_TYPE_OPTIONS = ['SIMPLE', 'DIFFERENTIAL', 'AIRTANK'];
 const PUMP_STATUS_OPTIONS = ['ACTIVE', 'INACTIVE'];
 const VALVE_STATUS_OPTIONS = ['OPEN', 'CLOSED'];
-const TURBINE_MODE_OPTIONS = ['GENERATE', 'GOVERN', 'OFF', 'REJECT'];
+const TURBINE_MODE_OPTIONS = ['GENERATE', 'GOVERN', 'OFF', 'REJECT', 'STARTUP'];
 const BOOL_OPTIONS = ['true', 'false'];
 
 export const PIPE_MATERIAL_OPTIONS = PIPE_MATERIALS.map(material => material.label);
@@ -321,9 +321,9 @@ function getRowValue(
   // ── NA: Manning's n, pipeE, pipeWT — conduit only ─────────────────────────
   if ((col.key === 'manningsN' || col.key === 'pipeE' || col.key === 'pipeWT') && !isConduitSub) return 'NA';
 
-  // ── NA: turbine V-schedule number — only needed for GENERATE/REJECT ──
+  // ── NA: turbine V-schedule number — only needed for GENERATE/REJECT/STARTUP ──
   if (col.key === 'vScheduleNumber' && isTurbineSub) {
-    if (turbineMode !== 'GENERATE' && turbineMode !== 'REJECT') return 'NA';
+    if (turbineMode !== 'GENERATE' && turbineMode !== 'REJECT' && turbineMode !== 'STARTUP') return 'NA';
   }
   if (col.key === 'turbineToff' && isTurbineSub && turbineMode !== 'REJECT') return 'NA';
   if (

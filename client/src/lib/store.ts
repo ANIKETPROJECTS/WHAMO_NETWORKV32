@@ -27,7 +27,7 @@ export interface PcharType {
 }
 
 export interface TcharType {
-  gate: number[];        // Gate opening fractions (0.0 to 1.0)
+  gate: number[];        // Wicket-gate positions (percent of full opening)
   head: number[];        // Head values
   qMatrix: number[][];   // Flow matrix [gate.length rows × head.length cols]
   effMatrix: number[][];  // Efficiency matrix [gate.length rows × head.length cols]

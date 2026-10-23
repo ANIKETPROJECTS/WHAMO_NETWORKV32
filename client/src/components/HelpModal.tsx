@@ -495,7 +495,7 @@ function downloadPDF() {
 
   // TURBINE
   y = subHeading('Turbine', y);
-  y = para('A Turbine is a link element that represents a hydraulic turbine (e.g., Francis, Pelton, Kaplan). Flow passes through the turbine and energy is extracted. WHAMO Designer offers the manual operation modes GENERATE, GOVERN, OFF, and REJECT.', y);
+  y = para('A Turbine is a link element that represents a hydraulic turbine (e.g., Francis, Pelton, Kaplan). Flow passes through the turbine and energy is extracted. WHAMO Designer offers the operation modes GENERATE, GOVERN, OFF, REJECT, and STARTUP.', y);
   y = miniHeading('Purpose & When to Use', y);
   y = bulletList([
     'Use to model hydroelectric turbines and their load-rejection or emergency shutdown transients.',
@@ -503,13 +503,14 @@ function downloadPDF() {
     'GOVERN: uses governor control and a generator-load schedule.',
     'OFF: leaves the turbine unoperated.',
     'REJECT: simulates load rejection at the entered TOFF time using a gate schedule.',
+    'STARTUP: starts from zero rpm under non-governor wicket-gate control; speed varies without transitioning to synchronized operation. Pump-mode startup is not simulated.',
     'Use with surge tanks and pressure relief valves in hydroelectric system transient studies.',
   ], y);
   y = miniHeading('Properties', y);
   y = propTable([
     ['Label', 'Unique identifier (required).'],
-    ['Mode', 'GENERATE, GOVERN, OFF, or REJECT, matching the WHAMO OPTURB operations.'],
-    ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE and REJECT.'],
+    ['Mode', 'GENERATE, GOVERN, OFF, REJECT, or STARTUP, matching the WHAMO OPTURB operations.'],
+    ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE, REJECT, and STARTUP.'],
     ['Governor & Load Schedule', 'GOVERN requires a water starting time (TW) and a generator load (HP).'],
     ['Speed', 'Rated rotational speed of the turbine (rpm).'],
     ['Inertia', 'Combined moment of inertia of turbine and generator (kg·m²). Affects speed transient response.'],
@@ -609,7 +610,7 @@ function downloadPDF() {
   y = bulletList([
     'Turbine must connect two nodes. Upstream node typically connects to a penstock conduit from a Reservoir.',
     'Downstream node connects to the tailrace (often another Reservoir or Node at low elevation).',
-    'A gate schedule (V-Schedule) is used by GENERATE and REJECT modes.',
+    'A gate schedule (V-Schedule) is used by GENERATE, REJECT, and STARTUP modes.',
   ], y);
   y = noteBox('For hydroelectric systems, always include a surge tank on the penstock near the turbine. Without it, load rejection transients can produce extreme over-pressures.', y, true);
 
@@ -808,7 +809,7 @@ function downloadPDF() {
     ],
     [
       'Turbine simulation aborts immediately',
-      'In REJECT mode, define at least two gate schedule (V-Schedule) pairs. GENERATE also needs a gate schedule.',
+      'In REJECT mode, define at least two gate schedule (V-Schedule) pairs. GENERATE and STARTUP also need a gate schedule.',
     ],
   ];
   for (const [q, a] of issues) {
@@ -1646,13 +1647,14 @@ const ELEMENT_DATA = [
     id: 'turbine',
     name: 'Turbine',
     badge: 'bg-cyan-700 text-white',
-    description: 'Link element representing a hydraulic turbine with GENERATE, GOVERN, OFF, and REJECT operation modes.',
+    description: 'Link element representing a hydraulic turbine with GENERATE, GOVERN, OFF, REJECT, and STARTUP operation modes.',
     purpose: [
       'Model hydroelectric turbines and load-rejection or emergency shutdown transients.',
       'GENERATE mode: synchronous-speed operation using a gate schedule.',
       'GOVERN mode: governor control using a generator-load schedule.',
       'OFF mode: turbine is not operated.',
       'REJECT mode: load rejection at TOFF using a gate schedule.',
+      'STARTUP mode: starts from zero rpm under non-governor wicket-gate control; speed varies without transitioning to synchronized operation.',
     ],
     howToAdd: [
       'Click the Turbine button in the INSERT ribbon to activate turbine link mode.',
@@ -1662,8 +1664,8 @@ const ELEMENT_DATA = [
     ],
     properties: [
       ['Label', 'Unique identifier (required).'],
-      ['Mode', 'GENERATE, GOVERN, OFF, or REJECT.'],
-      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE and REJECT.'],
+      ['Mode', 'GENERATE, GOVERN, OFF, REJECT, or STARTUP.'],
+      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs used by GENERATE, REJECT, and STARTUP.'],
       ['Governor & Load Schedule', 'GOVERN needs a water starting time (TW) and generator load in HP.'],
       ['Speed', 'Rated rotational speed of the turbine (rpm).'],
       ['Inertia', 'Combined moment of inertia of turbine + generator (kg·m²).'],
@@ -1674,15 +1676,15 @@ const ELEMENT_DATA = [
       'Validate inertia values against the turbine manufacturer data sheet.',
     ],
     commonMistakes: [
-      'Not providing a Gate Schedule in REJECT or GENERATE mode.',
+      'Not providing a Gate Schedule in REJECT, GENERATE, or STARTUP mode.',
       'Setting very fast gate closure (< 1 s) without surge protection — generates extreme over-pressures.',
     ],
     warnings: [
       'For hydroelectric systems: always include a surge tank on the penstock near the turbine inlet. Without it, load-rejection transients can produce dangerously high pressures.',
-      'REJECT and GENERATE require a complete V-Schedule. GOVERN requires governor and load settings.',
+      'REJECT, GENERATE, and STARTUP require a complete V-Schedule. GOVERN requires governor and load settings.',
     ],
     validationRules: [
-      'Gate Schedule must contain at least two pairs for GENERATE or REJECT mode.',
+      'Gate Schedule must contain at least two pairs for GENERATE, REJECT, or STARTUP mode.',
       'Speed and Inertia must be positive values.',
       'Must connect two nodes; upstream at high head, downstream at low head.',
     ],
@@ -1881,7 +1883,7 @@ const CONNECTION_DATA = [
     howToDraw: [
       'Click the Turbine button in the INSERT ribbon (turns blue).',
       'Drag from the upstream (penstock) node to the downstream (tailrace) node.',
-      'Set Mode (GENERATE, GOVERN, OFF, or REJECT), then fill in its required schedules or governor settings.',
+      'Set Mode (GENERATE, GOVERN, OFF, REJECT, or STARTUP), then fill in its required schedules or governor settings.',
       'Click Turbine button again to deactivate mode.',
     ],
     validConnections: [
@@ -1895,15 +1897,15 @@ const CONNECTION_DATA = [
       'Reverse direction (tailrace to penstock)',
     ],
     properties: [
-      ['Mode', 'GENERATE, GOVERN, OFF, or REJECT.'],
-      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs required for GENERATE and REJECT.'],
+      ['Mode', 'GENERATE, GOVERN, OFF, REJECT, or STARTUP.'],
+      ['Gate Schedule (V-Schedule)', 'Time/gate-position pairs required for GENERATE, REJECT, and STARTUP.'],
       ['Governor & Load', 'GOVERN requires water starting time TW and generator load (HP).'],
       ['Speed (rpm)', 'Rated turbine speed.'],
       ['Inertia (kg·m²)', 'Combined inertia of turbine and generator shaft.'],
     ] as Array<[string, string]>,
     warnings: [
       'Always include a surge tank on the penstock near the turbine. Without it, load-rejection transients generate dangerous over-pressures.',
-      'REJECT and GENERATE require a complete V-Schedule. GOVERN requires valid governor and load settings.',
+      'REJECT, GENERATE, and STARTUP require a complete V-Schedule. GOVERN requires valid governor and load settings.',
     ],
     troubleshooting: [
       'Simulation fails: check that the selected turbine operation has its required schedule and settings.',
@@ -2212,7 +2214,7 @@ function TroubleshootingSection() {
         { q: 'Surge Tank celerity is very high or infinite', a: 'Surge tanks are modelled as infinite-celerity elements in WHAMO. This is expected — do not adjust the celerity for surge tank connections.' },
         { q: 'Undo/Redo is not available', a: 'Undo/Redo is only available when a project is open. Make sure you have opened or saved a project first.' },
         { q: 'Reservoir connection gives unrealistic results', a: 'Check that the Reservoir elevation is set correctly and that the Loss Coefficient is appropriate (0.5 for sharp-edged inlet, 0.0 for fully flush connection).' },
-        { q: 'Turbine simulation aborts immediately', a: 'Check the mode-specific requirements: GENERATE and REJECT need a V-Schedule; GOVERN needs governor and load settings.' },
+        { q: 'Turbine simulation aborts immediately', a: 'Check the mode-specific requirements: GENERATE, REJECT, and STARTUP need a V-Schedule; GOVERN needs governor and load settings.' },
         { q: 'Flow BC not affecting simulation', a: 'Check that Mode is set correctly (Fixed or Schedule) and that Q-Schedule # references a valid defined schedule. Verify Q sign: positive for inflow, negative for extraction.' },
         { q: 'Junction demand not appearing in results', a: 'Demand at a Junction is a steady-state extraction. Verify the demand value in the Flex Table and ensure the output request includes the junction node.' },
       ].map(({ q, a }) => (
@@ -2331,8 +2333,8 @@ const ALL_ELEMENT_PROPS: ElementProps[] = [
       { name: 'Sync Speed (SYNCSPD)', unit: 'RPM', description: 'Synchronous speed of the turbine-generator set.', meaning: 'The rated operating speed. Used in runaway and load-rejection transient calculations.', howToUse: 'Enter the nameplate synchronous speed from the generator datasheet.' },
       { name: 'WR² — Moment of Inertia', unit: 'lb·ft² or kg·m²', description: 'Combined rotational inertia of turbine, shaft, and generator.', meaning: 'Controls the rate of speed rise during load rejection. Higher WR² = slower overspeed = smaller pressure transients.', howToUse: 'Obtain from the manufacturer. For Francis turbines, a typical range is 500–5000 lb·ft².' },
       { name: 'Diameter', unit: 'ft / m', description: 'Runner diameter of the turbine.', meaning: 'Used in dimensionless specific speed calculations for the turbine characteristic curves.', howToUse: 'Enter the runner diameter from the turbine datasheet.' },
-      { name: 'Mode', description: 'Supported WHAMO operations: GENERATE, GOVERN, OFF, and REJECT.', meaning: 'GENERATE uses synchronous-speed gate control; GOVERN uses governor control and a load schedule; OFF leaves the turbine unoperated; REJECT applies load rejection at TOFF.', howToUse: 'Choose a mode and complete its required schedule or governor values before generating the INP file.' },
-      { name: 'Gate Schedule (V-Schedule)', description: 'Time vs gate-opening fraction pairs for GENERATE and REJECT.', meaning: 'Prescribes the gate position over time.', howToUse: 'Define at least two time/gate pairs in the Flex Table schedule editor.' },
+      { name: 'Mode', description: 'Supported WHAMO operations: GENERATE, GOVERN, OFF, REJECT, and STARTUP.', meaning: 'GENERATE uses synchronous-speed gate control; GOVERN uses governor control and a load schedule; OFF leaves the turbine unoperated; REJECT applies load rejection at TOFF; STARTUP starts from zero rpm under non-governor gate control without synchronizing.', howToUse: 'Choose a mode and complete its required schedule or governor values before generating the INP file.' },
+      { name: 'Gate Schedule (V-Schedule)', description: 'Time vs wicket-gate opening percentage pairs for GENERATE, REJECT, and STARTUP.', meaning: 'Prescribes gate position as percent of fully open over time.', howToUse: 'Enter at least two time/gate pairs in the Flex Table schedule editor; time begins at 0 and gate position is entered as a percent.' },
     ],
   },
   {
