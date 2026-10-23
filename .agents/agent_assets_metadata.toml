@@ -182,3 +182,17 @@ mtime_ms = 1792395246736
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/aba6a998-db66-449a-a9ef-4c0885c67c14/79a55b0c-c6a8-4408-bba4-adb92793abf9"
 storage_version_token = "1792395279109637"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "OlpfCV1eNqm8tIrEHm7CY"
+uri = "file://TURBINE.MD"
+type = "text"
+title = "WHAMO Turbine User Guide"
+description = "Detailed guide to the turbine controls, operation modes, schedules, parameters, and generated INP behavior."
+logical_id = "66fd9e76-83de-426c-96dd-64a8a48ac52d"
+content_hash = "sha256:0ef024d830a62924ea0382e5227503cbed110dc13b63d8a0b7620c5b1d773b33"
+size = 13102
+mtime_ms = 1792735785223
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/66fd9e76-83de-426c-96dd-64a8a48ac52d/30c8498d-155d-45b3-b832-2c9624061e6c"
+storage_version_token = "1792735826301177"
+content_type = "text/markdown"
