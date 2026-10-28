@@ -490,17 +490,3 @@ When reporting a problem, record the date/time, application version, action imme
 | **VSCHEDULE** | Turbine time/gate-opening schedule referenced by the turbine operation settings. |
 | **WR²** | Moment-of-inertia input displayed for the turbine-generator assembly. |
 | **D_eq** | Circular equivalent diameter calculated from an entered non-circular shape reference dimension by matching cross-sectional area. |
-
----
-
-## Before final submission
-
-This manual is written from the current project interface and source. Before submitting it:
-
-1. Replace the author and organization fields on the cover.
-2. Confirm that the deployed application still displays version 1.0 and that the described controls match the deployed build.
-3. Add screenshots captured from the final authenticated application if required by the reviewer. Use sanitized example data and hide account details.
-4. Confirm turbine mode behavior and all generated file syntax against the specific WHAMO executable/version used for the project.
-5. Proofread the final Word/PDF copy and attach the project's reviewed source code, test evidence, and required signed declarations separately.
-
-This guide does not claim that the software, model, or simulation has been independently certified or accepted by the Ministry of Jal Shakti.
