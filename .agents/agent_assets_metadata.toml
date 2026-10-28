@@ -210,3 +210,17 @@ mtime_ms = 1793160528715
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/1d8b677b-18c6-4721-8f15-b5531e38abdc/25e207c1-f685-41a7-bb20-464b1a6c35b2"
 storage_version_token = "1793160557412160"
 content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "C6nM7EArGvWJiYEiOkiDk"
+uri = "file://Reports/WHAMO_Network_Designer_User_Manual.docx"
+type = "word_document"
+title = "WHAMO Network Designer User Manual"
+description = "Editable Word manual for project submission and technical review. Complete the author and organization fields before submitting."
+logical_id = "99c6d674-e6e3-46c0-a3b4-d727aae24116"
+content_hash = "sha256:0b0205a799e7d7c8d5c53d34fff2ad7b98e4ac835c8f223b351c30d81ecd2dfb"
+size = 26090
+mtime_ms = 1793182250805
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/99c6d674-e6e3-46c0-a3b4-d727aae24116/e16d861b-2941-42e9-9a59-7737f1bcb93a"
+storage_version_token = "1793182273997066"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
