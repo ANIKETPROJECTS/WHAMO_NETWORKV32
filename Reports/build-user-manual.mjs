@@ -25,7 +25,8 @@ const markdown = await fs.readFile(sourcePath, "utf8");
 const lines = markdown.replace(/\r\n/g, "\n").split("\n");
 
 const NAVY = "12304A";
-const BLUE = "1A73E8";
+const BLUE = "216C85";
+const GOLD = "B28B42";
 const TEXT = "243447";
 const MUTED = "64748B";
 const LIGHT = "F1F5F9";
@@ -62,10 +63,15 @@ function cleanMarkdown(value) {
     .trim();
 }
 
+function renderInline(value, base = {}) {
+  return inlineRuns(value.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1"), base);
+}
+
 function makeParagraph(text, options = {}) {
   return new Paragraph({
-    children: inlineRuns(text, { color: TEXT, size: 21 }),
-    spacing: { after: 120, line: 280 },
+    children: renderInline(text, { color: TEXT, size: 22 }),
+    spacing: { after: 150, line: 300 },
+    keepLines: true,
     ...options,
   });
 }
@@ -82,7 +88,7 @@ function makeTable(rows, header = true) {
       const runs = inlineRuns(content, {
         bold: isHeader,
         color: isHeader ? "FFFFFF" : TEXT,
-        size: 18,
+        size: 20,
       });
       return new TableCell({
         width: { size: widths[cellIndex], type: WidthType.DXA },
@@ -93,10 +99,10 @@ function makeTable(rows, header = true) {
           fill: isHeader ? NAVY : rowIndex % 2 === 0 ? "F8FAFC" : "FFFFFF",
         },
         borders: { top: border, bottom: border, left: border, right: border },
-        children: [new Paragraph({ children: runs, spacing: { after: 0, line: 240 } })],
+        children: [new Paragraph({ children: runs, spacing: { after: 0, line: 260 }, keepLines: true })],
       });
     });
-    return new TableRow({ children: cells, tableHeader: isHeader });
+    return new TableRow({ children: cells, tableHeader: isHeader, cantSplit: true });
   });
   return new Table({
     width: { size: CONTENT_WIDTH, type: WidthType.DXA },
@@ -143,10 +149,12 @@ function addMarkdownBody(bodyLines, children) {
             margins: { top: 130, bottom: 130, left: 160, right: 160 },
             borders: { top: border, bottom: border, left: border, right: border },
             children: codeLines.map((code) => new Paragraph({
-              children: [new TextRun({ text: code || " ", font: "Consolas", color: "1E3A5F", size: 18 })],
-              spacing: { after: 25, line: 240 },
+              children: [new TextRun({ text: code || " ", font: "Consolas", color: "1E3A5F", size: 19 })],
+              spacing: { after: 35, line: 260 },
+              keepLines: true,
             })),
           })],
+          cantSplit: true,
         })],
       }));
       children.push(new Paragraph({ text: "", spacing: { after: 80 } }));
@@ -171,7 +179,10 @@ function addMarkdownBody(bodyLines, children) {
         text: title,
         heading: headingLevel,
         keepNext: true,
-        spacing: { before: level === 1 ? 300 : 190, after: level === 1 ? 130 : 90 },
+        keepLines: true,
+        pageBreakBefore: level === 2,
+        border: level === 2 ? { bottom: { style: BorderStyle.SINGLE, size: 10, color: GOLD, space: 7 } } : undefined,
+        spacing: { before: level === 1 ? 320 : 210, after: level === 1 ? 170 : 120 },
       }));
       index += 1;
       continue;
@@ -198,6 +209,7 @@ function addMarkdownBody(bodyLines, children) {
               spacing: { after: 0, line: 250 },
             })],
           })],
+          cantSplit: true,
         })],
       }));
       children.push(new Paragraph({ text: "", spacing: { after: 100 } }));
@@ -208,11 +220,11 @@ function addMarkdownBody(bodyLines, children) {
       const content = isNumber ? line.replace(/^\d+\.\s/, "") : line.replace(/^[-*]\s/, "");
       const checked = content.startsWith("[ ] ");
       const bullet = isNumber ? line.match(/^\d+/)[0] + "." : checked ? "☐" : "•";
-      const text = cleanMarkdown(checked ? content.slice(4) : content);
       children.push(new Paragraph({
-        children: [new TextRun({ text: `${bullet}  `, bold: true, color: BLUE, size: 19 }), ...inlineRuns(text, { color: TEXT, size: 20 })],
+        children: [new TextRun({ text: `${bullet}  `, bold: true, color: BLUE, size: 21 }), ...renderInline(checked ? content.slice(4) : isNumber ? line.replace(/^\d+\.\s/, "") : line.replace(/^[-*]\s/, ""), { color: TEXT, size: 22 })],
         indent: { left: 360, hanging: 240 },
-        spacing: { after: 75, line: 265 },
+        spacing: { after: 100, line: 290 },
+        keepLines: true,
       }));
       index += 1;
       continue;
@@ -226,9 +238,10 @@ function addMarkdownBody(bodyLines, children) {
       index += 1;
     }
     children.push(new Paragraph({
-      children: inlineRuns(cleanMarkdown(paraLines.join(" ")), { color: TEXT, size: 20 }),
-      spacing: { after: 115, line: 270 },
+      children: renderInline(paraLines.join(" "), { color: TEXT, size: 22 }),
+      spacing: { after: 150, line: 300 },
       widowControl: true,
+      keepLines: true,
     }));
   }
 }
@@ -246,27 +259,27 @@ const bodyStart = lines.findIndex((line, idx) => idx > contentsHeading && line.t
 const documentBody = lines.slice(bodyStart + 1);
 
 const coverChildren = [
-  new Paragraph({ text: "", spacing: { after: 1050 } }),
+  new Paragraph({ text: "", spacing: { after: 850 } }),
   new Paragraph({
     text: "WHAMO",
     alignment: AlignmentType.CENTER,
-    spacing: { after: 80 },
+    spacing: { after: 110 },
     style: "Title",
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
+    spacing: { after: 190 },
+    children: [new TextRun({ text: "Network Designer", bold: true, color: NAVY, size: 42, font: "Aptos Display" })],
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
     spacing: { after: 160 },
-    children: [new TextRun({ text: "Network Designer", bold: true, color: NAVY, size: 40, font: "Aptos Display" })],
+    children: [new TextRun({ text: subtitle, color: BLUE, size: 30, font: "Aptos Display" })],
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
-    spacing: { after: 140 },
-    children: [new TextRun({ text: subtitle, color: BLUE, size: 28, font: "Aptos Display" })],
-  }),
-  new Paragraph({
-    alignment: AlignmentType.CENTER,
-    spacing: { after: 550 },
-    children: [new TextRun({ text: "Hydraulic Transient Analysis · Water Hammer & Mass Oscillation", color: MUTED, size: 19, italics: true })],
+    spacing: { after: 480 },
+    children: [new TextRun({ text: "Hydraulic Transient Analysis · Water Hammer & Mass Oscillation", color: MUTED, size: 21, italics: true })],
   }),
 ];
 
@@ -309,13 +322,13 @@ children.push(new Paragraph({
 for (const [number, entry] of tocEntries) {
   children.push(new Paragraph({
     children: [
-      new TextRun({ text: `${number}.  `, bold: true, color: BLUE, size: 21 }),
-      new TextRun({ text: entry, color: TEXT, size: 21 }),
+      new TextRun({ text: `${number}.  `, bold: true, color: BLUE, size: 22 }),
+      new TextRun({ text: entry, color: TEXT, size: 22 }),
     ],
-    spacing: { after: 150 },
+    spacing: { after: 180, line: 290 },
+    keepLines: true,
   }));
 }
-children.push(new Paragraph({ children: [new PageBreak()] }));
 addMarkdownBody(documentBody, children);
 
 const doc = new Document({
@@ -326,24 +339,24 @@ const doc = new Document({
   styles: {
     default: {
       document: {
-        run: { font: "Aptos", size: 20, color: TEXT },
-        paragraph: { spacing: { after: 100, line: 270 } },
+        run: { font: "Cambria", size: 22, color: TEXT },
+        paragraph: { spacing: { after: 150, line: 300 } },
       },
       title: {
-        run: { font: "Aptos Display", size: 52, bold: true, color: BLUE },
+        run: { font: "Aptos Display", size: 58, bold: true, color: BLUE },
         paragraph: { alignment: AlignmentType.CENTER, spacing: { after: 80 } },
       },
       heading1: {
-        run: { font: "Aptos Display", size: 30, bold: true, color: NAVY },
-        paragraph: { spacing: { before: 320, after: 150 }, keepNext: true },
+        run: { font: "Aptos Display", size: 32, bold: true, color: NAVY },
+        paragraph: { spacing: { before: 320, after: 170 }, keepNext: true, keepLines: true },
       },
       heading2: {
-        run: { font: "Aptos Display", size: 24, bold: true, color: BLUE },
-        paragraph: { spacing: { before: 220, after: 100 }, keepNext: true },
+        run: { font: "Aptos Display", size: 26, bold: true, color: BLUE },
+        paragraph: { spacing: { before: 220, after: 120 }, keepNext: true, keepLines: true },
       },
       heading3: {
-        run: { font: "Aptos", size: 21, bold: true, color: NAVY },
-        paragraph: { spacing: { before: 150, after: 80 }, keepNext: true },
+        run: { font: "Aptos", size: 23, bold: true, color: NAVY },
+        paragraph: { spacing: { before: 170, after: 100 }, keepNext: true, keepLines: true },
       },
     },
   },
