@@ -168,9 +168,12 @@ function makeDocument(report) {
   });
 }
 
+const outputDirectory = new URL("../Monthly_Progress_Reports/", import.meta.url);
+await fs.mkdir(outputDirectory, { recursive: true });
+
 for (const report of reports) {
   const buffer = await Packer.toBuffer(makeDocument(report));
-  const outputPath = new URL(`./${report.file}`, import.meta.url);
+  const outputPath = new URL(`../Monthly_Progress_Reports/${report.file}`, import.meta.url);
   await fs.writeFile(outputPath, buffer);
   console.log(`Created ${outputPath.pathname} (${buffer.length} bytes)`);
 }
