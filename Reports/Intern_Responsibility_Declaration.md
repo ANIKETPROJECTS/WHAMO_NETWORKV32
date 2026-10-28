@@ -10,7 +10,6 @@
 | Intern name | [Full legal name] |
 | Internship / student ID | [ID, if applicable] |
 | Institution / department | [Institution and department] |
-| Host organization | [Organization] |
 | Project period | [Start date] to [End date] |
 | Contribution period covered by this declaration | [Dates / release / report] |
 
@@ -33,7 +32,7 @@ I have reviewed the work identified above and declare that:
 4. I have reviewed the applicable terms for third-party software, data, fonts, images, and other materials used in my contribution. I have identified required notices, attribution, source disclosure, or other license obligations and have reported any item requiring further review.
 5. I understand that I am responsible for plagiarism, intellectual-property, or copyright violations arising from my contribution, subject to the applicable institutional and host-organization rules.
 6. I have not placed credentials, private personal information, or material I was not authorized to disclose into submitted source code, reports, screenshots, or public repositories.
-7. I have listed any tools or assistance that the host organization requires to be disclosed, including generated or externally supplied material, in the disclosure section below.
+7. I have listed any tools or assistance that project or institutional rules require to be disclosed, including generated or externally supplied material, in the disclosure section below.
 
 ### Source and assistance disclosure
 
@@ -57,15 +56,4 @@ I confirm that I have read this declaration and that the statements above are ac
 | Signature | [Sign here] |
 | Date | [Date] |
 
-## Supervisor / host-organization acknowledgement
-
-This acknowledgement records receipt or review; it does not replace the intern's individual responsibility.
-
-| Reviewer | Entry |
-|---|---|
-| Name and role | [Name and role] |
-| Review status | [Received / reviewed / follow-up required] |
-| Comments / follow-up | [Comments] |
-| Signature | [Sign here] |
-| Date | [Date] |
 

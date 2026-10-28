@@ -196,3 +196,17 @@ mtime_ms = 1792735785223
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/66fd9e76-83de-426c-96dd-64a8a48ac52d/30c8498d-155d-45b3-b832-2c9624061e6c"
 storage_version_token = "1792735826301177"
 content_type = "text/markdown"
+
+[[outputs]]
+id = "1Ir_N75alP1nIyJc14Vxf"
+uri = "file://Reports/Intern_Responsibility_Declaration.docx"
+type = "word_document"
+title = "Individual Intern Responsibility Declaration"
+description = "Signature-ready Word form for one intern, with authorship, plagiarism, intellectual-property, copyright, source disclosure, and an intern signature field. No supervisor or host-organization acknowledgement section."
+logical_id = "1d8b677b-18c6-4721-8f15-b5531e38abdc"
+content_hash = "sha256:8b7bd8a882590fc711691ea62d8fd2b6571668c02bc267c2af10276832847bd6"
+size = 13152
+mtime_ms = 1793160528715
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/1d8b677b-18c6-4721-8f15-b5531e38abdc/25e207c1-f685-41a7-bb20-464b1a6c35b2"
+storage_version_token = "1793160557412160"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"

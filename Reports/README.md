@@ -9,7 +9,7 @@ This folder contains templates and project documentation for the WHAMO Network D
 | [Monthly Progress Report Template](Monthly_Progress_Report_Template.md) | Submit one report per intern for each reporting month; the host-organization committee records verification and acceptance. |
 | [Final Project Report Template](Final_Project_Report_Template.md) | Document the final product, implementation, evidence, limitations, handover, and required countersignatures. |
 | [User Manual](USER_MANUAL.md) | Instructions for operating the WHAMO Designer. |
-| [Intern Responsibility Declaration](Intern_Responsibility_Declaration.md) | Individual declaration covering each intern's work, plagiarism, intellectual property, copyright, and acknowledgements. |
+| [Intern Responsibility Declaration](Intern_Responsibility_Declaration.md) | Individual declaration covering each intern's work, plagiarism, intellectual property, copyright, and acknowledgements. A signature-ready Word copy is also provided as `Intern_Responsibility_Declaration.docx`. |
 | [Open-Source Acknowledgements](Open_Source_Acknowledgements.md) | A selected register of direct components whose installed package metadata was checked, plus the limits of that check. |
 
 ## How to use these templates
