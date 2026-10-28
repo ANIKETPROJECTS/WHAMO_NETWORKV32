@@ -178,7 +178,7 @@ function addMarkdownBody(bodyLines, children) {
         heading: headingLevel,
         keepNext: true,
         keepLines: true,
-        pageBreakBefore: level === 2,
+        pageBreakBefore: level === 2 && /^\d+\./.test(title),
         border: level === 2 ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: BLACK, space: 7 } } : undefined,
         spacing: { before: level === 1 ? 320 : 210, after: level === 1 ? 170 : 120 },
       }));
