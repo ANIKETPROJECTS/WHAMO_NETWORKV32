@@ -2,10 +2,9 @@
 
 ## WHAMO Network Designer
 
-**Prepared for:** [Ministry / Department / Institution]
-**Prepared by:** [Project team members]
+**Prepared for:** [Ministry / Department]
+**Prepared by:** ABHIJEET SINGH; SEJAL YADAV; SAIRAJ KOYANDE; PRATIK KADAM; RUTUJA DESMUKH
 **Team leader:** ANIKET SANJAY RANE
-**Institution / department:** [Name]
 **Host organization:** [Name, if applicable]
 **Project period:** 01 February 2026 to 30 July 2026
 **Report version:** Draft for review and countersignature
