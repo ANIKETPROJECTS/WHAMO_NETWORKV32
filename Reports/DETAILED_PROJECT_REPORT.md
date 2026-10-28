@@ -7,7 +7,7 @@
 **Team leader:** ANIKET SANJAY RANE
 **Institution / department:** [Name]
 **Host organization:** [Name, if applicable]
-**Project period:** [Start date] to [End date]
+**Project period:** 01 February 2026 to 30 July 2026
 **Report version:** Draft for review and countersignature
 
 > This report describes the current project source and the WHAMO output samples supplied by the team. Complete the project-specific fields and attach the approved evidence before signature.
