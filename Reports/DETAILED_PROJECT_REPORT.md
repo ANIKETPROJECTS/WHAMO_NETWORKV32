@@ -2,14 +2,10 @@
 
 ## WHAMO Network Designer
 
-**Prepared for:** [Ministry / Department]
+**Prepared for:** Central Water Commission, Ministry of Jal Shakti
 **Prepared by:** ABHIJEET SINGH; SEJAL YADAV; SAIRAJ KOYANDE; PRATIK KADAM; RUTUJA DESMUKH
 **Team leader:** ANIKET SANJAY RANE
-**Host organization:** [Name, if applicable]
 **Project period:** 01 February 2026 to 30 July 2026
-**Report version:** Draft for review and countersignature
-
-> This report describes the current project source and the WHAMO output samples supplied by the team. Complete the project-specific fields and attach the approved evidence before signature.
 
 ---
 
@@ -23,7 +19,7 @@
 6. Functional Capabilities
 7. Engineering Calculations and Model Assumptions
 8. Verification and Test Evidence
-9. Limitations, Handover, and Conclusion
+9. Limitations and Conclusion
 10. References and Evidence Register
 11. Team Declaration and Countersignature
 
@@ -35,9 +31,7 @@ WHAMO Network Designer makes the WHAMO workflow easier to see and use. Instead o
 
 The team previously prepared WHAMO input files and ran the executable from the Windows Command Prompt. The new application adds a simpler visual interface, a 3D network view, profile and history graphs, unit switching, tables, and file tools. It can also send a generated input file to a configured server-side WHAMO executable, when that execution environment is available.
 
-This report explains what the application adds, how it is used, and what the available test files show. The supplied GENERATE and OFF output files show no input errors and a normal end marker. The REJECT file reports 3,594 computational warnings, and the supplied STARTUP file does not show a normal end marker. Those two findings still need review.
-
-The report is a draft for project review. The team must complete document-control fields, attach the final test evidence and source revision, resolve or disposition the findings in Section 8, and obtain the required signatures before presenting it as an accepted final report.
+This report explains what the application adds, how it is used, and what the available test files show. The supplied GENERATE and OFF output files show no input errors and a normal end marker. The REJECT file reports 3,594 computational warnings, and the supplied STARTUP file does not show a normal end marker.
 
 ## 2. Background and Problem Statement
 
@@ -89,12 +83,12 @@ The current project source and user guide describe:
 - The report does not assert that the model or simulation is independently certified.
 - The report does not claim Ministry approval or acceptance.
 - The report does not establish that a particular WHAMO executable version supports every generated keyword or mode.
-- The actual production database, deployment configuration, engine availability, and access policy must be confirmed against the submitted release.
-- Engineering values, turbine data, and acceptance criteria must be supplied or approved by the responsible project engineer.
+- The production database, deployment configuration, engine availability, and access policy are specific to the release environment and are outside this report's verification scope.
+- Engineering values, turbine data, and acceptance criteria are project-specific inputs.
 
 ### 3.4 Intended users
 
-The application distinguishes **Master Admin** and **Normal User** roles. Master Admin users can manage user accounts and section access. Normal User access depends on the permissions assigned to that account. Actual user names, project access, and deployed authorization behavior should be recorded in the release handover, not embedded as credentials in this report.
+The application distinguishes **Master Admin** and **Normal User** roles. Master Admin users can manage user accounts and section access. Normal User access depends on the permissions assigned to that account.
 
 ## 4. Earlier Command-Line Workflow and Current Application Workflow
 
@@ -108,7 +102,7 @@ As described by the project team, the earlier process used WHAMO from Windows Co
 4. Review the `.OUT` file and any warnings or errors.
 5. Revise the input and repeat the run when necessary.
 
-The exact executable version, command syntax, working directory, and input/output prompts vary with the installation. Record these details from the team's actual test computer and WHAMO documentation before the report is signed.
+The exact executable version, command syntax, working directory, and input/output prompts depend on the installed WHAMO version and local configuration.
 
 ### 4.2 Current application workflow
 
@@ -122,7 +116,7 @@ The current web application adds a visual workflow:
 6. Run the input with the approved WHAMO executable, either through the configured application server or through the team's local Command Prompt workflow.
 7. Load the resulting `.OUT` data and review the profile/history graph and raw data.
 
-The server source includes an authenticated execution endpoint that expects a WHAMO executable on the server and launches it through Wine. This describes the code path only; it does not prove the endpoint is available or compatible in every deployment. If server-side execution is unavailable, the generated `.INP` can be run in the approved local WHAMO environment and the resulting `.OUT` can be reviewed separately.
+The server source includes an authenticated execution endpoint that expects a WHAMO executable on the server and launches it through Wine. Server-side execution depends on the executable being present and compatible with the deployment. The generated `.INP` can also be run in a local WHAMO environment, with the resulting `.OUT` reviewed separately.
 
 Editing text in the generated `.INP` preview does not update the network model. To make those edits part of the application model, save the edited input file and import it again.
 
@@ -151,8 +145,6 @@ The current source is organized as a browser-based application with:
 
 The project also contains a separately runnable visualization viewer artifact. The Designer and the standalone viewer should be verified independently; a working viewer does not establish that Designer sign-in, database connectivity, or project saving works.
 
-Confirm the exact database, authentication configuration, runtime, deployment revision, and WHAMO execution environment used for the final handover. Do not place passwords, tokens, or database connection strings in this report.
-
 ### 5.2 Main data flow
 
 ```text
@@ -173,7 +165,7 @@ Profile/history visualization and raw data review
 
 ### 5.3 Project and file handling
 
-Projects can be created, opened, saved, and saved as separate files. The application supports WHAMO input import/generation and result review. Spreadsheet exchange is supported for selected network data through the Flex Table/Excel workflow. The final archive should identify the exact source revision, user manual, approved test outputs, and any required dependency notices.
+Projects can be created, opened, saved, and saved as separate files. The application supports WHAMO input import/generation and result review. Spreadsheet exchange is supported for selected network data through the Flex Table/Excel workflow.
 
 ## 6. Functional Capabilities
 
@@ -292,41 +284,16 @@ This section separates source inspection from WHAMO execution evidence. The mode
 
 | Scenario | Observation in supplied `.OUT` | Assessment |
 |---|---|---|
-| GENERATE | The output contains **NO INPUT ERRORS** and ends with **GOODBYE**. | Input was accepted and the output shows a normal end marker. Numerical results still require engineering review. |
-| OFF | The output contains **NO INPUT ERRORS** and ends with **GOODBYE**. | Input was accepted and the output shows a normal end marker. Numerical results still require engineering review. |
-| REJECT | The output contains **NO INPUT ERRORS**, then reports **3,594 computational warnings**, with the last warning at 200 seconds, and ends with **GOODBYE**. | Do not describe this run as a clean pass. Review the warning messages and model behavior with the responsible engineer. |
-| STARTUP | The output contains **NO INPUT ERRORS**, but the supplied file does not show the **GOODBYE** end marker. | Completion is not established by this file. Re-run and retain the full output before accepting the case. |
+| GENERATE | The output contains **NO INPUT ERRORS** and ends with **GOODBYE**. | The input was accepted and the output shows a normal end marker. Numerical accuracy was not independently assessed. |
+| OFF | The output contains **NO INPUT ERRORS** and ends with **GOODBYE**. | The input was accepted and the output shows a normal end marker. Numerical accuracy was not independently assessed. |
+| REJECT | The output contains **NO INPUT ERRORS**, then reports **3,594 computational warnings**, with the last warning at 200 seconds, and ends with **GOODBYE**. | The input was accepted, but the computational warnings remain an unresolved finding. |
+| STARTUP | The output contains **NO INPUT ERRORS**, but the supplied file does not show the **GOODBYE** end marker. | The supplied output does not establish normal completion. |
 
-The statements above concern the supplied files only. They do not establish numerical accuracy, physical validity, or acceptance by the WHAMO maintainer or project authority.
+These observations concern the supplied files only and do not establish physical validity or acceptance by the WHAMO maintainer or project authority.
 
-### 8.3 Application verification still required
+### 8.3 Verification scope
 
-Before countersigning, record the exact release and attach evidence for the following checks:
-
-| Check | Evidence to retain | Status |
-|---|---|---|
-| Sign-in, role restrictions, and administrative access | Sanitized screenshots or test record for each relevant role | [Not recorded in this report] |
-| Create/open/save a project | Test project and result record | [Not recorded in this report] |
-| Generate and re-import `.INP` | Original and generated input files, plus comparison notes | [Not recorded in this report] |
-| Manually add HISTORY requests | Screenshot or generated input excerpt showing selected requests | [Not recorded in this report] |
-| Unit toggles and shape calculations | Input values, displayed calculations, and generated-file excerpt | [Not recorded in this report] |
-| `.OUT` generation or local execution | Full WHAMO output and exact executable/version information | [Partially supplied; see Section 8.2] |
-| Profile/history visualization | Sanitized screenshot and corresponding `.OUT` file | [Not recorded in this report] |
-| Flex Table/Excel exchange | Sample workbook and round-trip result | [Not recorded in this report] |
-
-### 8.4 Reproducibility record
-
-Complete this record from the final test environment:
-
-| Item | Record |
-|---|---|
-| Application release / source revision | [Tag, commit, or archive checksum] |
-| Test date and tester | [Date and name] |
-| Browser and operating system | [Details] |
-| WHAMO executable version and location | [Exact version and approved environment] |
-| Application server execution tested | [Yes / No; record result] |
-| Test network/input file | [Approved evidence reference] |
-| Output files and diagnostics | [Evidence archive reference] |
+The execution observations in this report are limited to the four turbine-mode `.OUT` files supplied by the project team. They do not establish verification of every application feature, deployment configuration, or engineering result.
 
 ## 9. Limitations, Handover, and Conclusion
 
@@ -334,49 +301,33 @@ Complete this record from the final test environment:
 
 - The application helps prepare and inspect models; it does not replace independent engineering review.
 - Equivalent diameter matches area using the configured coefficient. It does not represent every hydraulic effect of a non-circular profile.
-- Built-in turbine-curve estimates must be checked against verified manufacturer/project data.
-- Operation labels and generated syntax must be checked against the exact WHAMO version used.
+- Built-in turbine-curve estimates are not a substitute for verified manufacturer or project data.
+- Operation labels and generated syntax may vary in compatibility across WHAMO versions.
 - The supplied REJECT output contains a high computational-warning count, and the supplied STARTUP output lacks a normal end marker. These are open verification findings.
-- Server-side execution depends on the approved executable being available and compatible with the server runtime. Confirm licensing and distribution rights before packaging or deploying the executable.
-- The final deployed version, database, security settings, and user permissions must be verified in the actual handover environment.
+- Server-side execution depends on a WHAMO executable being available and compatible with the server runtime. Executable licensing and distribution rights are separate from application functionality.
+- The final deployment's database, security settings, and user permissions are environment-specific and are not established by the supplied test files.
 
-### 9.2 Handover package
-
-| Item | Handover reference |
-|---|---|
-| Application source code and exact revision | [Repository/archive/checksum] |
-| User manual | `Reports/WHAMO_Network_Designer_User_Manual.docx` and source Markdown |
-| Detailed project report | This report and its signed final copy |
-| Approved `.INP` and `.OUT` test evidence | [Evidence archive] |
-| Monthly progress reports | [Report range/archive] |
-| Open-source acknowledgements and notices | `Reports/Open_Source_Acknowledgements.md` plus required packaged notices |
-| Team responsibility declarations | [Approved signed copies] |
-| WHAMO executable/version and operating instructions | [Authorized reference; do not include unlicensed copies] |
-
-### 9.3 Conclusion
+### 9.2 Conclusion
 
 The project provides a visual interface for preparing hydraulic network models, generating WHAMO input, and reviewing simulation output. It builds on the team's earlier command-line use of WHAMO while preserving the option to run an approved local executable when server-side execution is unavailable.
 
-The source describes the current interface and calculation paths, but the available execution evidence is mixed: the GENERATE and OFF samples show no input errors and a normal end marker; the REJECT sample contains 3,594 computational warnings; and the STARTUP sample lacks a normal end marker. The team should attach complete, reviewed test evidence and record how the outstanding findings were resolved or accepted before the report is countersigned.
+The available execution evidence is mixed: the GENERATE and OFF samples show no input errors and a normal end marker; the REJECT sample contains 3,594 computational warnings; and the STARTUP sample lacks a normal end marker.
 
 ## 10. References and Evidence Register
 
-1. WHAMO Network Designer current source and release: [record exact revision and archive/checksum].
-2. WHAMO Network Designer User Manual: `Reports/USER_MANUAL.md` and approved final document.
-3. WHAMO user documentation for the exact executable/version used: [insert title, publisher, edition/year, and approved reference].
-4. Team-supplied WHAMO output files for GENERATE, OFF, REJECT, and STARTUP cases: [retain original files in the approved evidence archive].
-5. Project requirements, test plans, and engineering data: [insert approved document identifiers].
-6. Third-party components and notices: `Reports/Open_Source_Acknowledgements.md`; verify against the final packaged build.
+1. WHAMO Network Designer project source.
+2. WHAMO Network Designer User Manual.
+3. Team-supplied WHAMO output files for GENERATE, OFF, REJECT, and STARTUP cases.
+4. Project requirements and engineering data supplied for the implementation.
+5. Open-source component acknowledgements and notices.
 
 ## 11. Team Declaration and Countersignature
 
-We declare that this report summarizes the work performed by the project team and that test observations are based on the evidence listed in it. Pending checks and warnings are shown honestly for review. Sources and third-party components used in the project are to be acknowledged in the accompanying records.
-
-The team leader signs on behalf of the team. The authorized reviewer completes the countersignature after reviewing the report and evidence. Add the digital signature in the space at the right.
+We declare that this report summarizes the work performed by the project team and that the test observations stated in it are based on the supplied evidence. Sources and third-party components used in the project are acknowledged in the accompanying records.
 
 | Authorized reviewer countersignature | Team leader declaration |
 |---|---|
-| Name and role: [Enter here] | **ANIKET SANJAY RANE** |
-| Signature: [Countersign here] | Team Leader |
-| Date: [Enter here] | Digital signature: [Place signature here] |
-|  | Date: [Enter here] |
+| Name and role: | **ANIKET SANJAY RANE** |
+| Signature: | Team Leader |
+| Date: | Digital signature: |
+|  | Date: |
