@@ -224,3 +224,17 @@ mtime_ms = 1793183538513
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/99c6d674-e6e3-46c0-a3b4-d727aae24116/6d761ada-6ede-4739-9464-37d4932f2af2"
 storage_version_token = "1793183577338497"
 content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "-niRfojjMVhdVvx2EjMGz"
+uri = "file://Reports/DETAILED_PROJECT_REPORT.docx"
+type = "word_document"
+title = "WHAMO Network Designer — Detailed Project Report"
+description = "Updated in simple language to highlight the visual editor, 3D view, results visualizer, and other user-friendly tools. The final declaration page places ANIKET SANJAY RANE and the digital-signature space on the right."
+logical_id = "db2da89d-9e1a-4abe-9934-3a2777b54bc2"
+content_hash = "sha256:600d2943097b0c29f993f37385bb54f728766eef6e3e27d60a646189f68b6c74"
+size = 24599
+mtime_ms = 1793184524801
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/db2da89d-9e1a-4abe-9934-3a2777b54bc2/97d9a5cb-f144-4802-b426-3fd532421e9a"
+storage_version_token = "1793184590103045"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
