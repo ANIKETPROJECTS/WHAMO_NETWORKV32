@@ -24,14 +24,12 @@ const outputPath = new URL("./WHAMO_Network_Designer_User_Manual.docx", import.m
 const markdown = await fs.readFile(sourcePath, "utf8");
 const lines = markdown.replace(/\r\n/g, "\n").split("\n");
 
-const NAVY = "12304A";
-const BLUE = "216C85";
-const GOLD = "B28B42";
-const TEXT = "243447";
-const MUTED = "64748B";
-const LIGHT = "F1F5F9";
-const PALE_BLUE = "EFF6FF";
-const BORDER = "D7E0EA";
+const BLACK = "000000";
+const TEXT = BLACK;
+const MUTED = BLACK;
+const LIGHT = "F2F2F2";
+const PALE_GRAY = "F7F7F7";
+const BORDER = "B7B7B7";
 const CONTENT_WIDTH = 9638;
 
 const border = { style: BorderStyle.SINGLE, size: 5, color: BORDER };
@@ -41,17 +39,17 @@ function inlineRuns(value, base = {}) {
   const parts = value.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean);
   return parts.map((part) => {
     if (part.startsWith("**") && part.endsWith("**")) {
-      return new TextRun({ text: part.slice(2, -2), bold: true, ...base });
+      return new TextRun({ text: part.slice(2, -2), bold: true, ...base, font: "Calibri", color: BLACK });
     }
     if (part.startsWith("`") && part.endsWith("`")) {
       return new TextRun({
         text: part.slice(1, -1),
-        font: "Consolas",
-        color: "1D4ED8",
         ...base,
+        font: "Calibri",
+        color: BLACK,
       });
     }
-    return new TextRun({ text: part, ...base });
+    return new TextRun({ text: part, ...base, font: "Calibri", color: BLACK });
   });
 }
 
@@ -87,7 +85,7 @@ function makeTable(rows, header = true) {
       const content = row[cellIndex] ?? "";
       const runs = inlineRuns(content, {
         bold: isHeader,
-        color: isHeader ? "FFFFFF" : TEXT,
+        color: BLACK,
         size: 20,
       });
       return new TableCell({
@@ -96,7 +94,7 @@ function makeTable(rows, header = true) {
         verticalAlign: VerticalAlign.CENTER,
         shading: {
           type: ShadingType.CLEAR,
-          fill: isHeader ? NAVY : rowIndex % 2 === 0 ? "F8FAFC" : "FFFFFF",
+          fill: isHeader ? "E6E6E6" : rowIndex % 2 === 0 ? PALE_GRAY : "FFFFFF",
         },
         borders: { top: border, bottom: border, left: border, right: border },
         children: [new Paragraph({ children: runs, spacing: { after: 0, line: 260 }, keepLines: true })],
@@ -149,7 +147,7 @@ function addMarkdownBody(bodyLines, children) {
             margins: { top: 130, bottom: 130, left: 160, right: 160 },
             borders: { top: border, bottom: border, left: border, right: border },
             children: codeLines.map((code) => new Paragraph({
-              children: [new TextRun({ text: code || " ", font: "Consolas", color: "1E3A5F", size: 19 })],
+              children: [new TextRun({ text: code || " ", font: "Calibri", color: BLACK, size: 19 })],
               spacing: { after: 35, line: 260 },
               keepLines: true,
             })),
@@ -181,7 +179,7 @@ function addMarkdownBody(bodyLines, children) {
         keepNext: true,
         keepLines: true,
         pageBreakBefore: level === 2,
-        border: level === 2 ? { bottom: { style: BorderStyle.SINGLE, size: 10, color: GOLD, space: 7 } } : undefined,
+        border: level === 2 ? { bottom: { style: BorderStyle.SINGLE, size: 6, color: BLACK, space: 7 } } : undefined,
         spacing: { before: level === 1 ? 320 : 210, after: level === 1 ? 170 : 120 },
       }));
       index += 1;
@@ -197,15 +195,15 @@ function addMarkdownBody(bodyLines, children) {
       children.push(new Table({
         width: { size: CONTENT_WIDTH, type: WidthType.DXA },
         columnWidths: [CONTENT_WIDTH],
-        borders: { top: border, bottom: border, left: { style: BorderStyle.SINGLE, size: 18, color: BLUE }, right: border },
+        borders: { top: border, bottom: border, left: { style: BorderStyle.SINGLE, size: 8, color: BLACK }, right: border },
         rows: [new TableRow({
           children: [new TableCell({
             width: { size: CONTENT_WIDTH, type: WidthType.DXA },
             margins: { top: 130, bottom: 130, left: 180, right: 150 },
-            shading: { type: ShadingType.CLEAR, fill: PALE_BLUE },
-            borders: { top: border, bottom: border, left: { style: BorderStyle.SINGLE, size: 18, color: BLUE }, right: border },
+            shading: { type: ShadingType.CLEAR, fill: PALE_GRAY },
+            borders: { top: border, bottom: border, left: { style: BorderStyle.SINGLE, size: 8, color: BLACK }, right: border },
             children: [new Paragraph({
-              children: inlineRuns(quoteText, { color: "173B5E", size: 19 }),
+              children: inlineRuns(quoteText, { color: BLACK, size: 19 }),
               spacing: { after: 0, line: 250 },
             })],
           })],
@@ -221,7 +219,7 @@ function addMarkdownBody(bodyLines, children) {
       const checked = content.startsWith("[ ] ");
       const bullet = isNumber ? line.match(/^\d+/)[0] + "." : checked ? "☐" : "•";
       children.push(new Paragraph({
-        children: [new TextRun({ text: `${bullet}  `, bold: true, color: BLUE, size: 21 }), ...renderInline(checked ? content.slice(4) : isNumber ? line.replace(/^\d+\.\s/, "") : line.replace(/^[-*]\s/, ""), { color: TEXT, size: 22 })],
+        children: [new TextRun({ text: `${bullet}  `, bold: true, color: BLACK, size: 21, font: "Calibri" }), ...renderInline(checked ? content.slice(4) : isNumber ? line.replace(/^\d+\.\s/, "") : line.replace(/^[-*]\s/, ""), { color: TEXT, size: 22 })],
         indent: { left: 360, hanging: 240 },
         spacing: { after: 100, line: 290 },
         keepLines: true,
@@ -269,17 +267,17 @@ const coverChildren = [
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 190 },
-    children: [new TextRun({ text: "Network Designer", bold: true, color: NAVY, size: 42, font: "Aptos Display" })],
+    children: [new TextRun({ text: "Network Designer", bold: true, color: BLACK, size: 42, font: "Calibri" })],
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 160 },
-    children: [new TextRun({ text: subtitle, color: BLUE, size: 30, font: "Aptos Display" })],
+    children: [new TextRun({ text: subtitle, bold: true, color: BLACK, size: 30, font: "Calibri" })],
   }),
   new Paragraph({
     alignment: AlignmentType.CENTER,
     spacing: { after: 480 },
-    children: [new TextRun({ text: "Hydraulic Transient Analysis · Water Hammer & Mass Oscillation", color: MUTED, size: 21, italics: true })],
+    children: [new TextRun({ text: "Hydraulic Transient Analysis · Water Hammer & Mass Oscillation", color: BLACK, size: 21 })],
   }),
 ];
 
@@ -297,10 +295,10 @@ coverChildren.push(new Table({
     children: [new TableCell({
       width: { size: CONTENT_WIDTH, type: WidthType.DXA },
       margins: { top: 150, bottom: 150, left: 180, right: 180 },
-      shading: { type: ShadingType.CLEAR, fill: PALE_BLUE },
-      borders: { top: border, bottom: border, left: { style: BorderStyle.SINGLE, size: 18, color: BLUE }, right: border },
+      shading: { type: ShadingType.CLEAR, fill: PALE_GRAY },
+      borders: { top: border, bottom: border, left: { style: BorderStyle.SINGLE, size: 8, color: BLACK }, right: border },
       children: [new Paragraph({
-        children: inlineRuns(coverNote, { color: "173B5E", size: 19 }),
+        children: inlineRuns(coverNote, { color: BLACK, size: 19 }),
         spacing: { after: 0, line: 260 },
       })],
     })],
@@ -322,8 +320,8 @@ children.push(new Paragraph({
 for (const [number, entry] of tocEntries) {
   children.push(new Paragraph({
     children: [
-      new TextRun({ text: `${number}.  `, bold: true, color: BLUE, size: 22 }),
-      new TextRun({ text: entry, color: TEXT, size: 22 }),
+      new TextRun({ text: `${number}.  `, bold: true, color: BLACK, size: 22, font: "Calibri" }),
+      new TextRun({ text: entry, color: BLACK, size: 22, font: "Calibri" }),
     ],
     spacing: { after: 180, line: 290 },
     keepLines: true,
@@ -339,24 +337,36 @@ const doc = new Document({
   styles: {
     default: {
       document: {
-        run: { font: "Cambria", size: 22, color: TEXT },
+        run: { font: "Calibri", size: 22, color: BLACK },
         paragraph: { spacing: { after: 150, line: 300 } },
       },
       title: {
-        run: { font: "Aptos Display", size: 58, bold: true, color: BLUE },
+        run: { font: "Calibri", size: 58, bold: true, color: BLACK },
         paragraph: { alignment: AlignmentType.CENTER, spacing: { after: 80 } },
       },
       heading1: {
-        run: { font: "Aptos Display", size: 32, bold: true, color: NAVY },
+        run: { font: "Calibri", size: 32, bold: true, color: BLACK },
         paragraph: { spacing: { before: 320, after: 170 }, keepNext: true, keepLines: true },
       },
       heading2: {
-        run: { font: "Aptos Display", size: 26, bold: true, color: BLUE },
+        run: { font: "Calibri", size: 26, bold: true, color: BLACK },
         paragraph: { spacing: { before: 220, after: 120 }, keepNext: true, keepLines: true },
       },
       heading3: {
-        run: { font: "Aptos", size: 23, bold: true, color: NAVY },
+        run: { font: "Calibri", size: 23, bold: true, color: BLACK },
         paragraph: { spacing: { before: 170, after: 100 }, keepNext: true, keepLines: true },
+      },
+      heading4: {
+        run: { font: "Calibri", size: 22, bold: true, color: BLACK },
+      },
+      heading5: {
+        run: { font: "Calibri", size: 22, bold: true, color: BLACK },
+      },
+      heading6: {
+        run: { font: "Calibri", size: 22, bold: true, color: BLACK },
+      },
+      hyperlink: {
+        run: { font: "Calibri", color: BLACK },
       },
     },
   },
@@ -371,8 +381,8 @@ const doc = new Document({
       default: new Header({
         children: [new Paragraph({
           children: [
-            new TextRun({ text: "WHAMO NETWORK DESIGNER", bold: true, color: NAVY, size: 16 }),
-            new TextRun({ text: "  |  USER MANUAL", color: MUTED, size: 16 }),
+            new TextRun({ text: "WHAMO NETWORK DESIGNER", bold: true, color: BLACK, size: 16, font: "Calibri" }),
+            new TextRun({ text: "  |  USER MANUAL", color: BLACK, size: 16, font: "Calibri" }),
           ],
           border: { bottom: { style: BorderStyle.SINGLE, size: 5, color: BORDER, space: 5 } },
           spacing: { after: 0 },
@@ -385,9 +395,9 @@ const doc = new Document({
           alignment: AlignmentType.CENTER,
           border: { top: { style: BorderStyle.SINGLE, size: 5, color: BORDER, space: 5 } },
           children: [
-            new TextRun({ text: "Project submission manual  •  ", color: MUTED, size: 16 }),
-            new TextRun({ text: "Page ", color: MUTED, size: 16 }),
-            new TextRun({ children: [PageNumber.CURRENT], color: MUTED, size: 16 }),
+            new TextRun({ text: "Project submission manual  •  ", color: BLACK, size: 16, font: "Calibri" }),
+            new TextRun({ text: "Page ", color: BLACK, size: 16, font: "Calibri" }),
+            new TextRun({ children: [PageNumber.CURRENT], color: BLACK, size: 16, font: "Calibri" }),
           ],
         })],
       }),

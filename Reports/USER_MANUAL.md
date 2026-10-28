@@ -124,9 +124,9 @@ Saving a project and generating an `.INP` are separate actions. Save the project
 3. Enter a unique, meaningful label and the required model values.
 4. Save the project after completing the element.
 
-Conduits are network connections between elements. Select or create a connection using the connection controls, then select the conduit to edit its properties. The **Turbine** ribbon has a split control for placing a turbine as an element or activating turbine-connection mode.
+Conduits are network connections between elements. Select or create a connection using the connection controls, then select it to edit its properties. Where offered, the connection's **Type** can be set to **Conduit** or **Dummy Pipe**. The **Turbine** ribbon has a split control for placing a turbine as an element or activating turbine-connection mode.
 
-Existing files containing retired Pump or Check Valve data may still be recognized for compatibility. These are not offered as new elements in the current Insert ribbon. Review legacy elements in imported models before generating new files.
+Some imported projects may retain older data fields that are not available for new insertion. Review the import summary and the imported properties before generating a new file.
 
 ### Connect and arrange the network
 
@@ -158,7 +158,7 @@ The precise fields shown depend on the selected element and project configuratio
 | **Node** | Network point used to connect conduits and report hydraulic quantities. | Label/number, elevation and any other displayed hydraulic or reporting fields. |
 | **Junction** | Connection/split point for branches in the model. | Label/number, connections, and any displayed junction values. |
 | **Flow BC** | Flow boundary condition driven by a flow schedule. | Label, schedule number, and the schedule's time/flow pairs. |
-| **Conduit** | Pipe or connection carrying the modeled transient flow. | Label, length, diameter/shape, celerity, friction, material values, and any other displayed properties. |
+| **Conduit / Dummy Pipe** | Connection type selected in the connection's properties. | Label, connection type, length, diameter/shape, celerity, friction, material values, and any other displayed properties. |
 | **Surge Tank** | Side-branch storage element used in the transient network. | Top and bottom elevations, cross-section mode, diameter or SHAPE data, and displayed hydraulic properties. |
 | **Turbine** | Turbine component with characteristic data and an operating mode. | TCHAR type, synchronous speed, inertia, diameter, friction, windage, operation mode, and applicable schedule fields. |
 
@@ -208,7 +208,7 @@ This is an area-equivalence conversion to a circular diameter for WHAMO input. I
 
 ### Pipe material
 
-The current material selector offers **Steel** and **Concrete**. Selecting a material can automatically fill Manning's `n` and Young's modulus `E`; values remain subject to engineering review. The currently configured Steel Manning's `n` is **0.011**. Use the expandable material-properties display to inspect the selected material's listed values. The **Apply to all conduits in network** option applies the selected material across the network; use it only when that is intended.
+The current material selector offers **Steel** and **Concrete**. Selecting a material can automatically fill Manning's `n` and Young's modulus `E`; values remain subject to engineering review. The configured Manning's `n` values are **0.011 for Steel** and **0.013 for Concrete**. Use the expandable material-properties display to inspect the selected material's listed values. The **Apply to all conduits in network** option applies the selected material across the network; use it only when that is intended.
 
 ### Surge tank cross-section
 
@@ -230,6 +230,28 @@ Select a turbine to open its **Properties** panel. Turbine behavior depends on t
 Each turbine references a **TCHAR Type**. The characteristic data describe turbine response across specified heads and gate openings. The software supports editing the characteristic tables and, where available, using a built-in curve generator. The generated curve is only an aid; it is not a substitute for verified manufacturer data.
 
 The characteristic data include flow (`Q`) and efficiency values associated with the characteristic points. Confirm the table dimensions, head/gate alignment, units, and source before using it in a study. Do not assume an automatically generated efficiency or flow value is manufacturer-approved.
+
+### Built-in performance-curve generator and Q/efficiency matrices
+
+The optional **Performance Curves — TCHAR Generator** fills a turbine characteristic table from the software's built-in hill-chart library. It is an estimation aid, not a replacement for verified manufacturer or project data.
+
+1. Select a specific-speed (`Ns`) library group. The current choices are **Ns 30**, **Ns 45**, and **Ns 60**; the panel shows each group's stated head range and a design-head-based recommendation.
+2. Enter **Design Head (H)**, **Design Flow (Q)**, and **Design Efficiency (η)**. Efficiency is entered as a decimal from `0` to `1` (for example, `0.90`).
+3. Choose **Head Steps** from 2 to 20 and select one or more gate-opening percentages. The built-in library provides gates from 20% through 100%.
+4. Review the curve preview, then choose **Generate TCHAR From Curves**. If the selected TCHAR table already contains data, confirm the overwrite. The generated table can then be edited directly.
+
+The initial form selects Ns 30, gates 20/40/60/80/100, design flow 100, design efficiency 0.90, and 5 head steps. Design head starts with the turbine's existing value when available, otherwise 50. These are interface defaults, not recommended design values. Treat the Ns recommendation as a convenience hint only; confirm the selected library group and units against the approved turbine data.
+
+The software samples normalized head values across the selected library range and scales them to the design head, rounding scaled head values to three decimal places. For each selected gate and sampled head, it linearly interpolates the library's flow and torque values. If a sampled head is outside the available points for a selected gate, the implementation uses that curve's nearest endpoint rather than extrapolating. The generated matrices use:
+
+```text
+H_scaled = H_normalized × H_design / 100
+Q_matrix = Q_library_interpolated × Q_design / 100
+η_raw = [T_library_interpolated / (H_normalized × Q_library_interpolated)] × (η_design × 100)
+η_matrix = min(0.98, max(0, η_raw))
+```
+
+The generator uses zero efficiency when normalized head or interpolated flow is at or below 1, rounds flow to three decimal places and efficiency to four, and caps the stored efficiency value at `0.98`. Each matrix row corresponds to a selected gate; each column corresponds to a generated head value. These are the program's implemented calculations—not a guarantee that the built-in curve is suitable for a specific turbine. Verify units, curve provenance, matrix values, and the resulting WHAMO input with the project engineer and the WHAMO version in use. Do not reinterpret `0.98` as `98` unless the required WHAMO format explicitly calls for that conversion.
 
 ### Operation modes
 
@@ -271,7 +293,21 @@ Review each time stage:
 | **DTOUT** | Interval between recorded output times. |
 | **TMAX** | Simulation end time for that stage. |
 
-Use **Add Stage** to add a time stage. At least one stage is retained. The panel also contains the **ACCUTEST** accuracy-check setting. If included in the `.INP`, select the mode required by the study and WHAMO version. These settings should come from the approved analysis plan; the software does not choose engineering-appropriate values on the user's behalf.
+Use **Add Stage** to add a time stage. At least one stage is retained. The panel also contains the **Include ACCUTEST in .INP** checkbox and the **ACCUTEST Mode** choices:
+
+| Mode | Label shown in the software |
+|---|---|
+| **FULL** | High Accuracy |
+| **PARTIAL** | Moderate |
+| **NONE** | No Checking |
+
+These settings should come from the approved analysis plan and the WHAMO version in use; the software does not choose engineering-appropriate values on the user's behalf. The in-app Help also calls out the Courant stability check:
+
+```text
+Courant number = celerity × DTCOMP / conduit length ≤ 1.0
+```
+
+Check this condition for the modeled conduits using consistent units. A successful file export does not establish that the chosen time step is appropriate.
 
 ### Output configuration
 
@@ -411,6 +447,7 @@ Master Admin accounts have full access. Assign only the minimum sections needed 
 - [ ] Surge tank connection and cross-section data have been reviewed.
 - [ ] Turbine characteristics, operation mode, TOFF where applicable, and gate schedule have been verified.
 - [ ] DTCOMP, DTOUT, TMAX, and ACCUTEST settings match the analysis plan.
+- [ ] The Courant condition (celerity × DTCOMP / conduit length ≤ 1.0) has been checked.
 - [ ] Output requests have been explicitly reviewed under Current Requests — HISTORY.
 - [ ] Validation errors are resolved and warnings are understood.
 - [ ] The generated `.INP`, WHAMO diagnostics, and `.OUT` are saved and checked.
