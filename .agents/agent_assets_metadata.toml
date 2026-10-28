@@ -238,3 +238,59 @@ mtime_ms = 1793188867993
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/db2da89d-9e1a-4abe-9934-3a2777b54bc2/0bd28d50-1249-4d4a-bbcd-44db3a0f8c9c"
 storage_version_token = "1793188892042089"
 content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "rSkDmTPPPUKdm8RStkcMY"
+uri = "file://Reports/MONTHLY_PROGRESS_ANIKET_SANJAY_RANE.docx"
+type = "word_document"
+title = "Monthly Progress Report — Aniket Sanjay Rane"
+description = "February–October 2026, with one plain progress paragraph for each month."
+logical_id = "5a0ac02b-c38d-4b68-8930-cb0230c5fbd7"
+content_hash = "sha256:d69b8915d5e4fe9ce1d33624c7971d10b9106ef50c852c130db7445876230b62"
+size = 10065
+mtime_ms = 1793192563675
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/5a0ac02b-c38d-4b68-8930-cb0230c5fbd7/77a545e9-8e91-49af-bf47-8add597496ba"
+storage_version_token = "1793192604046086"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "etHpCGm-4sT35fSsJMg0_"
+uri = "file://Reports/MONTHLY_PROGRESS_ABHIJEET_RAJESH_SINGH.docx"
+type = "word_document"
+title = "Monthly Progress Report — Abhijeet Rajesh Singh"
+description = "February–October 2026, with one plain progress paragraph for each month."
+logical_id = "837f4b96-c95e-4700-800e-4f3dc11c55f1"
+content_hash = "sha256:6f777fef253fd6d2454b1b1dac8f0eafa619cb8b26cce37c5d074dd59be87211"
+size = 9975
+mtime_ms = 1793192563703
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/837f4b96-c95e-4700-800e-4f3dc11c55f1/e19e3c9b-b236-477b-9ba8-16486d63bcfe"
+storage_version_token = "1793192605370015"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "rFiOq8EU0E94oZMMor7Iz"
+uri = "file://Reports/MONTHLY_PROGRESS_SAIRAJ_MANOHAR_KOYANDE.docx"
+type = "word_document"
+title = "Monthly Progress Report — Sairaj Manohar Koyande"
+description = "February–October 2026, with one plain progress paragraph for each month."
+logical_id = "daa8353d-f2f5-4428-bbb4-66e80cfeaef3"
+content_hash = "sha256:719b71060653f331ee5202c1bd12d31aeb670333d40badbba72a37be44bcdf74"
+size = 9975
+mtime_ms = 1793192563727
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/daa8353d-f2f5-4428-bbb4-66e80cfeaef3/a0259b4b-f8f9-4104-8743-3b70193de3bf"
+storage_version_token = "1793192606657671"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "NrzgJ71BUkxFkgmi6efns"
+uri = "file://Reports/MONTHLY_PROGRESS_SEJAL_SESHMANI_YADAV.docx"
+type = "word_document"
+title = "Monthly Progress Report — Sejal Seshmani Yadav"
+description = "February–October 2026, with one plain progress paragraph for each month."
+logical_id = "55831622-b5f4-417a-8b33-6ed78eac87c5"
+content_hash = "sha256:56e933fba50cd248a912f3e775fd8dfce851f543503bac590df90f0d37eb3b43"
+size = 10018
+mtime_ms = 1793192563771
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/55831622-b5f4-417a-8b33-6ed78eac87c5/bccdfba6-e7bb-4b35-9db9-f39e8fe3448a"
+storage_version_token = "1793192607935592"
+content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
