@@ -350,3 +350,17 @@ mtime_ms = 1793192706448
 storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/300590d4-7a20-4c9a-97f7-41c6ff210079/b399284b-90fd-4c57-a1ea-b7472e349d34"
 storage_version_token = "1793192726765878"
 content_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+[[outputs]]
+id = "3Td_w5dXzm0d_bDFpbdTL"
+uri = "file://TCHAR_Q_EFFICIENCY_GUIDE.md"
+type = "text"
+title = "Turbine TCHAR Q and Efficiency Guide"
+description = "Step-by-step explanation with worked examples from the supplied turbine curve file."
+logical_id = "2aa4818c-7c5b-4e89-972e-5a736c74cb72"
+content_hash = "sha256:db32588fdd7a5a82851f4b5a41a9bd6446c50d308f7114127eecf54417bf78b0"
+size = 9237
+mtime_ms = 1793244806989
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:76a027f9-6981-4ce3-9931-7aed0b639812/2aa4818c-7c5b-4e89-972e-5a736c74cb72/019d26e1-a7a5-474c-918c-dd3c7c9082af"
+storage_version_token = "1793244833538197"
+content_type = "text/markdown"
