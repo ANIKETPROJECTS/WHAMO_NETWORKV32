@@ -470,6 +470,51 @@ export function getRecommendedNs(designHeadFt: number): { nsUS: number; reason: 
   return { nsUS: 30, reason: 'Higher head → lower specific speed recommended' };
 }
 
+export const MIN_GATE_VALUE_COUNT = 3;
+export const MAX_GATE_VALUE_COUNT = 50;
+export const MIN_GATE_PERCENT = 20;
+export const MAX_GATE_PERCENT = 100;
+export const MIN_HEAD_STEP_COUNT = 3;
+export const MAX_HEAD_STEP_COUNT = 50;
+
+export function generateEvenlySpacedGatePercentages(count: number): number[] {
+  if (!Number.isInteger(count) || count < MIN_GATE_VALUE_COUNT || count > MAX_GATE_VALUE_COUNT) {
+    return [];
+  }
+
+  return Array.from({ length: count }, (_, index) => {
+    const value = MIN_GATE_PERCENT + (MAX_GATE_PERCENT - MIN_GATE_PERCENT) * index / (count - 1);
+    return Math.round(value * 100) / 100;
+  });
+}
+
+export function generateEvenlySpacedHeadValues(
+  nsGroup: TurbineNsGroup,
+  designHead: number,
+  count: number,
+): number[] {
+  if (
+    !Number.isInteger(count) ||
+    count < MIN_HEAD_STEP_COUNT ||
+    count > MAX_HEAD_STEP_COUNT ||
+    !Number.isFinite(designHead) ||
+    designHead <= 0
+  ) {
+    return [];
+  }
+
+  const normalizedHeads = nsGroup.gates.flatMap(gate => gate.points.map(point => point.head));
+  if (normalizedHeads.length === 0) return [];
+  const minHead = Math.min(...normalizedHeads);
+  const maxHead = Math.max(...normalizedHeads);
+  const scale = designHead / 100;
+
+  return Array.from({ length: count }, (_, index) => {
+    const normalizedHead = maxHead - (maxHead - minHead) * index / (count - 1);
+    return Number((normalizedHead * scale).toFixed(3));
+  });
+}
+
 function linearInterp(x: number, x0: number, x1: number, y0: number, y1: number): number {
   if (Math.abs(x1 - x0) < 1e-9) return y0;
   return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
@@ -493,6 +538,38 @@ function interpolateAtHead(points: TurbineCurvePoint[], targetHead: number): { q
   return null;
 }
 
+export function getTurbineCurvePointAtGate(
+  nsGroup: TurbineNsGroup,
+  gatePercent: number,
+  targetHead: number,
+): TurbineCurvePoint | null {
+  const gates = [...nsGroup.gates].sort((a, b) => a.gatePercent - b.gatePercent);
+  if (gates.length === 0 || gatePercent < gates[0].gatePercent || gatePercent > gates[gates.length - 1].gatePercent) {
+    return null;
+  }
+
+  const exactGate = gates.find(gate => Math.abs(gate.gatePercent - gatePercent) < 1e-9);
+  if (exactGate) {
+    const point = interpolateAtHead(exactGate.points, targetHead);
+    return point ? { head: targetHead, ...point } : null;
+  }
+
+  const upperIndex = gates.findIndex(gate => gate.gatePercent > gatePercent);
+  if (upperIndex <= 0) return null;
+
+  const lowerGate = gates[upperIndex - 1];
+  const upperGate = gates[upperIndex];
+  const lowerPoint = interpolateAtHead(lowerGate.points, targetHead);
+  const upperPoint = interpolateAtHead(upperGate.points, targetHead);
+  if (!lowerPoint || !upperPoint) return null;
+
+  return {
+    head: targetHead,
+    q: linearInterp(gatePercent, lowerGate.gatePercent, upperGate.gatePercent, lowerPoint.q, upperPoint.q),
+    torque: linearInterp(gatePercent, lowerGate.gatePercent, upperGate.gatePercent, lowerPoint.torque, upperPoint.torque),
+  };
+}
+
 export interface GenerateTcharOptions {
   nsGroup: TurbineNsGroup;
   selectedGatePercents: number[];
@@ -500,6 +577,7 @@ export interface GenerateTcharOptions {
   designFlow: number;
   designEfficiency: number;
   numHeadSteps: number;
+  headValues?: number[];
 }
 
 export interface GeneratedTchar {
@@ -510,34 +588,54 @@ export interface GeneratedTchar {
 }
 
 export function generateTcharFromCurves(opts: GenerateTcharOptions): GeneratedTchar {
-  const { nsGroup, selectedGatePercents, designHead, designFlow, designEfficiency, numHeadSteps } = opts;
+  const { nsGroup, selectedGatePercents, designHead, designFlow, designEfficiency, numHeadSteps, headValues } = opts;
 
   const allNormHeads: number[] = [];
   nsGroup.gates.forEach(g => g.points.forEach(p => allNormHeads.push(p.head)));
   const minNormHead = Math.min(...allNormHeads);
   const maxNormHead = Math.max(...allNormHeads);
-
-  const normHeadSteps: number[] = [];
-  for (let i = 0; i < numHeadSteps; i++) {
-    normHeadSteps.push(maxNormHead - (maxNormHead - minNormHead) * i / (numHeadSteps - 1));
-  }
-
   const headScaleFactor = designHead / 100;
+  const headStepCount = Math.max(MIN_HEAD_STEP_COUNT, Math.min(MAX_HEAD_STEP_COUNT, Math.trunc(numHeadSteps)));
+  const generatedNormHeadSteps = Array.from({ length: headStepCount }, (_, index) =>
+    maxNormHead - (maxNormHead - minNormHead) * index / (headStepCount - 1)
+  );
+  const generatedHeadValues = generatedNormHeadSteps.map(normalizedHead =>
+    Number((normalizedHead * headScaleFactor).toFixed(3))
+  );
+  const outputHeadValues = headValues
+    ? [...headValues].sort((a, b) => b - a).map(value => Number(value.toFixed(3)))
+    : generatedHeadValues;
+  const roundedHeadValuesAreValid =
+    outputHeadValues.length >= MIN_HEAD_STEP_COUNT &&
+    outputHeadValues.length <= MAX_HEAD_STEP_COUNT &&
+    outputHeadValues.every(value => Number.isFinite(value) && value > 0) &&
+    new Set(outputHeadValues).size === outputHeadValues.length;
+  if (headValues && !roundedHeadValuesAreValid) {
+    throw new Error('Head values must be unique positive numbers, with 3 to 50 values.');
+  }
+  if (headValues && headValues.length !== numHeadSteps) {
+    throw new Error('The number of head values must match the head step count.');
+  }
+  const normHeadSteps = headValues
+    ? outputHeadValues.map(value => value / headScaleFactor)
+    : generatedNormHeadSteps;
   const qScaleFactor = designFlow / 100;
   const effConst = designEfficiency * 100;
 
-  const scaledHeads = normHeadSteps.map(h => parseFloat((h * headScaleFactor).toFixed(3)));
-
-  const selectedGates = nsGroup.gates.filter(g => selectedGatePercents.includes(g.gatePercent));
+  const minGatePercent = Math.min(...nsGroup.gates.map(gate => gate.gatePercent));
+  const maxGatePercent = Math.max(...nsGroup.gates.map(gate => gate.gatePercent));
+  const selectedGates = Array.from(new Set(selectedGatePercents))
+    .filter(gate => Number.isFinite(gate) && gate >= minGatePercent && gate <= maxGatePercent)
+    .sort((a, b) => a - b);
 
   const qMatrix: number[][] = [];
   const effMatrix: number[][] = [];
 
-  for (const gate of selectedGates) {
+  for (const gatePercent of selectedGates) {
     const qRow: number[] = [];
     const effRow: number[] = [];
     for (const normH of normHeadSteps) {
-      const interp = interpolateAtHead(gate.points, normH);
+      const interp = getTurbineCurvePointAtGate(nsGroup, gatePercent, normH);
       if (!interp) {
         qRow.push(0);
         effRow.push(0);
@@ -556,8 +654,8 @@ export function generateTcharFromCurves(opts: GenerateTcharOptions): GeneratedTc
   }
 
   return {
-    gate: selectedGates.map(g => g.gatePercent),
-    head: scaledHeads,
+    gate: selectedGates,
+    head: outputHeadValues,
     qMatrix,
     effMatrix,
   };

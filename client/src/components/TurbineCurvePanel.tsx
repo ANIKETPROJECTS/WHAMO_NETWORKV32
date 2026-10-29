@@ -2,12 +2,20 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronDown, ChevronRight, Zap, BarChart2, Info } from 'lucide-react';
 import {
   TURBINE_CURVE_LIBRARY,
   getRecommendedNs,
+  getTurbineCurvePointAtGate,
+  generateEvenlySpacedGatePercentages,
+  generateEvenlySpacedHeadValues,
   generateTcharFromCurves,
+  MAX_GATE_PERCENT,
+  MAX_GATE_VALUE_COUNT,
+  MAX_HEAD_STEP_COUNT,
+  MIN_GATE_PERCENT,
+  MIN_GATE_VALUE_COUNT,
+  MIN_HEAD_STEP_COUNT,
   type TurbineNsGroup,
 } from '@/lib/turbine-curves';
 import type { TcharType } from '@/lib/store';
@@ -16,6 +24,7 @@ import {
 } from 'recharts';
 
 const GATE_COLORS = ['#1a73e8','#34a853','#fbbc04','#ea4335','#9c27b0','#ff5722','#00bcd4','#607d8b','#795548'];
+const formatCurveInputValue = (value: number) => String(Number(value.toFixed(3)));
 
 interface Props {
   tType: number;
@@ -31,7 +40,16 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
   const [designFlow, setDesignFlow] = useState<string>('100');
   const [designEff, setDesignEff] = useState<string>('0.90');
   const [numHeadSteps, setNumHeadSteps] = useState<string>('5');
-  const [selectedGates, setSelectedGates] = useState<Set<number>>(new Set([20, 40, 60, 80, 100]));
+  const [headStepValues, setHeadStepValues] = useState<string[]>(() =>
+    generateEvenlySpacedHeadValues(
+      TURBINE_CURVE_LIBRARY[0],
+      Number(initialDesignHead) > 0 ? Number(initialDesignHead) : 50,
+      5,
+    ).map(formatCurveInputValue)
+  );
+  const [headStepsManuallyEdited, setHeadStepsManuallyEdited] = useState(false);
+  const [gateCount, setGateCount] = useState<string>('5');
+  const [gatePercentInputs, setGatePercentInputs] = useState<string[]>(['20', '40', '60', '80', '100']);
   const [previewGate, setPreviewGate] = useState<number>(100);
   const [showChart, setShowChart] = useState(true);
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
@@ -47,28 +65,123 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
     [designHead]
   );
 
-  const availableGates = nsGroup.gates.map(g => g.gatePercent);
+  const headStepCountValue = Number(numHeadSteps);
+  const headStepCountIsValid =
+    /^\d+$/.test(numHeadSteps) &&
+    Number.isInteger(headStepCountValue) &&
+    headStepCountValue >= MIN_HEAD_STEP_COUNT &&
+    headStepCountValue <= MAX_HEAD_STEP_COUNT;
+  const parsedHeadStepValues = headStepValues.map(value =>
+    value.trim() === '' ? Number.NaN : Number(value)
+  );
+  const roundedHeadStepValues = parsedHeadStepValues.map(value => Math.round(value * 1000) / 1000);
+  const headStepValuesAreValid =
+    headStepCountIsValid &&
+    headStepValues.length === headStepCountValue &&
+    parsedHeadStepValues.every(value => Number.isFinite(value) && value > 0) &&
+    new Set(roundedHeadStepValues).size === headStepValues.length;
 
-  const toggleGate = (g: number) => {
-    setSelectedGates(prev => {
-      const next = new Set(prev);
-      if (next.has(g)) { if (next.size > 1) next.delete(g); }
-      else next.add(g);
-      return next;
-    });
+  const gateCountValue = Number(gateCount);
+  const gateCountIsValid =
+    /^\d+$/.test(gateCount) &&
+    Number.isInteger(gateCountValue) &&
+    gateCountValue >= MIN_GATE_VALUE_COUNT &&
+    gateCountValue <= MAX_GATE_VALUE_COUNT;
+  const parsedGatePercentInputs = gatePercentInputs.map(value =>
+    value.trim() === '' ? Number.NaN : Number(value)
+  );
+  const availableGates = Array.from(new Set(parsedGatePercentInputs
+    .filter(value => Number.isFinite(value) && value >= MIN_GATE_PERCENT && value <= MAX_GATE_PERCENT)))
+    .sort((a, b) => a - b);
+  const gatePercentagesAreValid =
+    gateCountIsValid &&
+    gatePercentInputs.length === gateCountValue &&
+    parsedGatePercentInputs.every(value =>
+      Number.isFinite(value) && value >= MIN_GATE_PERCENT && value <= MAX_GATE_PERCENT
+    ) &&
+    new Set(parsedGatePercentInputs).size === gatePercentInputs.length;
+  const gateSettingsAreValid = gateCountIsValid && gatePercentagesAreValid;
+  const curveSettingsAreValid = gateSettingsAreValid && headStepValuesAreValid;
+  const activePreviewGate = availableGates.includes(previewGate)
+    ? previewGate
+    : availableGates[0] ?? MAX_GATE_PERCENT;
+
+  const formatGatePercent = (value: number) => String(Number(value.toFixed(2)));
+
+  const refreshAutomaticHeadValues = (
+    count: number,
+    targetDesignHead = Number(designHead) || 50,
+    targetGroup = nsGroup,
+  ) => {
+    const values = generateEvenlySpacedHeadValues(targetGroup, targetDesignHead, count);
+    if (values.length > 0) {
+      setHeadStepValues(values.map(formatCurveInputValue));
+      setHeadStepsManuallyEdited(false);
+    }
+  };
+
+  const handleHeadStepCountChange = (value: string) => {
+    setNumHeadSteps(value);
+    if (!/^\d+$/.test(value)) return;
+    refreshAutomaticHeadValues(Number(value));
+  };
+
+  const handleHeadStepValueChange = (index: number, value: string) => {
+    setHeadStepValues(previous => previous.map((item, itemIndex) =>
+      itemIndex === index ? value : item
+    ));
+    setHeadStepsManuallyEdited(true);
+  };
+
+  const handleDesignHeadChange = (value: string) => {
+    setDesignHead(value);
+    if (!headStepsManuallyEdited && headStepCountIsValid) {
+      refreshAutomaticHeadValues(headStepCountValue, Number(value) || 50);
+    }
+  };
+
+  const handleNsChange = (value: string) => {
+    const nextNs = Number(value);
+    setSelectedNsUS(nextNs);
+    const nextGroup = TURBINE_CURVE_LIBRARY.find(group => group.nsUS === nextNs) ?? TURBINE_CURVE_LIBRARY[0];
+    if (!headStepsManuallyEdited && headStepCountIsValid) {
+      refreshAutomaticHeadValues(headStepCountValue, Number(designHead) || 50, nextGroup);
+    }
+  };
+
+  const handleGateCountChange = (value: string) => {
+    setGateCount(value);
+    if (!/^\d+$/.test(value)) return;
+    const count = Number(value);
+    const values = generateEvenlySpacedGatePercentages(count);
+    if (values.length > 0) {
+      setGatePercentInputs(values.map(formatGatePercent));
+      setPreviewGate(values[values.length - 1]);
+    }
+  };
+
+  const handleGatePercentChange = (index: number, value: string) => {
+    setGatePercentInputs(previous => previous.map((item, itemIndex) =>
+      itemIndex === index ? value : item
+    ));
   };
 
   const previewGateData = useMemo(() => {
-    const gate = nsGroup.gates.find(g => g.gatePercent === previewGate);
-    if (!gate) return [];
-    return gate.points.map(p => ({
-      head: Math.round(p.head),
-      q: parseFloat(p.q.toFixed(2)),
-      eff: parseFloat(Math.min(Math.max(
-        (p.head > 1 && p.q > 1) ? (p.torque / (p.head * p.q)) * (parseFloat(designEff) * 100) : 0,
-        0), 0.98).toFixed(4)),
-    }));
-  }, [nsGroup, previewGate, designEff]);
+    const heads = Array.from(new Set(nsGroup.gates.flatMap(gate =>
+      gate.points.map(point => Math.round(point.head))
+    ))).sort((a, b) => a - b);
+    return heads.flatMap(head => {
+      const point = getTurbineCurvePointAtGate(nsGroup, activePreviewGate, head);
+      if (!point) return [];
+      return [{
+        head,
+        q: parseFloat(point.q.toFixed(2)),
+        eff: parseFloat(Math.min(Math.max(
+          (point.head > 1 && point.q > 1) ? (point.torque / (point.head * point.q)) * (parseFloat(designEff) * 100) : 0,
+          0), 0.98).toFixed(4)),
+      }];
+    });
+  }, [nsGroup, activePreviewGate, designEff]);
 
   const allGatesPreviewData = useMemo(() => {
     const headSet = new Set<number>();
@@ -77,17 +190,16 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
 
     return heads.map(h => {
       const row: Record<string, number> = { head: h };
-      nsGroup.gates.forEach(g => {
-        const pt = g.points.reduce((best, p) => Math.abs(Math.round(p.head) - h) < Math.abs(Math.round(best.head) - h) ? p : best, g.points[0]);
-        if (Math.abs(Math.round(pt.head) - h) <= 12) {
-          row[`g${g.gatePercent}`] = parseFloat(pt.q.toFixed(2));
-        }
+      availableGates.forEach(gatePercent => {
+        const point = getTurbineCurvePointAtGate(nsGroup, gatePercent, h);
+        if (point) row[`g${gatePercent}`] = parseFloat(point.q.toFixed(2));
       });
       return row;
     });
-  }, [nsGroup]);
+  }, [nsGroup, gatePercentInputs]);
 
   const handleGenerate = () => {
+    if (!curveSettingsAreValid) return;
     const hasTcharData = activeTc.gate.length > 0 || activeTc.head.length > 0;
     if (hasTcharData && !confirmOverwrite) {
       setConfirmOverwrite(true);
@@ -99,11 +211,12 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
   const doGenerate = () => {
     const result = generateTcharFromCurves({
       nsGroup,
-      selectedGatePercents: Array.from(selectedGates).sort((a, b) => a - b),
+      selectedGatePercents: parsedGatePercentInputs,
       designHead: parseFloat(designHead) || 50,
       designFlow: parseFloat(designFlow) || 100,
       designEfficiency: parseFloat(designEff) || 0.9,
-      numHeadSteps: Math.max(2, Math.min(20, parseInt(numHeadSteps) || 5)),
+      numHeadSteps: headStepCountValue,
+      headValues: parsedHeadStepValues,
     });
     setGenerated(result);
     updateTcharData(tType, result);
@@ -149,7 +262,7 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
           {/* Ns group selection */}
           <div className="space-y-1.5">
             <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Specific Speed (Ns)</Label>
-            <Select value={String(selectedNsUS)} onValueChange={v => setSelectedNsUS(Number(v))}>
+            <Select value={String(selectedNsUS)} onValueChange={handleNsChange}>
               <SelectTrigger className="h-7 text-xs" data-testid="select-ns-group">
                 <SelectValue />
               </SelectTrigger>
@@ -182,7 +295,7 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
                 <input
                   className="w-full h-7 border rounded px-2 text-xs focus:outline-none focus:ring-1 focus:ring-teal-400 mt-0.5"
                   value={designHead}
-                  onChange={e => setDesignHead(e.target.value)}
+                  onChange={e => handleDesignHeadChange(e.target.value)}
                   data-testid="input-design-head"
                   type="number" step="any" placeholder="e.g. 50"
                 />
@@ -208,34 +321,127 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
                 />
               </div>
               <div>
-                <Label className="text-[10px]">Head Steps</Label>
+                <Label className="text-[10px]">Number of head steps (3–50)</Label>
                 <input
-                  className="w-full h-7 border rounded px-2 text-xs focus:outline-none focus:ring-1 focus:ring-teal-400 mt-0.5"
+                  className={`w-full h-7 border rounded px-2 text-xs focus:outline-none focus:ring-1 focus:ring-teal-400 mt-0.5 ${
+                    !headStepCountIsValid ? 'border-red-500' : ''
+                  }`}
                   value={numHeadSteps}
-                  onChange={e => setNumHeadSteps(e.target.value)}
+                  onChange={e => handleHeadStepCountChange(e.target.value)}
                   data-testid="input-head-steps"
-                  type="number" step="1" min="2" max="20" placeholder="5"
+                  aria-invalid={!headStepCountIsValid}
+                  type="number" step="1" min={MIN_HEAD_STEP_COUNT} max={MAX_HEAD_STEP_COUNT} placeholder="5"
                 />
               </div>
             </div>
+            <div className="space-y-1.5">
+              <p className="text-[9px] text-slate-500">
+                Head values are auto-spaced and editable. Editing Design Head or Ns refreshes them until you edit a value.
+              </p>
+              {!headStepCountIsValid && (
+                <p className="text-[10px] text-red-600" role="alert" data-testid="error-head-step-count">
+                  Enter a whole number from {MIN_HEAD_STEP_COUNT} to {MAX_HEAD_STEP_COUNT}.
+                </p>
+              )}
+              <div className="grid grid-cols-3 gap-2">
+                {headStepValues.map((value, index) => {
+                  const parsedValue = parsedHeadStepValues[index];
+                  const invalid = !Number.isFinite(parsedValue) ||
+                    parsedValue <= 0 ||
+                    roundedHeadStepValues.filter(candidate => candidate === roundedHeadStepValues[index]).length > 1;
+                  return (
+                    <div key={index}>
+                      <Label htmlFor={`input-head-value-${index}`} className="text-[10px]">
+                        Head {index + 1}
+                      </Label>
+                      <input
+                        id={`input-head-value-${index}`}
+                        type="number"
+                        min="0.001"
+                        step="0.001"
+                        value={value}
+                        onChange={event => handleHeadStepValueChange(index, event.target.value)}
+                        aria-invalid={invalid}
+                        data-testid={`input-head-value-${index + 1}`}
+                        className={`mt-0.5 w-full h-7 border rounded px-2 text-xs focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                          invalid ? 'border-red-500' : ''
+                        }`}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              {headStepCountIsValid && !headStepValuesAreValid && (
+                <p className="text-[10px] text-red-600" role="alert" data-testid="error-head-values">
+                  Enter {headStepCountValue} unique positive head values.
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Gate selection */}
+          {/* Gate-opening values */}
           <div className="space-y-1.5">
-            <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Gate Openings (%)</Label>
-            <div className="flex flex-wrap gap-2">
-              {availableGates.map(g => (
-                <label key={g} className="flex items-center gap-1 cursor-pointer select-none">
-                  <Checkbox
-                    data-testid={`cb-gate-${g}`}
-                    checked={selectedGates.has(g)}
-                    onCheckedChange={() => toggleGate(g)}
-                    className="h-3.5 w-3.5"
-                  />
-                  <span className="text-[10px]">{g}%</span>
-                </label>
-              ))}
+            <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">Gate Opening Values (%)</Label>
+            <div>
+              <Label htmlFor="input-gate-count" className="text-[10px]">Number of values (3–50)</Label>
+              <input
+                id="input-gate-count"
+                type="number"
+                min={MIN_GATE_VALUE_COUNT}
+                max={MAX_GATE_VALUE_COUNT}
+                step="1"
+                value={gateCount}
+                onChange={event => handleGateCountChange(event.target.value)}
+                aria-invalid={!gateCountIsValid}
+                data-testid="input-gate-count"
+                className={`mt-0.5 w-full h-7 border rounded px-2 text-xs focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                  !gateCountIsValid ? 'border-red-500' : ''
+                }`}
+              />
+              <p className="mt-1 text-[9px] text-slate-500">
+                Values are spaced evenly from {MIN_GATE_PERCENT}% to {MAX_GATE_PERCENT}%. Edit any value below.
+              </p>
+              {!gateCountIsValid && (
+                <p className="mt-1 text-[10px] text-red-600" role="alert" data-testid="error-gate-count">
+                  Enter a whole number from {MIN_GATE_VALUE_COUNT} to {MAX_GATE_VALUE_COUNT}.
+                </p>
+              )}
             </div>
+            <div className="grid grid-cols-3 gap-2">
+              {gatePercentInputs.map((value, index) => {
+                const parsedValue = parsedGatePercentInputs[index];
+                const invalid = !Number.isFinite(parsedValue) ||
+                  parsedValue < MIN_GATE_PERCENT ||
+                  parsedValue > MAX_GATE_PERCENT ||
+                  parsedGatePercentInputs.filter(candidate => candidate === parsedValue).length > 1;
+                return (
+                  <div key={index}>
+                    <Label htmlFor={`input-gate-percent-${index}`} className="text-[10px]">
+                      Value {index + 1} (%)
+                    </Label>
+                    <input
+                      id={`input-gate-percent-${index}`}
+                      type="number"
+                      min={MIN_GATE_PERCENT}
+                      max={MAX_GATE_PERCENT}
+                      step="0.01"
+                      value={value}
+                      onChange={event => handleGatePercentChange(index, event.target.value)}
+                      aria-invalid={invalid}
+                      data-testid={`input-gate-percent-${index + 1}`}
+                      className={`mt-0.5 w-full h-7 border rounded px-2 text-xs focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                        invalid ? 'border-red-500' : ''
+                      }`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {gateCountIsValid && !gatePercentagesAreValid && (
+              <p className="text-[10px] text-red-600" role="alert" data-testid="error-gate-percentages">
+                Enter unique percentages from {MIN_GATE_PERCENT}% to {MAX_GATE_PERCENT}%.
+              </p>
+            )}
           </div>
 
           {/* Chart preview */}
@@ -255,13 +461,13 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
               <>
                 <div className="flex items-center gap-2">
                   <Label className="text-[10px]">Gate:</Label>
-                  <Select value={String(previewGate)} onValueChange={v => setPreviewGate(Number(v))}>
+                  <Select value={String(activePreviewGate)} onValueChange={v => setPreviewGate(Number(v))}>
                     <SelectTrigger className="h-6 text-[10px] w-20" data-testid="select-preview-gate">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableGates.map(g => (
-                        <SelectItem key={g} value={String(g)}>{g}%</SelectItem>
+                      {availableGates.map(gatePercent => (
+                        <SelectItem key={gatePercent} value={String(gatePercent)}>{gatePercent}%</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -270,7 +476,7 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
 
                 {/* Single gate — Head vs Q and Head vs Eff */}
                 <div className="rounded border border-slate-100 overflow-hidden bg-slate-50 p-2">
-                  <p className="text-[10px] font-medium text-slate-500 mb-1">Gate {previewGate}% — Head vs Q &amp; Efficiency (normalized)</p>
+                  <p className="text-[10px] font-medium text-slate-500 mb-1">Gate {activePreviewGate}% — Head vs Q &amp; Efficiency (normalized)</p>
                   <ResponsiveContainer width="100%" height={140}>
                     <LineChart data={previewGateData} margin={{ top: 4, right: 8, left: -10, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
@@ -301,14 +507,14 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
                       <YAxis tick={{ fontSize: 9 }} />
                       <Tooltip contentStyle={{ fontSize: 10 }} />
                       <Legend wrapperStyle={{ fontSize: 9 }} />
-                      {nsGroup.gates.map((g, i) => (
+                      {availableGates.map((gatePercent, i) => (
                         <Line
-                          key={g.gatePercent}
+                          key={gatePercent}
                           type="monotone"
-                          dataKey={`g${g.gatePercent}`}
+                          dataKey={`g${gatePercent}`}
                           stroke={GATE_COLORS[i % GATE_COLORS.length]}
                           dot={false}
-                          name={`${g.gatePercent}%`}
+                          name={`${gatePercent}%`}
                           strokeWidth={1.5}
                           connectNulls
                         />
@@ -335,6 +541,7 @@ export function TurbineCurvePanel({ tType, activeTc, updateTcharData, designHead
                 size="sm"
                 className="h-7 text-[10px] flex-1 bg-teal-600 hover:bg-teal-700 text-white gap-1"
                 onClick={handleGenerate}
+                disabled={!curveSettingsAreValid}
                 data-testid="btn-generate-tchar"
                 type="button"
               >
