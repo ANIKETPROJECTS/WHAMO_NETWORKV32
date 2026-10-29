@@ -27,7 +27,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { getNodeSequenceViolations } from '@/lib/validator';
+import {
+  getNodeSequenceViolations,
+  isMissingNodeElevation,
+  requiresNodeElevation,
+} from '@/lib/validator';
 import saveIconImg from '@assets/diskette_(1)_1779571608664.png';
 import deleteIconImg from '@assets/bin_(4)_1779571627860.png';
 
@@ -422,6 +426,19 @@ export function PropertiesPanel() {
 
     if (isNodeEl) {
       const thisNode = nodes.find(n => n.id === selectedElementId);
+      if (
+        thisNode &&
+        requiresNodeElevation(thisNode.type, thisNode.data) &&
+        isMissingNodeElevation(processedData.elevation)
+      ) {
+        toast({
+          variant: "destructive",
+          title: "Node Elevation Required",
+          description: `Enter a valid Node Elevation for ${thisNode.data?.label || 'this element'} before saving.`,
+        });
+        return;
+      }
+
       const elementTypes = new Set(['pump', 'checkValve', 'turbine']);
 
       // Block save if new nodeNumber violates ascending order for non-element nodes
@@ -522,6 +539,31 @@ export function PropertiesPanel() {
   if (!element) return null;
 
   const currentUnit = (formData.unit as UnitSystem) || globalUnit;
+  const nodeElevationRequired = requiresNodeElevation(element.data?.type, element.data);
+  const nodeElevationMissing = nodeElevationRequired && isMissingNodeElevation(formData.elevation);
+  const nodeElevationInputClass = `h-7 text-[12px] font-medium text-black ${
+    nodeElevationMissing ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-300'
+  }`;
+  const renderNodeElevationInput = () => (
+    <div className="w-full">
+      <NumericInput
+        id="elev"
+        data-testid="input-node-elevation"
+        value={formData.elevation}
+        onValueChange={(v) => handleChange('elevation', v)}
+        required
+        aria-required="true"
+        aria-invalid={nodeElevationMissing}
+        className={nodeElevationInputClass}
+        style={{ fontFamily: 'Poppins, sans-serif' } as any}
+      />
+      {nodeElevationMissing && (
+        <p className="mt-1 text-[10px] text-red-600" role="alert" data-testid="error-node-elevation-required">
+          Node Elevation is required.
+        </p>
+      )}
+    </div>
+  );
 
   const isConduit = !isNode && (element.data?.type === 'conduit' || !element.data?.type);
   const isSurgeTank = isNode && (element.data?.type === 'surgeTank' || !!formData.type_st);
@@ -1278,14 +1320,8 @@ export function PropertiesPanel() {
                         )}
                       </div>
                     </PropRow>
-                    <PropRow label={`Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder>
-                      <NumericInput
-                        id="elev"
-                        value={formData.elevation}
-                        onValueChange={(v) => handleChange('elevation', v)}
-                        className="h-7 text-[12px] font-medium text-black border-slate-300"
-                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                      />
+                    <PropRow label={`Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder required>
+                      {renderNodeElevationInput()}
                     </PropRow>
                   </PropSection>
                 );
@@ -1361,14 +1397,8 @@ export function PropertiesPanel() {
                           </p>
                         )}
                       </PropRow>
-                      <PropRow label={`Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder>
-                        <NumericInput
-                          id="elev"
-                          value={formData.elevation}
-                          onValueChange={(v) => handleChange('elevation', v)}
-                          className="h-7 text-[12px] font-medium text-black border-slate-300"
-                          style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                        />
+                      <PropRow label={`Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder required>
+                        {renderNodeElevationInput()}
                       </PropRow>
                     </PropSection>
 
@@ -1521,12 +1551,11 @@ export function PropertiesPanel() {
               {/* Non-reservoir, non-node/junction, non-surgeTank, non-flowBoundary: elevation */}
               {element.data?.type !== 'reservoir' && element.data?.type !== 'node' && element.data?.type !== 'junction' && element.data?.type !== 'surgeTank' && element.data?.type !== 'flowBoundary' && (
               <div className="grid gap-2">
-                <Label htmlFor="elev">Elevation ({currentUnit === 'SI' ? 'm' : 'ft'})</Label>
-                <NumericInput 
-                  id="elev" 
-                  value={formData.elevation} 
-                  onValueChange={(v) => handleChange('elevation', v)} 
-                />
+                <Label htmlFor="elev">
+                  Elevation ({currentUnit === 'SI' ? 'm' : 'ft'})
+                  <span className="ml-0.5 text-red-600" aria-hidden="true">*</span>
+                </Label>
+                {renderNodeElevationInput()}
               </div>
               )}
 
@@ -1574,14 +1603,8 @@ export function PropertiesPanel() {
                           )}
                         </div>
                       </PropRow>
-                      <PropRow label={`Node Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder>
-                        <NumericInput
-                          id="elev"
-                          value={formData.elevation}
-                          onValueChange={(v) => handleChange('elevation', v)}
-                          className="h-7 text-[12px] font-medium text-black border-slate-300"
-                          style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                        />
+                      <PropRow label={`Node Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder required>
+                        {renderNodeElevationInput()}
                       </PropRow>
                     </PropSection>
 
@@ -2144,14 +2167,8 @@ export function PropertiesPanel() {
                         )}
                       </div>
                     </PropRow>
-                    <PropRow label={`Node Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder>
-                      <NumericInput
-                        id="elev"
-                        value={formData.elevation}
-                        onValueChange={(v) => handleChange('elevation', v)}
-                        className="h-7 text-[12px] font-medium text-black border-slate-300"
-                        style={{ fontFamily: 'Poppins, sans-serif' } as any}
-                      />
+                    <PropRow label={`Node Elevation (${currentUnit === 'SI' ? 'm' : 'ft'})`} noBorder required>
+                      {renderNodeElevationInput()}
                     </PropRow>
                   </PropSection>
                 );
@@ -2909,7 +2926,7 @@ export function PropertiesPanel() {
                   const displayUnit = currentUnit === 'SI' ? 'm' : 'ft';
                   return (
                     <>
-                      <PropRow label="Shape Type" noBorder>
+                      <PropRow label="Shape of the pipe" noBorder>
                         <Select
                           open={conduitShapeTypeOpen}
                           onOpenChange={setConduitShapeTypeOpen}

@@ -66,6 +66,7 @@ export function ValidationModal({
   }, [warnings, filterText, filterType]);
 
   const hasErrors = errors.length > 0;
+  const hasNonOverridableErrors = errors.some(error => error.nonOverridable);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -168,9 +169,11 @@ export function ValidationModal({
             data-testid="button-generate-anyway"
             className={!hasErrors ? "bg-green-600 hover:bg-green-700" : ""}
           >
-            {hasErrors ? "Fix Errors to Generate" : "Generate Anyway"}
+            {hasErrors
+              ? hasNonOverridableErrors ? "Complete Required Fields to Generate" : "Fix Errors to Generate"
+              : "Generate Anyway"}
           </Button>
-          {hasErrors && (
+          {hasErrors && !hasNonOverridableErrors && (
             <Button
               onClick={onForceGenerate}
               variant="destructive"

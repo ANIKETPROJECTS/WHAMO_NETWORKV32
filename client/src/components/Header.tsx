@@ -1006,12 +1006,6 @@ export function Header({
             data-testid="ribbon-btn-flextable"
           />
           <InlineRibbonBtn
-            imgSrc={chartIcon}
-            label="Visualization"
-            onClick={onVisualization}
-            data-testid="ribbon-btn-visualization"
-          />
-          <InlineRibbonBtn
             icon={<Box className="h-6 w-6 text-slate-700" />}
             label="3D View"
             onClick={on3DVisualization}
@@ -1019,7 +1013,7 @@ export function Header({
           />
         </RibbonGroup>
 
-        <RibbonGroup label="Generate" flex={2} disabled={!isProjectOpen}>
+        <RibbonGroup label="Generate" flex={3} disabled={!isProjectOpen}>
           <InlineRibbonBtn
             imgSrc={inputIcon}
             label=".INP"
@@ -1032,6 +1026,12 @@ export function Header({
             onClick={handleOutGenerate}
             disabled={isGeneratingOut}
             data-testid="ribbon-btn-generate-out"
+          />
+          <InlineRibbonBtn
+            imgSrc={chartIcon}
+            label="Visualization"
+            onClick={onVisualization}
+            data-testid="ribbon-btn-visualization"
           />
         </RibbonGroup>
 

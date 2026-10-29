@@ -49,10 +49,12 @@ export function PropRow({
   label,
   children,
   noBorder,
+  required = false,
 }: {
   label: string;
   children: React.ReactNode;
   noBorder?: boolean;
+  required?: boolean;
 }) {
   return (
     <div
@@ -63,6 +65,7 @@ export function PropRow({
         style={{ fontFamily: 'Poppins, sans-serif' }}
       >
         {label}
+        {required && <span className="text-red-600 ml-0.5" aria-hidden="true">*</span>}
       </span>
       <div className="flex-1 min-w-0">{children}</div>
     </div>

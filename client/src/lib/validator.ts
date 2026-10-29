@@ -6,6 +6,7 @@ export interface ValidationError {
   type: 'error' | 'warning';
   elementLabel?: string;
   elementType?: string;
+  nonOverridable?: boolean;
 }
 
 export interface NodeSequenceViolation {
@@ -16,6 +17,26 @@ export interface NodeSequenceViolation {
 }
 
 const elementTypes = new Set(['pump', 'checkValve', 'turbine']);
+const nodeElevationTypes = new Set(['reservoir', 'node', 'junction', 'surgeTank', 'flowBoundary']);
+
+export function requiresNodeElevation(
+  type: string | undefined,
+  data?: unknown,
+): boolean {
+  const hasLegacySurgeTankType =
+    !!data &&
+    typeof data === 'object' &&
+    'type_st' in data &&
+    !!(data as { type_st?: unknown }).type_st;
+  return (!!type && nodeElevationTypes.has(type)) || hasLegacySurgeTankType;
+}
+
+export function isMissingNodeElevation(value: unknown): boolean {
+  if (value === undefined || value === null) return true;
+  if (typeof value !== 'number' && typeof value !== 'string') return true;
+  if (typeof value === 'string' && value.trim() === '') return true;
+  return !Number.isFinite(Number(value));
+}
 
 function isBranchingJunction(node: WhamoNode, connectionCount: number): boolean {
   return node.type === 'junction' && connectionCount > 2;
@@ -102,8 +123,13 @@ export function validateNetwork(nodes: WhamoNode[], edges: WhamoEdge[]): { error
   const errors: ValidationError[] = [];
   const warnings: ValidationError[] = [];
 
-  const addError = (id: string, message: string, elementLabel?: string, elementType?: string) => 
-    errors.push({ id, message, type: 'error', elementLabel, elementType });
+  const addError = (
+    id: string,
+    message: string,
+    elementLabel?: string,
+    elementType?: string,
+    nonOverridable = false,
+  ) => errors.push({ id, message, type: 'error', elementLabel, elementType, nonOverridable });
   const addWarning = (id: string, message: string, elementLabel?: string, elementType?: string) => 
     warnings.push({ id, message, type: 'warning', elementLabel, elementType });
 
@@ -182,6 +208,16 @@ export function validateNetwork(nodes: WhamoNode[], edges: WhamoEdge[]): { error
   nodes.forEach(n => {
     const d = n.data;
     const connections = adjacency.get(n.id) || [];
+
+    if (requiresNodeElevation(n.type, d) && isMissingNodeElevation(d.elevation)) {
+      addError(
+        n.id,
+        `${d.label || n.id} is missing a valid Node Elevation.`,
+        d.label,
+        n.type,
+        true,
+      );
+    }
 
     if (n.type === 'reservoir') {
       if (connections.length !== 1) {
