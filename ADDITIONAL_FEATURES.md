@@ -32,7 +32,7 @@ WHAMO Network Designer adds visual modeling, file-management, and result-review 
 
 14. **User and permission management:** Administrators can manage user accounts and control access to application sections.
 
-15. **Browser and cloud access:** The hosted web application can be accessed through supported desktop, tablet, and mobile browsers. Access to projects and other server-based features depends on the configured deployment and user permissions.
+15. **Cloud-supported, multi-device access:** The hosted web application can be accessed from Windows computers, tablets, and other supported devices through a compatible browser and internet connection. Access to projects and other server-based features depends on the configured deployment and user permissions.
 
 ## Summary
 
