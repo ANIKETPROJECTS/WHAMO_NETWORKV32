@@ -87,7 +87,6 @@ import waterTankIcon from "@assets/water-tank_(2)_1779523360829.png";
 import windIcon from "@assets/wind_1779523398812.png";
 import turbineImgIcon from "@assets/turbine_1779523517554.png";
 import networkIcon from "@assets/network_1779525899254.png";
-import clickIcon from "@assets/click_1779525969230.png";
 import tabletIcon from "@assets/tablet_1779526000997.png";
 import chartIcon from "@assets/chart_1779526062244.png";
 import inputIcon from "@assets/input_1779526391855.png";
@@ -994,11 +993,6 @@ export function Header({
 
         <RibbonGroup label="Tools" flex={4} disabled={!isProjectOpen}>
           <InlineRibbonBtn imgSrc={networkIcon} label="Diagram" onClick={onShowDiagram} />
-          <InlineRibbonBtn
-            imgSrc={clickIcon}
-            label="Node Sel."
-            onClick={() => window.dispatchEvent(new CustomEvent('toggleNodeSelection'))}
-          />
           <InlineRibbonBtn
             imgSrc={tabletIcon}
             label="Flex Table"
